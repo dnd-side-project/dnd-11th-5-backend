@@ -22,7 +22,7 @@ class HelloControllerTest extends ControllerTestSupport {
 			)
 			.andDo(print())
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value(200))
+			.andExpect(jsonPath("$.statusCode").value(200))
 			.andExpect(jsonPath("$.status").value("OK"))
 			.andExpect(jsonPath("$.message").value("API 응답 테스트"))
 			.andExpect(jsonPath("$.data").isString());

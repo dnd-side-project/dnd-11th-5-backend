@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleServerException(Exception e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
-		return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
 	// 405 : Method Not Allowed
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
 		HttpRequestMethodNotSupportedException e) {
 		log.error(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED);
-		return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
 	// 400 : MethodArgumentNotValidException
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
 		MethodArgumentNotValidException e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE);
-		return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
 	// 400 : MethodArgumentType
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
 		MethodArgumentTypeMismatchException e) {
 		log.error(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_TYPE_VALUE);
-		return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
 	// 400 : Bad Request, ModelAttribute
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleBindException(BindException e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE);
-		return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
 	@ExceptionHandler(HttpMessageNotReadableException.class)
@@ -65,21 +65,21 @@ public class GlobalExceptionHandler {
 		HttpMessageNotReadableException e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE);
-		return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE);
-		return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
 	@ExceptionHandler(NoHandlerFoundException.class)
 	public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.NOT_FOUND);
-		return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
 	@ExceptionHandler(MissingServletRequestParameterException.class)
@@ -87,6 +87,6 @@ public class GlobalExceptionHandler {
 		MissingServletRequestParameterException e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.MISSING_REQUEST_PARAMETER);
-		return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 }
