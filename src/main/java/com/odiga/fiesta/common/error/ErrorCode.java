@@ -1,4 +1,4 @@
-package com.example.demo.common.error;
+package com.odiga.fiesta.common.error;
 
 import java.util.Collections;
 import java.util.Map;

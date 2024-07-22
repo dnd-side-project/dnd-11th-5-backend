@@ -1,4 +1,4 @@
-package com.example.demo.common;
+package com.odiga.fiesta.common;
 
 import org.springframework.http.HttpStatus;
 
