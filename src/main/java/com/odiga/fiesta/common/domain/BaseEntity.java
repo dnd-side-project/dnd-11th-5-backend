@@ -1,4 +1,4 @@
-package com.example.demo.common.domain;
+package com.odiga.fiesta.common.domain;
 
 import java.time.LocalDateTime;
 

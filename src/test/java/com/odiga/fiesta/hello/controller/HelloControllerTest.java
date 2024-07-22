@@ -1,4 +1,4 @@
-package com.example.demo.hello.controller;
+package com.odiga.fiesta.hello.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.demo.ControllerTestSupport;
+import com.odiga.fiesta.ControllerTestSupport;
 
 class HelloControllerTest extends ControllerTestSupport {
 

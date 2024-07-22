@@ -1,6 +1,6 @@
-package com.example.demo.common.error.exception;
+package com.odiga.fiesta.common.error.exception;
 
-import com.example.demo.common.error.ErrorCode;
+import com.odiga.fiesta.common.error.ErrorCode;
 
 import lombok.Getter;
 
