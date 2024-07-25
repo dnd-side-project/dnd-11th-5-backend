@@ -11,6 +11,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -20,9 +22,9 @@ public class LogFilter extends OncePerRequestFilter {
 
 	@Override
 	protected void doFilterInternal(
-		final HttpServletRequest request,
-		final HttpServletResponse response,
-		final FilterChain filterChain
+		final @NonNull HttpServletRequest request,
+		final @NonNull HttpServletResponse response,
+		final @NonNull FilterChain filterChain
 	) throws ServletException, IOException {
 		long requestTime = System.currentTimeMillis();
 
@@ -34,8 +36,8 @@ public class LogFilter extends OncePerRequestFilter {
 	}
 
 	private void log(
-		final HttpServletRequest request,
-		final HttpServletResponse response,
+		final @NonNull HttpServletRequest request,
+		final @NonNull HttpServletResponse response,
 		final long duration
 	) {
 		String requestURI = request.getRequestURI();
