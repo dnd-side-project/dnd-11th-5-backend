@@ -11,9 +11,9 @@ import com.odiga.fiesta.ControllerTestSupport;
 
 class HelloControllerTest extends ControllerTestSupport {
 
-	@DisplayName("Hello 요청을 보낸다.")
+	@DisplayName("/hello 요청을 보내면 요청이 성공한다.")
 	@Test
-	void test() throws Exception {
+	void requestHello() throws Exception {
 		// given
 
 		// when // then
@@ -26,5 +26,19 @@ class HelloControllerTest extends ControllerTestSupport {
 			.andExpect(jsonPath("$.status").value("OK"))
 			.andExpect(jsonPath("$.message").value("API 응답 테스트"))
 			.andExpect(jsonPath("$.data").isString());
+	}
+
+	@DisplayName("정의되지 않은 url에 요청을 보내면 404 에러가 발생한다.")
+	@Test
+	void request404() throws Exception {
+		// given
+
+		// when // then
+		mockMvc.perform(
+				get("/hello123")
+			)
+			.andDo(print())
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.statusCode").value(404));
 	}
 }
