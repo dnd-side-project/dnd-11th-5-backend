@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,6 +23,15 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleServerException(Exception e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
+	}
+
+	// 404 : Not Found
+	@ExceptionHandler(NoResourceFoundException.class)
+	protected ResponseEntity<ErrorResponse> handleNoResourceFoundExceptionException(
+		NoResourceFoundException e) {
+		log.error(e.getMessage(), e);
+		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.NOT_FOUND);
 		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
