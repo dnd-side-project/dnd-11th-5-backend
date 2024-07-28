@@ -2,6 +2,7 @@ package com.odiga.fiesta;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -9,6 +10,7 @@ import com.odiga.fiesta.hello.controller.HelloController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ActiveProfiles("test")
+@WithMockUser
 @WebMvcTest(controllers = {
 	HelloController.class, // 사용하는 컨트롤러 여기에 추가
 })
