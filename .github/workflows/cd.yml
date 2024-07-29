@@ -3,8 +3,6 @@ name: Java CI/CD Pipeline with Gradle and Docker
 on:
   push:
     branches: [ "main" ]
-  pull_request: # TODO: 테스트용, merge시 삭제하기
-    branches: [ "main" ]
 
 permissions:
   contents: read
