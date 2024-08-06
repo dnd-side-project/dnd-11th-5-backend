@@ -114,7 +114,6 @@ jacocoTestReport {
                             '**/dto/**',
                             '**/common/**',
                             "**/repository/*",
-                            '**/Sample*'
                     ])
                 })
         )
@@ -146,8 +145,7 @@ jacocoTestCoverageVerification {
                     '*.*Application',
                     '*.dto.*',
                     '*.common.*',
-                    '*.repository.*',
-                    'com.example.demo.Sample'
+                    '*.repository.*'
             ] + Qdomains
         }
     }
