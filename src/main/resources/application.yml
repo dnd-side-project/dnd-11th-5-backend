@@ -1,53 +1,8 @@
 spring:
   profiles:
     default: local
-
-  # TODO: 프로젝트 명으로 수정하기
-  datasource:
-    url: jdbc:h2:mem:~/odiga
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-
----
-
-spring:
-  config:
-    activate:
-      on-profile: local
-
-  jpa:
-    hibernate:
-      ddl-auto: create
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-    # 아직 기본 데이터가 없으므로 주석처리
-    # defer-datasource-initialization: true
-
-  h2:
-    console:
-      enabled: true
-
 ---
 spring:
   config:
     activate:
-      on-profile: test
-
-  jpa:
-    hibernate:
-      ddl-auto: create
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
-  sql:
-    init:
-      mode: never
+      on-profile: local, dev, prod

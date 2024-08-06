@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: admin
+    password: fiesta123
+    url: jdbc:mysql://localhost:3306/fiesta
+    jpa:
+      show-sql: true
+      properties:
+        hibernate:
+          format_sql: true
+      hibernate:
+        # 실제 데이터베이스 스키마와 JPA 엔티티의 구조가 서로 같은지 비교하고,
+        # 같지 않다면 어플리케이션을 실행하지 못하도록 하는 옵션
+        ddl-auto : validate
+
+      flyway:
+        enabled: true
+        baselineOnMigrate: true
