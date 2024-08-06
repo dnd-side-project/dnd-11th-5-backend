@@ -8,11 +8,11 @@ import lombok.Getter;
 @Getter
 public class PageResponse<T> {
 
-	private List<T> content;
-	private int offset;
-	private int pageSize;
-	private int totalElements;
-	private int totalPages;
+	private final List<T> content;
+	private final int offset;
+	private final int pageSize;
+	private final int totalElements;
+	private final int totalPages;
 
 	@Builder
 	public PageResponse(List<T> content, int offset, int pageSize, int totalElements, int totalPages) {
