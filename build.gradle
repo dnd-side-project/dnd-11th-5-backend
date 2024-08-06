@@ -45,7 +45,7 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
 
     // mysql
-    implementation 'mysql:mysql-connector-java'
+    implementation 'mysql:mysql-connector-java:8.0.32'
 
     //querydsl
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
@@ -60,6 +60,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // flyway
+    implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-mysql'
 }
 
@@ -150,4 +151,12 @@ jacocoTestCoverageVerification {
             ] + Qdomains
         }
     }
+}
+
+processResources.dependsOn('copySecret')
+
+tasks.register('copySecret', Copy) {
+    from './Odiga-Submodule'
+    include "application*.yml"  // 복사할 파일들
+    into 'src/main/resources'  // 복사 위치
 }
