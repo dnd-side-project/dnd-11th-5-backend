@@ -3,9 +3,6 @@ name: Java CI/CD Pipeline with Gradle and Docker
 on:
   push:
     branches: [ "main" ]
-  # 배포 테스트
-  pull_request:
-    branches: ["main"]
 
 permissions:
   contents: read
