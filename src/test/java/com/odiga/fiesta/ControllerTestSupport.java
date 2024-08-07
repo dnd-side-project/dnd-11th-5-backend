@@ -6,13 +6,12 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.odiga.fiesta.hello.controller.HelloController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ActiveProfiles("test")
 @WithMockUser
 @WebMvcTest(controllers = {
-	HelloController.class, // 사용하는 컨트롤러 여기에 추가
+	// 사용하는 컨트롤러 여기에 추가
 })
 public abstract class ControllerTestSupport {
 	@Autowired
