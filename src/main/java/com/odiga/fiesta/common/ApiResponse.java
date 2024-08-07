@@ -11,10 +11,10 @@ import lombok.Getter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
-	private int statusCode;
-	private HttpStatus status; // reason phrase
-	private String message;
-	private T data;
+	private final int statusCode;
+	private final HttpStatus status; // reason phrase
+	private final String message;
+	private final T data;
 
 	@Builder
 	private ApiResponse(HttpStatus status, String message, T data) {
