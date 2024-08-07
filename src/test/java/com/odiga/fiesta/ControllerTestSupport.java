@@ -13,12 +13,11 @@ import com.odiga.fiesta.festival.service.CategoryService;
 import com.odiga.fiesta.festival.service.CompanionService;
 import com.odiga.fiesta.festival.service.MoodService;
 import com.odiga.fiesta.festival.service.PriorityService;
-import com.odiga.fiesta.hello.controller.HelloController;
 
 @ActiveProfiles("test")
 @WithMockUser
 @WebMvcTest(controllers = {
-	HelloController.class, // 사용하는 컨트롤러 여기에 추가
+	// 사용하는 컨트롤러 여기에 추가
 	FestivalController.class
 })
 public abstract class ControllerTestSupport {
