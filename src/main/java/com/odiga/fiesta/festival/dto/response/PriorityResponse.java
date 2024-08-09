@@ -2,7 +2,7 @@ package com.odiga.fiesta.festival.dto.response;
 
 import static lombok.AccessLevel.*;
 
-import com.odiga.fiesta.festival.domain.Priority;
+import com.odiga.fiesta.global.domain.Priority;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

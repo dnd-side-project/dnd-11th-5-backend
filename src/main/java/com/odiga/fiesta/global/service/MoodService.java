@@ -1,13 +1,13 @@
-package com.odiga.fiesta.festival.service;
+package com.odiga.fiesta.global.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.odiga.fiesta.festival.domain.Mood;
+import com.odiga.fiesta.global.domain.Mood;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
-import com.odiga.fiesta.festival.repository.MoodRepository;
+import com.odiga.fiesta.global.repository.MoodRepository;
 
 import lombok.RequiredArgsConstructor;
 

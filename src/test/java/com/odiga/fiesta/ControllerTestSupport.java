@@ -9,10 +9,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odiga.fiesta.festival.controller.FestivalController;
-import com.odiga.fiesta.festival.service.CategoryService;
-import com.odiga.fiesta.festival.service.CompanionService;
-import com.odiga.fiesta.festival.service.MoodService;
-import com.odiga.fiesta.festival.service.PriorityService;
+import com.odiga.fiesta.global.service.CategoryService;
+import com.odiga.fiesta.global.service.CompanionService;
+import com.odiga.fiesta.global.service.MoodService;
+import com.odiga.fiesta.global.service.PriorityService;
 
 @ActiveProfiles("test")
 @WithMockUser
