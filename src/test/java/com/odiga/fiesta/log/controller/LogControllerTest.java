@@ -23,11 +23,11 @@ class LogControllerTest extends ControllerTestSupport {
 	@Autowired
 	private LogService logService;
 
-	@DisplayName("활동일지 키워드들을 조회한다.")
+	@DisplayName("방문일지 키워드들을 조회한다.")
 	@Test
 	void getAllLogKeywords() throws Exception {
 		// given
-		String message = "활동일지 키워드 조회 성공";
+		String message = "방문일지 키워드 조회 성공";
 
 		List<LogKeywordResponse> mockLogKeywords = List.of();
 		when(logService.getAllLogKeywords()).thenReturn(mockLogKeywords);
@@ -60,7 +60,7 @@ class LogControllerTest extends ControllerTestSupport {
 			.andExpect(jsonPath("$.message").value(message));
 	}
 
-	@DisplayName("존재하지 않는 방문일지 ID로 조회하면 400 에러가 발생한다.")
+	@DisplayName("존재하지 않는 방문일지 ID로 조회하면 404 에러가 발생한다.")
 	@Test
 	void getLogDetail_NotFound() throws Exception {
 		// given
