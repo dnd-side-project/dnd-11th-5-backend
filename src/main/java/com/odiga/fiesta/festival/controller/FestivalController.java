@@ -12,10 +12,10 @@ import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.CompanionResponse;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
 import com.odiga.fiesta.festival.dto.response.PriorityResponse;
-import com.odiga.fiesta.festival.service.CategoryService;
-import com.odiga.fiesta.festival.service.CompanionService;
-import com.odiga.fiesta.festival.service.MoodService;
-import com.odiga.fiesta.festival.service.PriorityService;
+import com.odiga.fiesta.global.service.CategoryService;
+import com.odiga.fiesta.global.service.CompanionService;
+import com.odiga.fiesta.global.service.MoodService;
+import com.odiga.fiesta.global.service.PriorityService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

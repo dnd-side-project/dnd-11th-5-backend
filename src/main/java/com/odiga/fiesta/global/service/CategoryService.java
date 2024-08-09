@@ -1,13 +1,13 @@
-package com.odiga.fiesta.festival.service;
+package com.odiga.fiesta.global.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.odiga.fiesta.festival.domain.Category;
+import com.odiga.fiesta.global.domain.Category;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
-import com.odiga.fiesta.festival.repository.CategoryRepository;
+import com.odiga.fiesta.global.repository.CategoryRepository;
 
 import lombok.RequiredArgsConstructor;
 

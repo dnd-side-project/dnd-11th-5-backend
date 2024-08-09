@@ -11,9 +11,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import com.odiga.fiesta.MockTestSupport;
-import com.odiga.fiesta.festival.domain.Mood;
+import com.odiga.fiesta.global.domain.Mood;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
-import com.odiga.fiesta.festival.repository.MoodRepository;
+import com.odiga.fiesta.global.repository.MoodRepository;
+import com.odiga.fiesta.global.service.MoodService;
 
 class MoodServiceTest extends MockTestSupport {
 

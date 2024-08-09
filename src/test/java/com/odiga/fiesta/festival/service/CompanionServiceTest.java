@@ -11,9 +11,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import com.odiga.fiesta.MockTestSupport;
-import com.odiga.fiesta.festival.domain.Companion;
+import com.odiga.fiesta.global.domain.Companion;
 import com.odiga.fiesta.festival.dto.response.CompanionResponse;
-import com.odiga.fiesta.festival.repository.CompanionRepository;
+import com.odiga.fiesta.global.repository.CompanionRepository;
+import com.odiga.fiesta.global.service.CompanionService;
 
 class CompanionServiceTest extends MockTestSupport {
 
