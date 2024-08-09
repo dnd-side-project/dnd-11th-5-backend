@@ -21,11 +21,14 @@ public enum ErrorCode {
 	NOT_FOUND(404, "C004", "해당 리소스를 찾을 수 없습니다."),
 	BAD_REQUEST(400, "C005", "잘못된 요청입니다."),
 	MISSING_REQUEST_PARAMETER(400, "C005", "필수 파라미터가 누락되었습니다."),
-	INVALID_LENGTH(400, "C006", "올바르지 않은 길이입니다.");
+	INVALID_LENGTH(400, "C006", "올바르지 않은 길이입니다."),
 
 	/**
 	 * Domain
 	 */
+
+	// LOG
+	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다.");
 
 	private final int status;
 	private final String code;
