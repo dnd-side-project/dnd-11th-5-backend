@@ -51,10 +51,10 @@ public class Festival extends BaseEntity {
     @Column(nullable = false)
     private String tip;
 
-    @Column(name = "homepage_url", columnDefinition = "VARCHAR(1024)")
+    @Column(name = "homepage_url", length = 1024)
     private String homepageUrl;
 
-    @Column(name = "instagram_url", columnDefinition = "VARCHAR(1024)")
+    @Column(name = "instagram_url", length = 1024)
     private String instagramUrl;
 
     private String fee;
@@ -62,7 +62,7 @@ public class Festival extends BaseEntity {
     @Column(nullable = false)
     private String description;
 
-    @Column(name = "ticket_link", columnDefinition = "VARCHAR(1024)")
+    @Column(name = "ticket_link", length = 1024)
     private String ticketLink;
 
     private String playtime;

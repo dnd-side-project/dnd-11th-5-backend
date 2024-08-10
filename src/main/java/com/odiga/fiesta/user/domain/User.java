@@ -32,7 +32,7 @@ public class User extends BaseEntity {
     @Column(name = "status_message")
     private String statusMessage;
 
-    @Column(name = "profile_image", columnDefinition = "VARCHAR(1024)")
+    @Column(name = "profile_image", length = 1024)
     private String profileImage;
 
 }
