@@ -1,22 +1,24 @@
 package com.odiga.fiesta.user.domain.accounts;
 
-import com.odiga.fiesta.common.domain.BaseEntity;
+import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.oauth.OauthProvider;
 import jakarta.persistence.*;
 import lombok.*;
+import static lombok.AccessLevel.PROTECTED;
 
 @Entity
 @AllArgsConstructor
 @Getter
 @Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OauthUser extends BaseEntity {
-    @Id
-    @Column(name = "user_id")
-    private Long id;
+@NoArgsConstructor(access = PROTECTED)
+@DiscriminatorValue("oauth")
+public class OauthUser extends User {
 
     @Column(name = "provider_id", nullable = false)
     private Long providerId;
 
-    @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'Kakao'")
-    private String provider;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'KAKAO'")
+    private OauthProvider provider;
+
 }

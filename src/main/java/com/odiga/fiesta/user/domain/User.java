@@ -4,14 +4,19 @@ import com.odiga.fiesta.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static lombok.AccessLevel.PROTECTED;
+
 @Entity
 @AllArgsConstructor
 @Getter
-@Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = PROTECTED)
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "account_type")
 public class User extends BaseEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "user_id")
     private Long id;
 
@@ -27,6 +32,7 @@ public class User extends BaseEntity {
     @Column(name = "status_message")
     private String statusMessage;
 
-    @Column(name = "profile_image")
+    @Column(name = "profile_image", columnDefinition = "VARCHAR(1024)")
     private String profileImage;
+
 }

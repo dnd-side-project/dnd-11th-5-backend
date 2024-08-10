@@ -6,14 +6,18 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static lombok.AccessLevel.PROTECTED;
+
 @Entity
 @AllArgsConstructor
 @Getter
 @Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = PROTECTED)
 public class Festival extends BaseEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "festival_id")
     private Long id;
 
@@ -39,18 +43,18 @@ public class Festival extends BaseEntity {
     private String sigungu;
 
     @Column(nullable = false)
-    private float latitude;
+    private double latitude;
 
     @Column(nullable = false)
-    private float longitude;
+    private double longitude;
 
     @Column(nullable = false)
     private String tip;
 
-    @Column(name = "homepage_url")
+    @Column(name = "homepage_url", columnDefinition = "VARCHAR(1024)")
     private String homepageUrl;
 
-    @Column(name = "instagram_url")
+    @Column(name = "instagram_url", columnDefinition = "VARCHAR(1024)")
     private String instagramUrl;
 
     private String fee;
@@ -58,11 +62,12 @@ public class Festival extends BaseEntity {
     @Column(nullable = false)
     private String description;
 
-    @Column(name = "ticket_link")
+    @Column(name = "ticket_link", columnDefinition = "VARCHAR(1024)")
     private String ticketLink;
 
     private String playtime;
 
     @Column(name = "is_pending", nullable = false)
     private boolean isPending;
+
 }

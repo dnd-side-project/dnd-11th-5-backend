@@ -4,14 +4,18 @@ import com.odiga.fiesta.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static lombok.AccessLevel.PROTECTED;
+
 @Entity
 @AllArgsConstructor
 @Getter
 @Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = PROTECTED)
 public class Review extends BaseEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
     @Column(name = "user_id", nullable = false)
@@ -25,4 +29,5 @@ public class Review extends BaseEntity {
 
     @Column(nullable = false)
     private String content;
+
 }
