@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,7 @@ class LogServiceTest extends IntegrationTestSupport {
 		// then
 		assertThat(keywords).hasSize(3)
 			.usingRecursiveComparison()
-			.isEqualTo(List.of(keyword1, keyword2, keyword3).stream().map(LogKeywordResponse::of).toList());
+			.isEqualTo(Stream.of(keyword1, keyword2, keyword3).map(LogKeywordResponse::of).toList());
 	}
 
 	@DisplayName("활동일지 ID를 통해 활동일지를 상세 조회한다.")
@@ -92,7 +93,7 @@ class LogServiceTest extends IntegrationTestSupport {
 			.title(log1.getTitle())
 			.date(log1.getDate())
 			.address(log1.getAddress())
-			.rating((double) log1.getRating() / 2)
+			.rating((double)log1.getRating() / 2)
 			.content(log1.getContent())
 			.keywords(savedKeywords.stream().map(LogKeywordResponse::of).toList())
 			.images(List.of())
@@ -122,7 +123,7 @@ class LogServiceTest extends IntegrationTestSupport {
 	}
 
 	private static Log createLog() {
-		LocalDateTime date = LocalDateTime.now();
+		LocalDateTime date = LocalDateTime.of(2024, 10, 4, 10, 4);
 
 		return Log.builder()
 			.userId(1L)
