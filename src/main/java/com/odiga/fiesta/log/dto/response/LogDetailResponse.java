@@ -14,7 +14,7 @@ public class LogDetailResponse {
 	private String title;
 	private LocalDateTime date; // 페스티벌에 다녀온 일자
 	private String address;
-	private Integer rating;
+	private Double rating;
 	private String content;
 	private List<LogKeywordResponse> keywords;
 	private List<LogImageResponse> images;
