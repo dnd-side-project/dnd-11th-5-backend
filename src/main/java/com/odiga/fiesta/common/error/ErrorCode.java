@@ -52,5 +52,4 @@ public enum ErrorCode {
 	public static ErrorCode fromMessage(String message) {
 		return messageMap.get(message);
 	}
-
 }
