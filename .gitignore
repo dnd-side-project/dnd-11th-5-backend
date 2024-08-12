@@ -41,4 +41,4 @@ out/
 
 ### 설정파일
 src/main/resources/application-prod.yml
-src/main/resources/application-db.yml
+src/main/resources/application-cloud.yml

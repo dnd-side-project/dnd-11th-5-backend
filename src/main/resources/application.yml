@@ -1,8 +1,10 @@
+# application.yml
 spring:
   profiles:
-    default: local
----
-spring:
-  config:
-    activate:
-      on-profile: local, test, prod
+    group:
+      local:
+        - cloud
+      prod:
+        - cloud
+
+    active: local
