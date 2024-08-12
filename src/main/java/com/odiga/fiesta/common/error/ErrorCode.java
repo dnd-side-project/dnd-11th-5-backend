@@ -13,6 +13,8 @@ public enum ErrorCode {
 
 	//Internal Server Error
 	INTERNAL_SERVER_ERROR(500, "S001", "서버에 문제가 생겼습니다."),
+	UPLOAD_FAIL(500, "S002", "파일 업로드에 실패하였습니다."),
+
 
 	// 400 Client Error
 	METHOD_NOT_ALLOWED(405, "C001", "적절하지 않은 HTTP 메소드입니다."),
@@ -24,6 +26,7 @@ public enum ErrorCode {
 	INVALID_LENGTH(400, "C006", "올바르지 않은 길이입니다."),
 	INVALID_IMAGE_TYPE(400, "C007", "지원하지 않는 이미지 형식입니다."),
 	INVALID_EXTENSION_TYPE(400, "C008", "파일의 확장자가 잘못되었습니다."),
+
 	/**
 	 * Domain
 	 */
