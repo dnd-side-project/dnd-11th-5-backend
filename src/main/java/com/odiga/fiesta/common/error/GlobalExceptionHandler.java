@@ -12,6 +12,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import com.odiga.fiesta.common.error.exception.CustomException;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -97,6 +99,14 @@ public class GlobalExceptionHandler {
 		MissingServletRequestParameterException e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.MISSING_REQUEST_PARAMETER);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
+	}
+
+	// Custom Exception
+	@ExceptionHandler(CustomException.class)
+	public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
+		log.warn(e.getMessage(), e);
+		ErrorResponse errorResponse = ErrorResponse.of(e.getErrorCode());
 		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 }

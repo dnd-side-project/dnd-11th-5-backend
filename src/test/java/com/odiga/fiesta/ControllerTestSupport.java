@@ -13,12 +13,15 @@ import com.odiga.fiesta.festival.service.CategoryService;
 import com.odiga.fiesta.festival.service.CompanionService;
 import com.odiga.fiesta.festival.service.MoodService;
 import com.odiga.fiesta.festival.service.PriorityService;
+import com.odiga.fiesta.log.controller.LogController;
+import com.odiga.fiesta.log.service.LogService;
 
 @ActiveProfiles("test")
 @WithMockUser
 @WebMvcTest(controllers = {
 	// 사용하는 컨트롤러 여기에 추가
-	FestivalController.class
+	FestivalController.class,
+	LogController.class
 })
 public abstract class ControllerTestSupport {
 	@Autowired
@@ -39,4 +42,8 @@ public abstract class ControllerTestSupport {
 
 	@MockBean
 	protected PriorityService priorityService;
+
+	@MockBean
+	protected LogService logService;
+
 }
