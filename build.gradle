@@ -116,8 +116,8 @@ jacocoTestReport {
                             '**/*Application*',
                             '**/dto/**',
                             '**/common/**',
-                            "**/repository/*",
-                            "**/domain/**",
+                            '**/repository/*',
+                            '**/domain/**',
                             '**/S3Service*'
                     ])
                 })
@@ -152,7 +152,7 @@ jacocoTestCoverageVerification {
                     '*.common.*',
                     '*.repository.*',
                     '*.domain.*',
-                    '*.S3Servie*'
+                    '*.S3Service*'
             ] + Qdomains
         }
     }
