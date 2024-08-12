@@ -1,8 +1,8 @@
-package com.odiga.fiesta.festival.repository;
+package com.odiga.fiesta.category.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.odiga.fiesta.festival.domain.Category;
+import com.odiga.fiesta.category.domain.Category;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 }

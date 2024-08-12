@@ -5,9 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.odiga.fiesta.festival.domain.Mood;
+import com.odiga.fiesta.mood.domain.Mood;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
-import com.odiga.fiesta.festival.repository.MoodRepository;
+import com.odiga.fiesta.mood.repository.MoodRepository;
 
 import lombok.RequiredArgsConstructor;
 
