@@ -1,10 +1,13 @@
 package com.odiga.fiesta.user.domain.accounts;
 
 import com.odiga.fiesta.user.domain.User;
-import com.odiga.fiesta.user.oauth.OauthProvider;
+import com.odiga.fiesta.user.domain.oauth.OauthProvider;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import static lombok.AccessLevel.PROTECTED;
+
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @AllArgsConstructor
@@ -18,7 +21,8 @@ public class OauthUser extends User {
     private Long providerId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'KAKAO'")
+    @NotNull
+    @ColumnDefault("KAKAO")
     private OauthProvider provider;
 
 }
