@@ -93,7 +93,6 @@ class LogServiceTest extends IntegrationTestSupport {
 			.title(log1.getTitle())
 			.date(log1.getDate())
 			.address(log1.getAddress())
-			.rating((double)log1.getRating() / 2)
 			.content(log1.getContent())
 			.keywords(savedKeywords.stream().map(LogKeywordResponse::of).toList())
 			.images(List.of())
@@ -132,7 +131,6 @@ class LogServiceTest extends IntegrationTestSupport {
 			.content("활동일지 내용")
 			.date(date)
 			.isPublic(true)
-			.rating(7)
 			.build();
 	}
 

@@ -7,3 +7,6 @@ ALTER TABLE `log`
 
 ALTER TABLE `log_image`
     MODIFY `image_url` varchar(2083) NOT NULL;
+
+ALTER TABLE `log`
+    DROP COLUMN `rating`;

@@ -48,23 +48,18 @@ public class Log extends BaseEntity {
 	@NotNull
 	private Boolean isPublic;
 
-	@NotNull
-	private Integer rating;
-
 	@Builder
-	private Log(Long userId, String address, String title, String content, LocalDateTime date, Boolean isPublic,
-		Integer rating) {
+	private Log(Long userId, String address, String title, String content, LocalDateTime date, Boolean isPublic) {
 		this.userId = userId;
 		this.address = address;
 		this.title = title;
 		this.content = content;
 		this.date = date;
 		this.isPublic = isPublic;
-		this.rating = rating;
 	}
 
 	public static Log of(Long userId, String address, String title, String content, LocalDateTime date,
-		Boolean isPublic, Integer rating) {
-		return new Log(userId, address, title, content, date, isPublic, rating);
+		Boolean isPublic) {
+		return new Log(userId, address, title, content, date, isPublic);
 	}
 }

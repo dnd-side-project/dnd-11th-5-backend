@@ -60,7 +60,6 @@ public class LogService {
 			.title(log.getTitle())
 			.date(log.getDate())
 			.address(log.getAddress())
-			.rating((double) log.getRating() / 2)
 			.content(log.getContent())
 			.keywords(keywords)
 			.images(logImages)
