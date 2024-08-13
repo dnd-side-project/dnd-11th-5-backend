@@ -47,4 +47,17 @@ class FestivalControllerTest extends ControllerTestSupport {
 			.andExpect(jsonPath("$.message").value("페스티벌 월간 조회 성공"))
 			.andExpect(jsonPath("$.data").isNotEmpty());
 	}
+
+	@DisplayName("유효하지 않는 날짜 값이 들어오면 에러가 발생한다.")
+	@Test
+	void getFestivalsByDay_invalidParameter() throws Exception {
+		// given // when // then
+		mockMvc.perform(get(PREFIX + "/daily")
+				.param("year", "2023")
+				.param("month", "11")
+				.param("day", "43")
+			)
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("유효하지 않은 날짜입니다."));
+	}
 }
