@@ -1,3 +1,5 @@
+package com.odiga.fiesta;
+
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +15,7 @@ import redis.embedded.RedisServer;
 public class EmbeddedRedisConfig {
 	private RedisServer redisServer;
 
-	public EmbeddedRedisConfig(@Value("${spring.redis.port}") int port) throws IOException {
+	public EmbeddedRedisConfig(@Value("${spring.data.redis.port}") int port) throws IOException {
 		this.redisServer = new RedisServer(port);
 	}
 
