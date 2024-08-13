@@ -19,9 +19,9 @@ import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
-import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalBasicResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 
