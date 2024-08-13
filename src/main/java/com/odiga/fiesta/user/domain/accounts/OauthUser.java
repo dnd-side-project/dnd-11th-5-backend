@@ -12,7 +12,6 @@ import org.hibernate.annotations.ColumnDefault;
 @Entity
 @AllArgsConstructor
 @Getter
-@Builder
 @NoArgsConstructor(access = PROTECTED)
 @DiscriminatorValue("oauth")
 public class OauthUser extends User {
