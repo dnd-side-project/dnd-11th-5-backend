@@ -1,4 +1,4 @@
-package com.odiga.fiesta.festival.domain;
+package com.odiga.fiesta.priority.domain;
 
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
