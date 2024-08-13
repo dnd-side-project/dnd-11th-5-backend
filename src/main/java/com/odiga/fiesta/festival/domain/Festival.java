@@ -1,17 +1,15 @@
 package com.odiga.fiesta.festival.domain;
 
 import static jakarta.persistence.GenerationType.*;
+import static java.util.stream.Collectors.*;
 import static lombok.AccessLevel.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.odiga.fiesta.common.domain.BaseEntity;
-import com.odiga.fiesta.festival.dto.response.FestivalSimpleResponse;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,12 +19,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @AllArgsConstructor
 @Getter
 @Builder
 @NoArgsConstructor(access = PROTECTED)
+@ToString
 public class Festival extends BaseEntity {
 
 	@Id
@@ -41,10 +41,10 @@ public class Festival extends BaseEntity {
 	private String name;
 
 	@Column(name = "start_date", nullable = false)
-	private LocalDateTime startDate;
+	private LocalDate startDate;
 
 	@Column(name = "end_date", nullable = false)
-	private LocalDateTime endDate;
+	private LocalDate endDate;
 
 	@Column(nullable = false)
 	private String address;
@@ -86,10 +86,10 @@ public class Festival extends BaseEntity {
 	public static Map<LocalDate, List<Festival>> getGroupedByDate(List<Festival> festivals) {
 		return festivals.stream()
 			.flatMap(festival ->
-				festival.getStartDate().toLocalDate().datesUntil(festival.getEndDate().toLocalDate().plusDays(1))
+				festival.getStartDate().datesUntil(festival.getEndDate().plusDays(1))
 					.map(date -> new AbstractMap.SimpleEntry<>(date, festival)))
 			.collect(
-				Collectors.groupingBy(entry -> entry.getKey(),
-					Collectors.mapping(entry -> entry.getValue(), Collectors.toList())));
+				groupingBy(AbstractMap.SimpleEntry::getKey,
+					mapping(AbstractMap.SimpleEntry::getValue, toList())));
 	}
 }
