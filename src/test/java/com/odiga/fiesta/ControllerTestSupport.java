@@ -1,5 +1,6 @@
 package com.odiga.fiesta;
 
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -8,9 +9,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.odiga.fiesta.festival.controller.FestivalController;
 import com.odiga.fiesta.festival.controller.FestivalStaticDataController;
 import com.odiga.fiesta.festival.service.CategoryService;
 import com.odiga.fiesta.festival.service.CompanionService;
+import com.odiga.fiesta.festival.service.FestivalService;
 import com.odiga.fiesta.festival.service.MoodService;
 import com.odiga.fiesta.festival.service.PriorityService;
 import com.odiga.fiesta.log.controller.LogController;
@@ -20,6 +23,7 @@ import com.odiga.fiesta.log.service.LogService;
 @WithMockUser
 @WebMvcTest(controllers = {
 	// 사용하는 컨트롤러 여기에 추가
+	FestivalController.class,
 	FestivalStaticDataController.class,
 	LogController.class
 })
@@ -46,4 +50,6 @@ public abstract class ControllerTestSupport {
 	@MockBean
 	protected LogService logService;
 
+	@MockBean
+	protected FestivalService festivalService;
 }

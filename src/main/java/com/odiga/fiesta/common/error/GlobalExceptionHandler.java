@@ -1,5 +1,6 @@
 package com.odiga.fiesta.common.error;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -99,6 +101,14 @@ public class GlobalExceptionHandler {
 		MissingServletRequestParameterException e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.MISSING_REQUEST_PARAMETER);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
+	}
+
+	// 유효성 검사 에러
+	@ExceptionHandler(HandlerMethodValidationException.class)
+	public ResponseEntity<Object> handleHandlerMethodValidationException(HandlerMethodValidationException e) {
+		log.warn(e.getMessage(), e);
+		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE);
 		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
