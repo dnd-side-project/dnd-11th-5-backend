@@ -3,8 +3,8 @@ package com.odiga.fiesta.festival.domain;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -19,16 +19,16 @@ class FestivalTest {
 
 		// given
 		Festival festival = createFestival(
-			LocalDateTime.of(2024, 10, 23, 0, 0),
-			LocalDateTime.of(2024, 10, 25, 23, 59)
+			LocalDate.of(2024, 10, 23),
+			LocalDate.of(2024, 10, 25)
 		);
 
-		List<Festival> festivals = Arrays.asList(festival);
+		List<Festival> festivals = Collections.singletonList(festival);
 
 		Map<LocalDate, List<Festival>> expected = Map.of(
-			LocalDate.of(2024, 10, 23), Arrays.asList(festival),
-			LocalDate.of(2024, 10, 24), Arrays.asList(festival),
-			LocalDate.of(2024, 10, 25), Arrays.asList(festival)
+			LocalDate.of(2024, 10, 23), Collections.singletonList(festival),
+			LocalDate.of(2024, 10, 24), Collections.singletonList(festival),
+			LocalDate.of(2024, 10, 25), Collections.singletonList(festival)
 		);
 
 		// when
@@ -45,13 +45,13 @@ class FestivalTest {
 	void getGroupedByDate_multipleFestival()  {
 		// given
 		Festival festival1 = createFestival(
-			LocalDateTime.of(2024, 10, 24, 0, 0),
-			LocalDateTime.of(2024, 10, 24, 23, 59)
+			LocalDate.of(2024, 10, 24),
+			LocalDate.of(2024, 10, 24)
 		);
 
 		Festival festival2 = createFestival(
-			LocalDateTime.of(2024, 10, 24, 0, 0),
-			LocalDateTime.of(2024, 10, 24, 23, 59)
+			LocalDate.of(2024, 10, 24),
+			LocalDate.of(2024, 10, 24)
 		);
 
 		List<Festival> festivals = Arrays.asList(festival1, festival2);
@@ -74,18 +74,18 @@ class FestivalTest {
 	void getGroupedByDate_overlappingFestivals()  {
 		// given
 		Festival festival1 = createFestival(
-			LocalDateTime.of(2024, 10, 23, 0, 0),
-			LocalDateTime.of(2024, 10, 25, 23, 59)
+			LocalDate.of(2024, 10, 23),
+			LocalDate.of(2024, 10, 25)
 		);
 
 		Festival festival2 = createFestival(
-			LocalDateTime.of(2024, 10, 24, 0, 0),
-			LocalDateTime.of(2024, 10, 25, 23, 59)
+			LocalDate.of(2024, 10, 24),
+			LocalDate.of(2024, 10, 25)
 		);
 
 		Festival festival3 = createFestival(
-			LocalDateTime.of(2024, 10, 23, 0, 0),
-			LocalDateTime.of(2024, 10, 26, 23, 59)
+			LocalDate.of(2024, 10, 23),
+			LocalDate.of(2024, 10, 26)
 		);
 
 		List<Festival> festivals = Arrays.asList(festival1, festival2, festival3);
@@ -94,7 +94,7 @@ class FestivalTest {
 			LocalDate.of(2024, 10, 23), Arrays.asList(festival1, festival3),
 			LocalDate.of(2024, 10, 24), Arrays.asList(festival1, festival2, festival3),
 			LocalDate.of(2024, 10, 25), Arrays.asList(festival1, festival2, festival3),
-			LocalDate.of(2024, 10, 26), Arrays.asList(festival3)
+			LocalDate.of(2024, 10, 26), Collections.singletonList(festival3)
 		);
 
 		// when
@@ -106,7 +106,7 @@ class FestivalTest {
 			.isEqualTo(expected);
 	}
 
-	private static Festival createFestival(LocalDateTime startDate, LocalDateTime endDate) {
+	private static Festival createFestival(LocalDate startDate, LocalDate endDate) {
 		return Festival.builder()
 			.id(1L)
 			.userId(1L)
