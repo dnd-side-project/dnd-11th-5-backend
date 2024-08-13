@@ -12,12 +12,20 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.odiga.fiesta.IntegrationTestSupport;
 import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.domain.FestivalImage;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
+import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.sido.domain.Sido;
+import com.odiga.fiesta.sido.repository.SidoRepository;
 
 class FestivalServiceTest extends IntegrationTestSupport {
 
@@ -26,6 +34,12 @@ class FestivalServiceTest extends IntegrationTestSupport {
 
 	@Autowired
 	private FestivalRepository festivalRepository;
+
+	@Autowired
+	private FestivalImageRepository festivalImageRepository;
+
+	@Autowired
+	private SidoRepository sidoRepository;
 
 	@DisplayName("startDate 와 endDate 사이에 해당 월이 끼어있어도 페스티벌이 포함되어야 한다.")
 	@Test
@@ -117,6 +131,62 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		}
 	}
 
+	@DisplayName("해당 일자에 개최되고 있는 페스티벌을 조회할 수 있다.")
+	@Test
+	void getFestivalsByDay() {
+		// given
+		Sido sido = createSido();
+		Sido savedSido = sidoRepository.save(sido);
+
+		Festival festival1 = createFestival(LocalDate.of(2024, 10, 1), LocalDate.of(2024, 10, 10), savedSido.getId());
+		Festival festival2 = createFestival(LocalDate.of(2024, 10, 5), LocalDate.of(2024, 10, 10), savedSido.getId());
+
+		Festival savedFestival1 = festivalRepository.save(festival1);
+		Festival savedFestival2 = festivalRepository.save(festival2);
+
+		FestivalImage image1 = FestivalImage.builder().festivalId(savedFestival1.getId()).imageUrl("imageUrl1").build();
+		FestivalImage image2 = FestivalImage.builder().festivalId(savedFestival2.getId()).imageUrl("imageUrl2").build();
+
+		FestivalImage savedImage1 = festivalImageRepository.save(image1);
+		FestivalImage savedImage2 = festivalImageRepository.save(image2);
+
+		Pageable pageable = PageRequest.of(0, 10);
+
+		// when
+		Page<FestivalInfoResponse> result = festivalService.getFestivalsByDay(null, 2024, 10, 4, pageable);
+
+		// then
+		assertThat(result.getContent()).hasSize(1)
+			.extracting("festivalId", "name", "sido", "sigungu", "thumbnailImage",
+				"startDate", "endDate", "isBookmarked")
+			.containsExactlyInAnyOrder(
+				tuple(savedFestival1.getId(), savedFestival1.getName(), savedSido.getName(), savedFestival1.getSigungu(),
+					savedImage1.getImageUrl(), savedFestival1.getStartDate(), savedFestival1.getEndDate(), false)
+			);
+	}
+
+	private static Festival createFestival(LocalDate startDate, LocalDate endDate, Long sidoId) {
+		return Festival.builder()
+			.userId(1L)
+			.name("페스티벌 이름")
+			.startDate(startDate)
+			.endDate(endDate)
+			.address("페스티벌 주소")
+			.sidoId(sidoId)
+			.sigungu("시군구")
+			.latitude(10.1)
+			.longitude(10.1)
+			.tip("페스티벌 팁")
+			.homepageUrl("홈페이지 url")
+			.instagramUrl("인스타그램 url")
+			.fee("비용")
+			.description("페스티벌 상세 설명")
+			.ticketLink("티켓 링크")
+			.playtime("페스티벌 진행 시간")
+			.isPending(false)
+			.build();
+	}
+
 	private static Festival createFestival(LocalDate startDate, LocalDate endDate) {
 		return Festival.builder()
 			.userId(1L)
@@ -136,6 +206,13 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.ticketLink("티켓 링크")
 			.playtime("페스티벌 진행 시간")
 			.isPending(false)
+			.build();
+	}
+
+	private static Sido createSido() {
+		return Sido.builder()
+			.name("부산")
+			.code(42)
 			.build();
 	}
 }

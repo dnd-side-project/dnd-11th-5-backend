@@ -9,14 +9,20 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
-import com.odiga.fiesta.festival.dto.response.FestivalSimpleResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalBasicResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
+import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FestivalService {
 
 	private final FestivalRepository festivalRepository;
+	private final FestivalImageRepository festivalImageRepository;
 
 	public FestivalMonthlyResponse getMonthlyFestivals(int year, int month) {
 		validateMonth(month);
@@ -53,6 +60,31 @@ public class FestivalService {
 			.build();
 	}
 
+	public Page<FestivalInfoResponse> getFestivalsByDay(Long userId, int year, int month, int day,
+		Pageable pageable) {
+		validateFestivalDay(year, month, day);
+
+		LocalDate date = LocalDate.of(year, month, day);
+
+		Page<FestivalWithBookmarkAndSido> festivals = festivalRepository.findFestivalsInDate(date,
+			pageable, userId);
+
+		List<FestivalInfoResponse> responses = festivals.getContent().stream().map(festival -> {
+			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
+			return FestivalInfoResponse.of(festival, thumbnailImage);
+		}).toList();
+
+		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
+	}
+
+	private void validateFestivalDay(int year, int month, int day) {
+		YearMonth yearMonth = YearMonth.of(year, month);
+
+		if (!yearMonth.isValidDay(day)) {
+			throw new CustomException(INVALID_FESTIVAL_DATE);
+		}
+	}
+
 	private static List<LocalDate> getAllDatesInMonth(LocalDate startOfMonth, LocalDate endOfMonth) {
 		return startOfMonth
 			.datesUntil(endOfMonth.plusDays(1))
@@ -74,7 +106,7 @@ public class FestivalService {
 			.map(date -> DailyFestivalContents.builder()
 				.date(date)
 				.festivals(groupedByDate.getOrDefault(date, List.of()).stream()
-					.map(FestivalSimpleResponse::of)
+					.map(FestivalBasicResponse::of)
 					.limit(3)
 					.collect(toList()))
 				.totalElements(groupedByDate.getOrDefault(date, List.of()).size())
@@ -87,4 +119,5 @@ public class FestivalService {
 			throw new CustomException(INVALID_FESTIVAL_MONTH);
 		}
 	}
+
 }
