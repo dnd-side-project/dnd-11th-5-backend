@@ -11,9 +11,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import com.odiga.fiesta.MockTestSupport;
-import com.odiga.fiesta.festival.domain.Priority;
+import com.odiga.fiesta.priority.domain.Priority;
 import com.odiga.fiesta.festival.dto.response.PriorityResponse;
-import com.odiga.fiesta.festival.repository.PriorityRepository;
+import com.odiga.fiesta.priority.repository.PriorityRepository;
 
 class PriorityServiceTest extends MockTestSupport {
 
