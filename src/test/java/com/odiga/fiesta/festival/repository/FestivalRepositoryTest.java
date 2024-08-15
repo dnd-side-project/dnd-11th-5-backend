@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -12,18 +13,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import com.odiga.fiesta.RepositoryTestSupport;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.FestivalBookmark;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
+import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.sido.domain.Sido;
 import com.odiga.fiesta.user.domain.User;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-class FestivalCustomRepositoryImplTest extends RepositoryTestSupport {
+class FestivalRepositoryTest extends RepositoryTestSupport {
 
 	@Autowired
 	private FestivalRepository festivalRepository;
@@ -31,7 +34,7 @@ class FestivalCustomRepositoryImplTest extends RepositoryTestSupport {
 	@PersistenceContext
 	private EntityManager em;
 
-	@DisplayName("현재 날짜에 진행 중인 페스티벌을 조회할 수 있다.")
+	@DisplayName("페스티벌 일간 조회 - 주어진 날짜에 개최되고 있는 페스티벌을 조회할 수 있다.")
 	@Test
 	void findFestivalsInDate() {
 		// given
@@ -82,9 +85,9 @@ class FestivalCustomRepositoryImplTest extends RepositoryTestSupport {
 		assertEquals("부산", festivalWithBookmark2.getSido());
 	}
 
-	@DisplayName("페스티벌 페이징 조회 테스트")
+	@DisplayName("페스티벌 일간 조회 - 페이지네이션")
 	@Test
-	void findFestivalsInDate_paginationn() {
+	void findFestivalsInDate_pagination() {
 		// given
 		User user = createUser();
 		em.persist(user);
@@ -100,7 +103,8 @@ class FestivalCustomRepositoryImplTest extends RepositoryTestSupport {
 		Pageable pageable = PageRequest.of(0, 10);
 
 		// when
-		Page<FestivalWithBookmarkAndSido> result = festivalRepository.findFestivalsInDate(LocalDate.of(2024, 10, 4), pageable, user.getId());
+		Page<FestivalWithBookmarkAndSido> result = festivalRepository.findFestivalsInDate(LocalDate.of(2024, 10, 4),
+			pageable, user.getId());
 
 		// then
 		assertThat(result).isNotNull();
@@ -112,6 +116,35 @@ class FestivalCustomRepositoryImplTest extends RepositoryTestSupport {
 		assertEquals(10, festivals.size());
 	}
 
+	@DisplayName("페스티벌 필터 조회 - endDate 가 현재 날짜 이 후여야 한다.")
+	@Test
+	void findFestivalsByFilter() {
+		// given
+		LocalDate currentDate = LocalDate.of(2024, 10, 4);
+
+		// 현재 날짜까지 진행되는 경우
+		Festival festival1 = createFestival(LocalDate.of(2024, 10, 1), currentDate);
+		// 현재 날짜 부터 진행되는 경우
+		Festival festival2 = createFestival(currentDate, currentDate.plusDays(1));
+		// 페스티벌이 이미 끝난 경우
+		Festival festival3 = createFestival(LocalDate.of(2024, 10, 1), LocalDate.of(2024, 10, 3));
+
+		em.persist(festival1);
+		em.persist(festival2);
+		em.persist(festival3);
+
+		Pageable pageable = PageRequest.of(0, 10, Sort.by("startDate").ascending());
+
+		// when
+		Page<FestivalWithBookmarkAndSido> result = festivalRepository.findFestivalsByFiltersAndSort(
+			null, new FestivalFilterCondition(new HashSet<>(), new HashSet<>(), new HashSet<>()), null,
+			null, currentDate, pageable
+		);
+
+		// then
+		assertEquals(2, result.getTotalElements());
+	}
+
 	private static Festival createFestival(LocalDate startDate, LocalDate endDate, Long sidoId) {
 		return Festival.builder()
 			.userId(1L)
@@ -120,6 +153,28 @@ class FestivalCustomRepositoryImplTest extends RepositoryTestSupport {
 			.endDate(endDate)
 			.address("페스티벌 주소")
 			.sidoId(sidoId)
+			.sigungu("시군구")
+			.latitude(10.1)
+			.longitude(10.1)
+			.tip("페스티벌 팁")
+			.homepageUrl("홈페이지 url")
+			.instagramUrl("인스타그램 url")
+			.fee("비용")
+			.description("페스티벌 상세 설명")
+			.ticketLink("티켓 링크")
+			.playtime("페스티벌 진행 시간")
+			.isPending(false)
+			.build();
+	}
+
+	private static Festival createFestival(LocalDate startDate, LocalDate endDate) {
+		return Festival.builder()
+			.userId(1L)
+			.name("페스티벌 이름")
+			.startDate(startDate)
+			.endDate(endDate)
+			.address("페스티벌 주소")
+			.sidoId(1L)
 			.sigungu("시군구")
 			.latitude(10.1)
 			.longitude(10.1)
