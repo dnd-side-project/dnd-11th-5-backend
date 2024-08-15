@@ -24,9 +24,13 @@ public class Category {
 	@Column(name = "category", nullable = false)
 	private String name;
 
+	@Column(name = "emoji", nullable = false)
+	private String emoji;
+
 	@Builder
-	public Category(Long id, String name) {
+	public Category(Long id, String name, String emoji) {
 		this.id = id;
 		this.name = name;
+		this.emoji = emoji;
 	}
 }

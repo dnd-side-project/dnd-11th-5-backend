@@ -13,11 +13,13 @@ public class CategoryResponse {
 
 	private final Long categoryId;
 	private final String name;
+	private final String emoji;
 
 	public static CategoryResponse of(final Category category) {
 		return new CategoryResponse(
 			category.getId(),
-			category.getName()
+			category.getName(),
+			category.getEmoji()
 		);
 	}
 }

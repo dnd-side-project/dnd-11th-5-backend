@@ -24,5 +24,4 @@ public class CategoryService {
 			.map(CategoryResponse::of)
 			.toList();
 	}
-
 }
