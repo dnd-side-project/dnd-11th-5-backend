@@ -21,12 +21,16 @@ public class Category {
 	@Column(name = "category_id")
 	private Long id;
 
-	@Column(nullable = false)
-	private String category;
+	@Column(name = "category", nullable = false)
+	private String name;
+
+	@Column(name = "emoji", nullable = false)
+	private String emoji;
 
 	@Builder
-	public Category(Long id, String category) {
+	public Category(Long id, String name, String emoji) {
 		this.id = id;
-		this.category = category;
+		this.name = name;
+		this.emoji = emoji;
 	}
 }

@@ -28,8 +28,8 @@ class CategoryServiceTest extends MockTestSupport {
 	void getAllCategories() {
 		// given
 		List<Category> categories = List.of(
-			Category.builder().id(1L).category("문화").build(),
-			Category.builder().id(2L).category("영화").build()
+			Category.builder().id(1L).name("문화").build(),
+			Category.builder().id(2L).name("영화").build()
 		);
 
 		given(categoryRepository.findAll())
