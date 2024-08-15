@@ -21,12 +21,12 @@ public class Category {
 	@Column(name = "category_id")
 	private Long id;
 
-	@Column(nullable = false)
-	private String category;
+	@Column(name = "category", nullable = false)
+	private String name;
 
 	@Builder
-	public Category(Long id, String category) {
+	public Category(Long id, String name) {
 		this.id = id;
-		this.category = category;
+		this.name = name;
 	}
 }

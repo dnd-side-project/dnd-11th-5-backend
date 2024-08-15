@@ -12,12 +12,12 @@ import lombok.RequiredArgsConstructor;
 public class CategoryResponse {
 
 	private final Long categoryId;
-	private final String category;
+	private final String name;
 
 	public static CategoryResponse of(final Category category) {
 		return new CategoryResponse(
 			category.getId(),
-			category.getCategory()
+			category.getName()
 		);
 	}
 }
