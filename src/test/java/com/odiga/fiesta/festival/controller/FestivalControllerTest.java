@@ -101,4 +101,26 @@ class FestivalControllerTest extends ControllerTestSupport {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value(INVALID_CURRENT_LOCATION.getMessage()));
 	}
+
+	@DisplayName("페스티벌 이름 검색 - 검색어가 비어있으면 에러가 발생한다.")
+	@Test
+	void getFestivalsByQuery_QueryIsNull() throws Exception {
+		// given // when // then
+		mockMvc.perform(get("/api/v1/festivals/search")
+				.param("query", "")
+			)
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value(QUERY_CANNOT_BE_EMPTY.getMessage()));
+	}
+
+	@DisplayName("페스티벌 이름 검색 - 검색어가 공백이면 에러가 발생한다.")
+	@Test
+	void getFestivalsByQuery_QueryIsBlank() throws Exception {
+		// given // when // then
+		mockMvc.perform(get("/api/v1/festivals/search")
+				.param("query", " ")
+			)
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value(QUERY_CANNOT_BE_BLANK.getMessage()));
+	}
 }

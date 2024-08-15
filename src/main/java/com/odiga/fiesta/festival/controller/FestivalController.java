@@ -98,6 +98,34 @@ public class FestivalController {
 		return ResponseEntity.ok(BasicResponse.ok("페스티벌 필터 조회 성공", PageResponse.of(festivals)));
 	}
 
+	@Operation(
+		summary = "페스티벌 이름 검색",
+		description = "페스티벌을 이름으로 검색합니다."
+	)
+	@GetMapping("/search")
+	public ResponseEntity<BasicResponse<PageResponse<FestivalInfoResponse>>> getFestivalsByQuery(
+		@AuthenticationPrincipal User user,
+		String query,
+		@PageableDefault(sort = {"startDate"}, direction = Sort.Direction.ASC, size = 6) Pageable pageable) {
+
+		validateQuery(query);
+
+		Page<FestivalInfoResponse> festivals = festivalService.getFestivalsByQuery(
+			isNull(user) ? null : user.getId(), query, pageable);
+
+		return ResponseEntity.ok(BasicResponse.ok("페스티벌 이름 검색 성공", PageResponse.of(festivals)));
+	}
+
+	private void validateQuery(String query) {
+		if (isNull(query) || query.isEmpty()) {
+			throw new CustomException(QUERY_CANNOT_BE_EMPTY);
+		}
+
+		if (query.isBlank()) {
+			throw new CustomException(QUERY_CANNOT_BE_BLANK);
+		}
+	}
+
 	private void validateFestivalDay(int year, int month, int day) {
 		YearMonth yearMonth = YearMonth.of(year, month);
 

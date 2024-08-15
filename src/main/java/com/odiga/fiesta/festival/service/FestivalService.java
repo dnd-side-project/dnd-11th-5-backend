@@ -90,18 +90,26 @@ public class FestivalService {
 
 	public Page<FestivalInfoResponse> getFestivalByFiltersAndSort(Long userId,
 		FestivalFilterRequest festivalFilterRequest,
-		Double latitude, Double longitude,Pageable pageable) {
+		Double latitude, Double longitude, Pageable pageable) {
 
 		FestivalFilterCondition festivalFilterCondition = getFestivalFilterCondition(festivalFilterRequest);
 
 		LocalDate date = LocalDate.now(clock);
-		System.out.println("date: " + date);
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters = festivalRepository.findFestivalsByFiltersAndSort(userId,
 			festivalFilterCondition, latitude, longitude, date, pageable);
 
 		List<FestivalInfoResponse> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
 
 		return new PageImpl<>(responses, pageable, festivalsByFilters.getTotalElements());
+	}
+
+	public Page<FestivalInfoResponse> getFestivalsByQuery(Long userId, String query, Pageable pageable) {
+		Page<FestivalWithBookmarkAndSido> festivalsByQuery = festivalRepository.findFestivalsByQuery(userId, query,
+			pageable);
+
+		List<FestivalInfoResponse> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByQuery);
+
+		return new PageImpl<>(responses, pageable, festivalsByQuery.getTotalElements());
 	}
 
 	private List<FestivalInfoResponse> getFestivalWithBookmarkAndSidoAndThumbnailImage(
@@ -190,4 +198,5 @@ public class FestivalService {
 			throw new CustomException(INVALID_FESTIVAL_DATE);
 		}
 	}
+
 }

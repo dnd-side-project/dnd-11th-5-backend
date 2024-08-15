@@ -19,4 +19,6 @@ public interface FestivalCustomRepository {
 	Page<FestivalWithBookmarkAndSido> findFestivalsByFiltersAndSort(Long userId,
 		FestivalFilterCondition festivalFilterCondition, Double latitude, Double longitude,
 		LocalDate date, Pageable pageable);
+
+	Page<FestivalWithBookmarkAndSido> findFestivalsByQuery(Long userId, String query, Pageable pageable);
 }

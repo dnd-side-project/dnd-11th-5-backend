@@ -63,7 +63,7 @@ class FestivalServiceTest {
 	private Clock clock;
 
 	@BeforeEach
-	void beforeEach(){
+	void beforeEach() {
 		doReturn(Instant.now(CURRENT_CLOCK))
 			.when(clock)
 			.instant();
@@ -93,7 +93,7 @@ class FestivalServiceTest {
 		List<DailyFestivalContents> contents = response.getContents();
 		YearMonth yearMonth = YearMonth.of(year, month);
 
-		assertEquals(yearMonth.lengthOfMonth(), contents.size()); 
+		assertEquals(yearMonth.lengthOfMonth(), contents.size());
 
 		List<LocalDate> allDatesInApril = Stream.iterate(yearMonth.atDay(1), date -> date.plusDays(1))
 			.limit(yearMonth.lengthOfMonth())
@@ -101,10 +101,10 @@ class FestivalServiceTest {
 
 		for (int i = 0; i < contents.size(); i++) {
 			DailyFestivalContents dailyContent = contents.get(i);
-			assertEquals(allDatesInApril.get(i), dailyContent.getDate()); 
-			assertEquals(1, dailyContent.getFestivals().size()); 
-			assertEquals(festival1.getName(), dailyContent.getFestivals().get(0).getName()); 
-			assertEquals(1, dailyContent.getTotalElements()); 
+			assertEquals(allDatesInApril.get(i), dailyContent.getDate());
+			assertEquals(1, dailyContent.getFestivals().size());
+			assertEquals(festival1.getName(), dailyContent.getFestivals().get(0).getName());
+			assertEquals(1, dailyContent.getTotalElements());
 		}
 	}
 
@@ -251,6 +251,67 @@ class FestivalServiceTest {
 			.containsExactly(
 				"1", "4", "2", "3"
 			);
+	}
+
+	@DisplayName("페스티벌 이름 검색")
+	@Test
+	void getFestivalsByQuery() {
+		// given
+		Festival festival1 = createFestival("펜타포트");
+		Festival festival2 = createFestival("펜타타");
+		Festival festival3 = createFestival("락페스티벌");
+		festivalRepository.saveAll(List.of(festival1, festival2, festival3));
+
+		Pageable pageable = PageRequest.of(0, 6);
+
+		// when
+		Page<FestivalInfoResponse> festivals = festivalService.getFestivalsByQuery(null, "펜타", pageable);
+
+		// then
+		assertThat(festivals.getContent())
+			.hasSize(2)
+			.extracting("name")
+			.containsExactly("펜타포트", "펜타타");
+	}
+
+	@DisplayName("페스티벌 이름 검색 - 매칭되는 데이터가 없을 떄 빈 리스트 반환")
+	@Test
+	void getFestivalsByQuery_EmptyResult() {
+		// given
+		Festival festival1 = createFestival("가나다라");
+		Festival festival2 = createFestival("가나다라");
+		Festival festival3 = createFestival("가나다라");
+		festivalRepository.saveAll(List.of(festival1, festival2, festival3));
+
+		Pageable pageable = PageRequest.of(0, 6);
+
+		// when
+		Page<FestivalInfoResponse> festivals = festivalService.getFestivalsByQuery(null, "마바사아", pageable);
+
+		// then
+		assertThat(festivals.getContent()).isEmpty();
+	}
+
+	private static Festival createFestival(String name) {
+		return Festival.builder()
+			.userId(1L)
+			.name(name)
+			.startDate(LocalDate.of(2024, 1, 1))
+			.endDate(LocalDate.of(2024, 1, 10))
+			.address("페스티벌 주소")
+			.sidoId(1L)
+			.sigungu("시군구")
+			.latitude(10.1)
+			.longitude(10.1)
+			.tip("페스티벌 팁")
+			.homepageUrl("홈페이지 url")
+			.instagramUrl("인스타그램 url")
+			.fee("비용")
+			.description("페스티벌 상세 설명")
+			.ticketLink("티켓 링크")
+			.playtime("페스티벌 진행 시간")
+			.isPending(false)
+			.build();
 	}
 
 	private static Festival createFestival(LocalDate startDate, LocalDate endDate, Long sidoId) {

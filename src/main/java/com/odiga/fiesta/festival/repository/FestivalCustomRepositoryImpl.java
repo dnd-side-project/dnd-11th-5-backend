@@ -89,6 +89,22 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
 	}
 
+	@Override
+	public Page<FestivalWithBookmarkAndSido> findFestivalsByQuery(Long userId, String query, Pageable pageable) {
+		List<FestivalWithBookmarkAndSido> festivals =
+			selectFestivalsWithBookmarkAndSido(pageable, userId)
+				.where(festivalNameContains(query))
+				.orderBy(festival.startDate.asc())
+				.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory
+			.select(festival.count())
+			.from(festival)
+			.where(festivalNameContains(query));
+
+		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
+	}
+
 	private List<OrderSpecifier> getAllOrderSpecifiers(Pageable pageable, Double latitude, Double longitude) {
 		List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
 
@@ -220,6 +236,10 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 
 	private BooleanExpression getDateRangeCondition(LocalDate date) {
 		return festival.startDate.loe(date).and(festival.endDate.goe(date));
+	}
+
+	private BooleanExpression festivalNameContains(String name) {
+		return festival.name.contains(name);
 	}
 }
 
