@@ -15,7 +15,6 @@ public enum ErrorCode {
 	INTERNAL_SERVER_ERROR(500, "S001", "서버에 문제가 생겼습니다."),
 	UPLOAD_FAIL(500, "S002", "파일 업로드에 실패하였습니다."),
 
-
 	// 400 Client Error
 	METHOD_NOT_ALLOWED(405, "C001", "적절하지 않은 HTTP 메소드입니다."),
 	INVALID_TYPE_VALUE(400, "C002", "요청 값의 타입이 잘못되었습니다."),
@@ -30,6 +29,9 @@ public enum ErrorCode {
 	/**
 	 * Domain
 	 */
+
+	// Festival
+	INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."),
 
 	// LOG
 	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다.");
