@@ -4,10 +4,15 @@ import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static com.odiga.fiesta.festival.domain.Festival.*;
 import static java.util.stream.Collectors.*;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -15,15 +20,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
+import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
+import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
 import com.odiga.fiesta.festival.dto.response.FestivalBasicResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.sido.repository.SidoRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +42,11 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @Slf4j
 public class FestivalService {
+
+	private final Clock clock;
+
+	private final CategoryRepository categoryRepository;
+	private final SidoRepository sidoRepository;
 
 	private final FestivalRepository festivalRepository;
 	private final FestivalImageRepository festivalImageRepository;
@@ -69,20 +83,61 @@ public class FestivalService {
 		Page<FestivalWithBookmarkAndSido> festivals = festivalRepository.findFestivalsInDate(date,
 			pageable, userId);
 
-		List<FestivalInfoResponse> responses = festivals.getContent().stream().map(festival -> {
-			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
-			return FestivalInfoResponse.of(festival, thumbnailImage);
-		}).toList();
+		List<FestivalInfoResponse> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivals);
 
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
 	}
 
-	private void validateFestivalDay(int year, int month, int day) {
-		YearMonth yearMonth = YearMonth.of(year, month);
+	public Page<FestivalInfoResponse> getFestivalByFiltersAndSort(Long userId,
+		FestivalFilterRequest festivalFilterRequest,
+		Double latitude, Double longitude,Pageable pageable) {
 
-		if (!yearMonth.isValidDay(day)) {
-			throw new CustomException(INVALID_FESTIVAL_DATE);
-		}
+		FestivalFilterCondition festivalFilterCondition = getFestivalFilterCondition(festivalFilterRequest);
+
+		LocalDate date = LocalDate.now(clock);
+		System.out.println("date: " + date);
+		Page<FestivalWithBookmarkAndSido> festivalsByFilters = festivalRepository.findFestivalsByFiltersAndSort(userId,
+			festivalFilterCondition, latitude, longitude, date, pageable);
+
+		List<FestivalInfoResponse> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
+
+		return new PageImpl<>(responses, pageable, festivalsByFilters.getTotalElements());
+	}
+
+	private List<FestivalInfoResponse> getFestivalWithBookmarkAndSidoAndThumbnailImage(
+		Page<FestivalWithBookmarkAndSido> festivalsByFilters) {
+		return festivalsByFilters.getContent().stream().map(festival -> {
+			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
+			return FestivalInfoResponse.of(festival, thumbnailImage);
+		}).toList();
+	}
+
+	// 필터링을 위해, request list 내부의 중복 제거
+	private FestivalFilterCondition getFestivalFilterCondition(FestivalFilterRequest festivalFilterRequest) {
+		Optional.ofNullable(festivalFilterRequest.getMonths())
+			.orElse(Collections.emptyList())
+			.forEach(this::validateMonth);
+
+		Optional.ofNullable(festivalFilterRequest.getAreas())
+			.orElse(Collections.emptyList())
+			.forEach(this::validateAreaId);
+
+		Optional.ofNullable(festivalFilterRequest.getCategories())
+			.orElse(Collections.emptyList())
+			.forEach(this::validateFestivalCategory);
+
+		Set<Long> areas = new HashSet<>(
+			Optional.ofNullable(festivalFilterRequest.getAreas()).orElse(Collections.emptyList()));
+		Set<Integer> months = new HashSet<>(
+			Optional.ofNullable(festivalFilterRequest.getMonths()).orElse(Collections.emptyList()));
+		Set<Long> categories = new HashSet<>(
+			Optional.ofNullable(festivalFilterRequest.getCategories()).orElse(Collections.emptyList()));
+
+		return FestivalFilterCondition.builder()
+			.areas(areas)
+			.months(months)
+			.categories(categories)
+			.build();
 	}
 
 	private static List<LocalDate> getAllDatesInMonth(LocalDate startOfMonth, LocalDate endOfMonth) {
@@ -120,4 +175,19 @@ public class FestivalService {
 		}
 	}
 
+	private void validateAreaId(Long areaId) {
+		sidoRepository.findById(areaId).orElseThrow(() -> new CustomException(FESTIVAL_AREA_NOT_FOUND));
+	}
+
+	private void validateFestivalCategory(Long festivalId) {
+		categoryRepository.findById(festivalId).orElseThrow(() -> new CustomException(FESTIVAL_CATEGORY_NOT_FOUND));
+	}
+
+	private void validateFestivalDay(int year, int month, int day) {
+		YearMonth yearMonth = YearMonth.of(year, month);
+
+		if (!yearMonth.isValidDay(day)) {
+			throw new CustomException(INVALID_FESTIVAL_DATE);
+		}
+	}
 }
