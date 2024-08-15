@@ -20,5 +20,3 @@ public interface FestivalCustomRepository {
 		FestivalFilterCondition festivalFilterCondition, Double latitude, Double longitude,
 		LocalDate date, Pageable pageable);
 }
-
-

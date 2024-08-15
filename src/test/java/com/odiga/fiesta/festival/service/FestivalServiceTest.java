@@ -69,7 +69,7 @@ class FestivalServiceTest {
 			.instant();
 	}
 
-	@DisplayName("startDate 와 endDate 사이에 해당 월이 끼어있어도 페스티벌이 포함되어야 한다.")
+	@DisplayName("페스티벌 월간 조회 - startDate 와 endDate 사이에 해당 월이 끼어있어도 페스티벌이 포함되어야 한다.")
 	@Test
 	void getMonthlyFestivals() {
 		// given
@@ -93,7 +93,7 @@ class FestivalServiceTest {
 		List<DailyFestivalContents> contents = response.getContents();
 		YearMonth yearMonth = YearMonth.of(year, month);
 
-		assertEquals(yearMonth.lengthOfMonth(), contents.size()); // 4월의 일 수와 Content의 크기 비교
+		assertEquals(yearMonth.lengthOfMonth(), contents.size()); 
 
 		List<LocalDate> allDatesInApril = Stream.iterate(yearMonth.atDay(1), date -> date.plusDays(1))
 			.limit(yearMonth.lengthOfMonth())
@@ -101,14 +101,14 @@ class FestivalServiceTest {
 
 		for (int i = 0; i < contents.size(); i++) {
 			DailyFestivalContents dailyContent = contents.get(i);
-			assertEquals(allDatesInApril.get(i), dailyContent.getDate()); // 날짜 검증
-			assertEquals(1, dailyContent.getFestivals().size()); // 페스티벌 크기 검증
-			assertEquals(festival1.getName(), dailyContent.getFestivals().get(0).getName()); // 페스티벌 이름 검증
-			assertEquals(1, dailyContent.getTotalElements()); // totalElements 검증
+			assertEquals(allDatesInApril.get(i), dailyContent.getDate()); 
+			assertEquals(1, dailyContent.getFestivals().size()); 
+			assertEquals(festival1.getName(), dailyContent.getFestivals().get(0).getName()); 
+			assertEquals(1, dailyContent.getTotalElements()); 
 		}
 	}
 
-	@DisplayName("데이터가 3개 이상일 경우, 3개의 데이터만 보인다.")
+	@DisplayName("페스티벌 월간 조회 - 데이터가 3개 이상일 경우, 3개의 데이터만 보인다.")
 	@Test
 	void getMonthlyFestivals_Limit() {
 		// given

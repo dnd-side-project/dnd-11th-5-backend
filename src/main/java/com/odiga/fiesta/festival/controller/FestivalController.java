@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
-import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
-import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
-import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
-import com.odiga.fiesta.festival.service.FestivalService;
 import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
+import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
+import com.odiga.fiesta.festival.service.FestivalService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FestivalController {
 
 	private final FestivalService festivalService;
-
+  
 	@Operation(
 		summary = "페스티벌 월간 조회",
 		description = "페스티벌을 월간 조회합니다. 해당 월 기준으로 일자별 페스티벌이 리턴됩니다."
@@ -59,7 +60,7 @@ public class FestivalController {
 
 	@Operation(
 		summary = "페스티벌 일간 조회",
-		description = "해당 날짜의 페스티벌을 조회합니다. 로그인 했을 때, 북마크 여부가 활성화 됩니다."
+		description = "해당 날짜의 페스티벌을 조회합니다."
 	)
 	@GetMapping("/daily")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfoResponse>>> getFestivalsByDay(
@@ -79,8 +80,8 @@ public class FestivalController {
 	}
 
 	@Operation(
-		summary = "필터를 이용한 페스티벌 조회",
-		description = "종료되지 않은 페스티벌을 다건 조회합니다. 필터와 정렬 조건을 사용할 수 있습니다."
+		summary = "필터를 사용한 페스티벌 조회",
+		description = "필터와 정렬 조건을 사용하여 페스티벌을 다건 조회합니다."
 	)
 	@GetMapping("/filter")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfoResponse>>> getFestivalsByFilters(
@@ -95,24 +96,10 @@ public class FestivalController {
 
 		validateLatAndLng(latitude, longitude, pageable);
 
-		log.warn("festivalFilterRequest = {}", festivalFilterRequest);
-		log.warn("latitude = {}", latitude);
-		log.warn("longitude = {}", longitude);
-
 		Page<FestivalInfoResponse> festivals = festivalService.getFestivalByFiltersAndSort(
 			isNull(user) ? null : user.getId(), festivalFilterRequest, latitude, longitude,pageable);
 
 		return ResponseEntity.ok(BasicResponse.ok("페스티벌 필터 조회 성공", PageResponse.of(festivals)));
-	}
-
-	private static void validateLatAndLng(Double latitude, Double longitude, Pageable pageable) {
-		for (Sort.Order order : pageable.getSort()) {
-			String property = order.getProperty();
-
-			if ("dist".equals(property) && (isNull(latitude) || isNull(longitude))) {
-				throw new CustomException(INVALID_CURRENT_LOCATION);
-			}
-		}
 	}
 
 	private void validateFestivalDay(int year, int month, int day) {
@@ -122,7 +109,13 @@ public class FestivalController {
 			throw new CustomException(INVALID_FESTIVAL_DATE);
 		}
 	}
+  
+  private static void validateLatAndLng(Double latitude, Double longitude, Pageable pageable) {
+		for (Sort.Order order : pageable.getSort()) {
+			String property = order.getProperty();
 
-	// 페스티벌 다건 조회
-
+			if ("dist".equals(property) && (isNull(latitude) || isNull(longitude))) {
+				throw new CustomException(INVALID_CURRENT_LOCATION);
+			}
+		}
 }
