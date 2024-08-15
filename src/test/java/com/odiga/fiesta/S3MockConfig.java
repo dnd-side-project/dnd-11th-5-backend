@@ -1,3 +1,5 @@
+package com.odiga.fiesta;
+
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
