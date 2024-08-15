@@ -19,13 +19,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.odiga.fiesta.IntegrationTestSupport;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.FestivalImage;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
@@ -37,8 +39,11 @@ import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.sido.domain.Sido;
 import com.odiga.fiesta.sido.repository.SidoRepository;
 
+@ActiveProfiles("test")
+@Transactional
+@SpringBootTest
 @ExtendWith(MockitoExtension.class)
-class FestivalServiceTest extends IntegrationTestSupport {
+class FestivalServiceTest {
 
 	private static final Clock CURRENT_CLOCK = Clock.fixed(Instant.parse("2024-01-01T10:00:00Z"), ZoneOffset.UTC);
 
@@ -238,7 +243,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			filterRequest, currentLatitude, currentLongitude, pageable);
 
 		// then
-		assertEquals(responses.getTotalElements(), 4);
+		assertEquals(4, responses.getTotalElements());
 
 		assertThat(responses.getContent())
 			.hasSize(4)
