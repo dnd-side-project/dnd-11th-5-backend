@@ -5,6 +5,7 @@ import static com.odiga.fiesta.festival.domain.Festival.*;
 import static java.util.stream.Collectors.*;
 
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Collections;
@@ -24,12 +25,14 @@ import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
+import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
 import com.odiga.fiesta.festival.dto.response.FestivalBasicResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
@@ -90,18 +93,37 @@ public class FestivalService {
 
 	public Page<FestivalInfoResponse> getFestivalByFiltersAndSort(Long userId,
 		FestivalFilterRequest festivalFilterRequest,
-		Double latitude, Double longitude,Pageable pageable) {
+		Double latitude, Double longitude, Pageable pageable) {
 
 		FestivalFilterCondition festivalFilterCondition = getFestivalFilterCondition(festivalFilterRequest);
 
 		LocalDate date = LocalDate.now(clock);
-		System.out.println("date: " + date);
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters = festivalRepository.findFestivalsByFiltersAndSort(userId,
 			festivalFilterCondition, latitude, longitude, date, pageable);
 
 		List<FestivalInfoResponse> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
 
 		return new PageImpl<>(responses, pageable, festivalsByFilters.getTotalElements());
+	}
+
+	public Page<FestivalThisWeekResponse> getFestivalsInThisWeek(Pageable pageable) {
+
+		LocalDate now = LocalDate.now(clock);
+		LocalDate startDayOfWeek = now.with(DayOfWeek.MONDAY);
+		LocalDate endDayOfWeek = now.with(DayOfWeek.SUNDAY);
+
+		Page<FestivalWithSido> festivals = festivalRepository.findFestivalsAndSidoWithinDateRange(startDayOfWeek,
+			endDayOfWeek, pageable);
+		List<FestivalThisWeekResponse> responses = getFestivalAndSidoWithThumbnailImage(festivals);
+		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
+	}
+
+	private List<FestivalThisWeekResponse> getFestivalAndSidoWithThumbnailImage(
+		Page<FestivalWithSido> festivals) {
+		return festivals.getContent().stream().map(festival -> {
+			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
+			return FestivalThisWeekResponse.of(festival, thumbnailImage);
+		}).toList();
 	}
 
 	private List<FestivalInfoResponse> getFestivalWithBookmarkAndSidoAndThumbnailImage(
@@ -190,4 +212,5 @@ public class FestivalService {
 			throw new CustomException(INVALID_FESTIVAL_DATE);
 		}
 	}
+
 }
