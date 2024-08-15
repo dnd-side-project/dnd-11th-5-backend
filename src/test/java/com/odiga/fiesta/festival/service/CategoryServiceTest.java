@@ -12,8 +12,8 @@ import org.mockito.Mock;
 
 import com.odiga.fiesta.MockTestSupport;
 import com.odiga.fiesta.category.domain.Category;
-import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.category.repository.CategoryRepository;
+import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 
 class CategoryServiceTest extends MockTestSupport {
 

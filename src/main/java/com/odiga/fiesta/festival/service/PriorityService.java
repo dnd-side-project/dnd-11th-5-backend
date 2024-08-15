@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.odiga.fiesta.priority.domain.Priority;
 import com.odiga.fiesta.festival.dto.response.PriorityResponse;
+import com.odiga.fiesta.priority.domain.Priority;
 import com.odiga.fiesta.priority.repository.PriorityRepository;
 
 import lombok.RequiredArgsConstructor;

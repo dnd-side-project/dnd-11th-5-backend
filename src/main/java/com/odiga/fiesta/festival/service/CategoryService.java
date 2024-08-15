@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.odiga.fiesta.category.domain.Category;
-import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.category.repository.CategoryRepository;
+import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 
 import lombok.RequiredArgsConstructor;
 

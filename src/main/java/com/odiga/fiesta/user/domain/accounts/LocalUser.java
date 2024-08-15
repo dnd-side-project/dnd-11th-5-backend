@@ -8,7 +8,6 @@ import static lombok.AccessLevel.PROTECTED;
 @Entity
 @AllArgsConstructor
 @Getter
-@Builder
 @NoArgsConstructor(access = PROTECTED)
 @DiscriminatorValue("local")
 public class LocalUser extends User {
