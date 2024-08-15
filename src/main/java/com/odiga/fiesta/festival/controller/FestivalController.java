@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FestivalController {
 
 	private final FestivalService festivalService;
-  
+
 	@Operation(
 		summary = "페스티벌 월간 조회",
 		description = "페스티벌을 월간 조회합니다. 해당 월 기준으로 일자별 페스티벌이 리턴됩니다."
@@ -68,8 +68,7 @@ public class FestivalController {
 		@RequestParam(name = "year") @NotNull int year,
 		@RequestParam(name = "month") @Min(1) @Max(12) @NotNull int month,
 		@RequestParam(name = "day") int day,
-		@PageableDefault(page = 0, size = 6) Pageable pageable
-	) {
+		@PageableDefault(size = 6) Pageable pageable) {
 		validateFestivalDay(year, month, day);
 
 		String message = "페스티벌 일간 조회 성공";
@@ -89,15 +88,12 @@ public class FestivalController {
 		@ModelAttribute FestivalFilterRequest festivalFilterRequest,
 		@RequestParam(value = "lat", required = false) Double latitude,
 		@RequestParam(value = "lng", required = false) Double longitude,
-		@PageableDefault(
-			sort = {"startDate"},
-			direction = Sort.Direction.ASC,
-			page = 0, size = 6) Pageable pageable) {
+		@PageableDefault(sort = {"startDate"}, direction = Sort.Direction.ASC, size = 6) Pageable pageable) {
 
 		validateLatAndLng(latitude, longitude, pageable);
 
 		Page<FestivalInfoResponse> festivals = festivalService.getFestivalByFiltersAndSort(
-			isNull(user) ? null : user.getId(), festivalFilterRequest, latitude, longitude,pageable);
+			isNull(user) ? null : user.getId(), festivalFilterRequest, latitude, longitude, pageable);
 
 		return ResponseEntity.ok(BasicResponse.ok("페스티벌 필터 조회 성공", PageResponse.of(festivals)));
 	}
@@ -109,8 +105,8 @@ public class FestivalController {
 			throw new CustomException(INVALID_FESTIVAL_DATE);
 		}
 	}
-  
-  private static void validateLatAndLng(Double latitude, Double longitude, Pageable pageable) {
+
+	private static void validateLatAndLng(Double latitude, Double longitude, Pageable pageable) {
 		for (Sort.Order order : pageable.getSort()) {
 			String property = order.getProperty();
 
@@ -118,4 +114,5 @@ public class FestivalController {
 				throw new CustomException(INVALID_CURRENT_LOCATION);
 			}
 		}
+	}
 }
