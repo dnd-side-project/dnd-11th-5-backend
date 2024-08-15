@@ -11,17 +11,12 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
 
+	//Internal Server Error
+	INTERNAL_SERVER_ERROR(500, "S001", "서버에 문제가 생겼습니다."),
+
+	// Client Error
 	BAD_REQUEST(400, "C005", "잘못된 요청입니다."),
-	INTERNAL_SERVER_ERROR(500, "S001", "서버에 문제가 생겼습니다.") //Internal Server Error
-	,
-
 	INVALID_EXTENSION_TYPE(400, "C008", "파일의 확장자가 잘못되었습니다."),
-	/**
-	 * Domain
-	 */
-
-	INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."), // Festival
-	INVALID_FESTIVAL_DATE(400, "F002", "유효하지 않은 날짜입니다."),
 
 	INVALID_IMAGE_TYPE(400, "C007", "지원하지 않는 이미지 형식입니다."),
 	INVALID_INPUT_VALUE(400, "C003", "적절하지 않은 값입니다."),
@@ -32,6 +27,15 @@ public enum ErrorCode {
 	MISSING_REQUEST_PARAMETER(400, "C005", "필수 파라미터가 누락되었습니다."),
 	NOT_FOUND(404, "C004", "해당 리소스를 찾을 수 없습니다."),
 	UPLOAD_FAIL(500, "S002", "파일 업로드에 실패하였습니다."),
+
+	// Domain
+
+	// Festival
+	INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."), // Festival
+	INVALID_FESTIVAL_DATE(400, "F002", "유효하지 않은 날짜입니다."),
+	FESTIVAL_AREA_NOT_FOUND(400, "F003", "존재하지 않는 지역 id 입니다."),
+	FESTIVAL_CATEGORY_NOT_FOUND(400, "F004", "존재하지 않는 페스티벌 카테고리 입니다."),
+	INVALID_CURRENT_LOCATION(400, "F005", "현재 위치 값을 알 수 없습니다."),
 
 	// LOG
 	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다.");
