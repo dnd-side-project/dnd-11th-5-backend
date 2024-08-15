@@ -12,6 +12,7 @@ import com.odiga.fiesta.festival.controller.FestivalController;
 import com.odiga.fiesta.festival.controller.FestivalStaticDataController;
 import com.odiga.fiesta.festival.service.CategoryService;
 import com.odiga.fiesta.festival.service.CompanionService;
+import com.odiga.fiesta.festival.service.FestivalBookmarkService;
 import com.odiga.fiesta.festival.service.FestivalService;
 import com.odiga.fiesta.festival.service.MoodService;
 import com.odiga.fiesta.festival.service.PriorityService;
@@ -27,6 +28,7 @@ import com.odiga.fiesta.log.service.LogService;
 	LogController.class
 })
 public abstract class ControllerTestSupport {
+
 	@Autowired
 	protected MockMvc mockMvc;
 
@@ -51,4 +53,7 @@ public abstract class ControllerTestSupport {
 
 	@MockBean
 	protected FestivalService festivalService;
+
+	@MockBean
+	protected FestivalBookmarkService festivalBookmarkService;
 }
