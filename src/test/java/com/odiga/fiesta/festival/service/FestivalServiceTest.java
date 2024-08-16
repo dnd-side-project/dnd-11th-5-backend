@@ -10,13 +10,17 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,14 +29,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.FestivalImage;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
-import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalBasic;
+import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
@@ -42,7 +51,7 @@ import com.odiga.fiesta.sido.repository.SidoRepository;
 @ActiveProfiles("test")
 @Transactional
 @SpringBootTest
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class})
 class FestivalServiceTest {
 
 	private static final Clock CURRENT_CLOCK = Clock.fixed(Instant.parse("2024-01-01T10:00:00Z"), ZoneOffset.UTC);
@@ -59,6 +68,7 @@ class FestivalServiceTest {
 	@Autowired
 	private SidoRepository sidoRepository;
 
+
 	@SpyBean
 	private Clock clock;
 
@@ -68,6 +78,9 @@ class FestivalServiceTest {
 			.when(clock)
 			.instant();
 	}
+
+	@Autowired
+	private RedisTemplate redisTemplate;
 
 	@DisplayName("페스티벌 월간 조회 - startDate 와 endDate 사이에 해당 월이 끼어있어도 페스티벌이 포함되어야 한다.")
 	@Test
@@ -181,7 +194,7 @@ class FestivalServiceTest {
 		Pageable pageable = PageRequest.of(0, 10);
 
 		// when
-		Page<FestivalInfoResponse> result = festivalService.getFestivalsByDay(null, 2024, 10, 4, pageable);
+		Page<FestivalInfo> result = festivalService.getFestivalsByDay(null, 2024, 10, 4, pageable);
 
 		// then
 		assertThat(result.getContent()).hasSize(1)
@@ -212,7 +225,7 @@ class FestivalServiceTest {
 		festivalRepository.saveAll(List.of(festival1, festival2, festival3, festival4));
 
 		// when
-		Page<FestivalInfoResponse> responses = festivalService.getFestivalByFiltersAndSort(null,
+		Page<FestivalInfo> responses = festivalService.getFestivalByFiltersAndSort(null,
 			filterRequest, null, null, pageable);
 
 		System.out.println("response: " + responses.getContent());
@@ -239,7 +252,7 @@ class FestivalServiceTest {
 		festivalRepository.saveAll(List.of(festival1, festival2, festival3, festival4));
 
 		// when
-		Page<FestivalInfoResponse> responses = festivalService.getFestivalByFiltersAndSort(null,
+		Page<FestivalInfo> responses = festivalService.getFestivalByFiltersAndSort(null,
 			filterRequest, currentLatitude, currentLongitude, pageable);
 
 		// then
@@ -265,7 +278,7 @@ class FestivalServiceTest {
 		Pageable pageable = PageRequest.of(0, 6);
 
 		// when
-		Page<FestivalInfoResponse> festivals = festivalService.getFestivalsByQuery(null, "펜타", pageable);
+		Page<FestivalInfo> festivals = festivalService.getFestivalsByQuery(null, "펜타", pageable);
 
 		// then
 		assertThat(festivals.getContent())
@@ -286,7 +299,7 @@ class FestivalServiceTest {
 		Pageable pageable = PageRequest.of(0, 6);
 
 		// when
-		Page<FestivalInfoResponse> festivals = festivalService.getFestivalsByQuery(null, "마바사아", pageable);
+		Page<FestivalInfo> festivals = festivalService.getFestivalsByQuery(null, "마바사아", pageable);
 
 		// then
 		assertThat(festivals.getContent()).isEmpty();
