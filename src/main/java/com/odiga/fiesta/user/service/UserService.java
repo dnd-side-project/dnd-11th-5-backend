@@ -1,4 +1,4 @@
-package com.odiga.fiesta.user.UserService;
+package com.odiga.fiesta.user.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
