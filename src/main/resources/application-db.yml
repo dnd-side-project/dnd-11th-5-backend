@@ -1,0 +1,14 @@
+local-db:
+  url: jdbc:mysql://localhost:3306/fiesta
+  username: admin
+  password: fiesta123
+
+#test-db:
+#  url: jdbc:h2:mem:~/odiga
+#  username: sa
+#  password:
+#
+#prod-db:
+#  url:
+#  username:
+#  password:

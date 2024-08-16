@@ -21,7 +21,7 @@ public class User extends BaseEntity {
     @Column(name = "user_id")
     private Long id;
 
-    @Column(name = "user_type_id", nullable = false)
+    @Column(name = "user_type_id")
     private Long userTypeId;
 
     @Column(name = "role_id", nullable = false)

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorCode {
@@ -36,7 +37,14 @@ public enum ErrorCode {
 	INVALID_CURRENT_LOCATION(400, "F005", "현재 위치 값을 알 수 없습니다."),
 
 	// LOG
-	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다.");
+	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다."),
+
+	// USER
+	INVALID_CODE(400, "U001", "유효하지 않은 인가코드입니다."),
+	INVALID_TOKEN(401, "U002", "유효하지 않은 토큰입니다."),
+	TOKEN_EXPIRED(401, "U003", "만료된 토큰입니다."),
+	DIFFERENT_CATEGORY(401, "U004", "카테고리가 다른 토큰입니다.");
+
 
 	private final int status;
 	private final String code;

@@ -5,6 +5,7 @@ import com.odiga.fiesta.user.domain.oauth.OauthProvider;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
 import static lombok.AccessLevel.PROTECTED;
 
 import org.hibernate.annotations.ColumnDefault;
