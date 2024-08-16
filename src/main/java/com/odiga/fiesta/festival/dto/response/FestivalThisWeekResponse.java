@@ -15,7 +15,7 @@ public class FestivalThisWeekResponse extends FestivalBasicResponse {
 	private LocalDate endDate;
 
 	@Builder
-	public FestivalThisWeekResponse(Long festivalId, String name, Long festivalId1, String name1, String sido,
+	public FestivalThisWeekResponse(Long festivalId, String name, String sido,
 		String sigungu, String thumbnailImage, LocalDate startDate, LocalDate endDate) {
 		super(festivalId, name);
 		this.sido = sido;
