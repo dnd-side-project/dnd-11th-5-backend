@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-public class FestivalInfoResponse extends FestivalBasicResponse {
+public class FestivalInfo extends FestivalBasic {
 
 	private String sido; // 시도 행정 구역 이름
 	private String sigungu; // 시군구 행정 구역 이름
@@ -18,7 +18,7 @@ public class FestivalInfoResponse extends FestivalBasicResponse {
 	private Boolean isBookmarked;
 
 	@Builder
-	public FestivalInfoResponse(Long festivalId, String name, String sido, String sigungu, String thumbnailImage,
+	public FestivalInfo(Long festivalId, String name, String sido, String sigungu, String thumbnailImage,
 		LocalDate startDate, LocalDate endDate, Boolean isBookmarked) {
 		super(festivalId, name);
 		this.sido = sido;
@@ -29,8 +29,8 @@ public class FestivalInfoResponse extends FestivalBasicResponse {
 		this.isBookmarked = isBookmarked;
 	}
 
-	public static FestivalInfoResponse of(FestivalWithBookmarkAndSido festival, String thumbnailImage) {
-		return FestivalInfoResponse.builder()
+	public static FestivalInfo of(FestivalWithBookmarkAndSido festival, String thumbnailImage) {
+		return FestivalInfo.builder()
 			.festivalId(festival.getFestivalId())
 			.name(festival.getName())
 			.sido(festival.getSido())
