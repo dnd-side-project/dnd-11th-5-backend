@@ -20,10 +20,19 @@ jobs:
           workflow: ${{ github.event.workflow.id }}
           run_id: ${{ github.event.workflow_run.id }}
 
+      - name: Download and Extract Artifacts
+        uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          path: artifacts
+
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: ${{ always() }}
         with:
+          commit: ${{ github.event.workflow_run.head_sha }}
+          event_file: artifacts/event-file/event.json
+          event_name: ${{ github.event.workflow_run.event }}
           files: 'build/test-results/**/*.xml'
 
       - name: Reports JUnit Test Results
