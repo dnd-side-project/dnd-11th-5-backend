@@ -1,14 +1,19 @@
 name: 'PR CI'
 
 on:
-  pull_request:
-    branches: [ "main" ]
+  pull_request_target:
+    types: [labeled]
 
-permissions: write-all
+permissions:
+  contents: read
 
 jobs:
   build:
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -33,7 +38,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Test with Gradle
-        run: ./gradlew --info test
+        run: |
+          ./gradlew copySecret
+          ./gradlew --info test
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
