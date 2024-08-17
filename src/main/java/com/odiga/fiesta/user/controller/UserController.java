@@ -1,25 +1,18 @@
 package com.odiga.fiesta.user.controller;
 
 import com.odiga.fiesta.common.BasicResponse;
-import com.odiga.fiesta.common.PageResponse;
-import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
-import com.odiga.fiesta.user.UserService.UserService;
+import com.odiga.fiesta.user.service.UserService;
 import com.odiga.fiesta.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
-
-import static java.util.Objects.isNull;
 
 @RestController
 @RequestMapping("/api/v1/users")
