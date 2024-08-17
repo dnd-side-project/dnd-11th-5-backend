@@ -7,6 +7,7 @@ on:
 
 permissions:
   checks: write
+  pull-requests: write
 
 jobs:
   checks:
@@ -19,7 +20,13 @@ jobs:
           workflow: ${{ github.event.workflow.id }}
           run_id: ${{ github.event.workflow_run.id }}
 
-      - name: Publish Test Report
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: ${{ always() }}
+        with:
+          files: 'build/test-results/**/*.xml'
+
+      - name: Reports JUnit Test Results
         uses: mikepenz/action-junit-report@v3
         if: success() || failure()
         with:
