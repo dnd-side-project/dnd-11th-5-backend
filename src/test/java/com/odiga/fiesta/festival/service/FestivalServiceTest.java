@@ -43,6 +43,7 @@ import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.sido.domain.Sido;
@@ -51,7 +52,7 @@ import com.odiga.fiesta.sido.repository.SidoRepository;
 @ActiveProfiles("test")
 @Transactional
 @SpringBootTest
-@ExtendWith({MockitoExtension.class})
+@ExtendWith(MockitoExtension.class)
 class FestivalServiceTest {
 
 	private static final Clock CURRENT_CLOCK = Clock.fixed(Instant.parse("2024-01-01T10:00:00Z"), ZoneOffset.UTC);
@@ -67,7 +68,6 @@ class FestivalServiceTest {
 
 	@Autowired
 	private SidoRepository sidoRepository;
-
 
 	@SpyBean
 	private Clock clock;
@@ -325,6 +325,32 @@ class FestivalServiceTest {
 			.playtime("페스티벌 진행 시간")
 			.isPending(false)
 			.build();
+	}
+
+	@DisplayName("이번 주 페스티벌 조회")
+	@Test
+	void getFestivalsInThisWeek() {
+		// given
+		Festival festival1 = createFestival(LocalDate.of(2023, 12, 31), LocalDate.of(2024, 1, 1));
+		Festival festival2 = createFestival(LocalDate.of(2023, 12, 30), LocalDate.of(2023, 12, 30));
+		Festival festival3 = createFestival(LocalDate.of(2024, 1, 7), LocalDate.of(2024, 1, 10));
+		Festival festival4 = createFestival(LocalDate.of(2024, 1, 8), LocalDate.of(2024, 1, 10));
+
+		Pageable pageable = PageRequest.of(0, 3);
+
+		festivalRepository.saveAll(List.of(festival1, festival2, festival3, festival4));
+
+		// when
+		Page<FestivalThisWeekResponse> responses = festivalService.getFestivalsInThisWeek(pageable);
+
+		// then
+		assertThat(responses.getContent())
+			.hasSize(2)
+			.extracting("startDate")
+			.containsExactly(
+				LocalDate.of(2023, 12, 31),
+				LocalDate.of(2024, 1, 7)
+			);
 	}
 
 	private static Festival createFestival(LocalDate startDate, LocalDate endDate, Long sidoId) {

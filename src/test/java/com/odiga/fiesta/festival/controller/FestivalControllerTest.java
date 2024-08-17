@@ -43,7 +43,7 @@ class FestivalControllerTest extends ControllerTestSupport {
 		when(festivalService.getMonthlyFestivals(2024, 10)).thenReturn(mockResponse);
 
 		// when // then
-		mockMvc.perform(get("/api/v1/festivals//monthly")
+		mockMvc.perform(get("/api/v1/festivals/monthly")
 				.param("year", "2024")
 				.param("month", "10")
 				.contentType(MediaType.APPLICATION_JSON))
@@ -63,7 +63,7 @@ class FestivalControllerTest extends ControllerTestSupport {
 		when(festivalService.getFestivalsByDay(null, 2023, 10, 4, pageable)).thenReturn(page);
 
 		// when // then
-		mockMvc.perform(get("/api/v1/festivals//daily")
+		mockMvc.perform(get("/api/v1/festivals/daily")
 				.param("year", "2023")
 				.param("month", "10")
 				.param("day", "4")
@@ -77,7 +77,7 @@ class FestivalControllerTest extends ControllerTestSupport {
 	@Test
 	void getFestivalsByDay_invalidParameter() throws Exception {
 		// given // when // then
-		mockMvc.perform(get("/api/v1/festivals//daily")
+		mockMvc.perform(get("/api/v1/festivals/daily")
 				.param("year", "2023")
 				.param("month", "11")
 				.param("day", "43")
@@ -90,7 +90,7 @@ class FestivalControllerTest extends ControllerTestSupport {
 	@Test
 	void getFestivalsByFilters_InvalidLocation() throws Exception {
 		// given // when // then
-		mockMvc.perform(get("/api/v1/festivals//filter")
+		mockMvc.perform(get("/api/v1/festivals/filter")
 				.param("areas", "1,3")
 				.param("months", "1,2,3,4,5")
 				.param("categories", "")

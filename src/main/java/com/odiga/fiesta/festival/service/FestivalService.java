@@ -5,6 +5,7 @@ import static com.odiga.fiesta.festival.domain.Festival.*;
 import static java.util.stream.Collectors.*;
 
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Collections;
@@ -27,12 +28,14 @@ import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
+import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
@@ -138,7 +141,7 @@ public class FestivalService {
 		Set<ZSetOperations.TypedTuple<String>> set = redisUtils.zRevrange(rankingKey, page * size,
 			(page * size) + size);
 
-		log.error("set - {}" , set);
+		log.error("set - {}", set);
 		List<FestivalBasic> festivals = festivalRepository.findAllById(
 				set.stream().map(tuple -> Long.parseLong(tuple.getValue())).toList())
 			.stream().map(FestivalBasic::of).toList();
@@ -153,6 +156,26 @@ public class FestivalService {
 		return festivalsByFilters.getContent().stream().map(festival -> {
 			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
 			return FestivalInfo.of(festival, thumbnailImage);
+		}).toList();
+	}
+
+	public Page<FestivalThisWeekResponse> getFestivalsInThisWeek(Pageable pageable) {
+
+		LocalDate now = LocalDate.now(clock);
+		LocalDate startDayOfWeek = now.with(DayOfWeek.MONDAY);
+		LocalDate endDayOfWeek = now.with(DayOfWeek.SUNDAY);
+
+		Page<FestivalWithSido> festivals = festivalRepository.findFestivalsAndSidoWithinDateRange(startDayOfWeek,
+			endDayOfWeek, pageable);
+		List<FestivalThisWeekResponse> responses = getFestivalAndSidoWithThumbnailImage(festivals);
+		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
+	}
+
+	private List<FestivalThisWeekResponse> getFestivalAndSidoWithThumbnailImage(
+		Page<FestivalWithSido> festivals) {
+		return festivals.getContent().stream().map(festival -> {
+			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
+			return FestivalThisWeekResponse.of(festival, thumbnailImage);
 		}).toList();
 	}
 
