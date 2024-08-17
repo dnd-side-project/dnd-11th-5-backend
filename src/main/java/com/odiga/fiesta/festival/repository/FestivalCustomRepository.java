@@ -25,4 +25,6 @@ public interface FestivalCustomRepository {
 		Pageable pageable);
 
 	Page<FestivalWithBookmarkAndSido> findFestivalsByQuery(Long userId, String query, Pageable pageable);
+
+	Page<FestivalWithSido> findMostLikeFestival(Pageable pageable);
 }
