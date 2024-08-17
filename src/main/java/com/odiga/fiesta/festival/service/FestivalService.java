@@ -18,19 +18,22 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.odiga.fiesta.category.repository.CategoryRepository;
+import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
-import com.odiga.fiesta.festival.dto.response.FestivalBasicResponse;
-import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalBasic;
+import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
@@ -53,6 +56,8 @@ public class FestivalService {
 
 	private final FestivalRepository festivalRepository;
 	private final FestivalImageRepository festivalImageRepository;
+
+	private final RedisUtils redisUtils;
 
 	public FestivalMonthlyResponse getMonthlyFestivals(int year, int month) {
 		validateMonth(month);
@@ -77,7 +82,7 @@ public class FestivalService {
 			.build();
 	}
 
-	public Page<FestivalInfoResponse> getFestivalsByDay(Long userId, int year, int month, int day,
+	public Page<FestivalInfo> getFestivalsByDay(Long userId, int year, int month, int day,
 		Pageable pageable) {
 		validateFestivalDay(year, month, day);
 
@@ -86,12 +91,12 @@ public class FestivalService {
 		Page<FestivalWithBookmarkAndSido> festivals = festivalRepository.findFestivalsInDate(date,
 			pageable, userId);
 
-		List<FestivalInfoResponse> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivals);
+		List<FestivalInfo> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivals);
 
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
 	}
 
-	public Page<FestivalInfoResponse> getFestivalByFiltersAndSort(Long userId,
+	public Page<FestivalInfo> getFestivalByFiltersAndSort(Long userId,
 		FestivalFilterRequest festivalFilterRequest,
 		Double latitude, Double longitude, Pageable pageable) {
 
@@ -101,9 +106,57 @@ public class FestivalService {
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters = festivalRepository.findFestivalsByFiltersAndSort(userId,
 			festivalFilterCondition, latitude, longitude, date, pageable);
 
-		List<FestivalInfoResponse> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
+		List<FestivalInfo> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
 
 		return new PageImpl<>(responses, pageable, festivalsByFilters.getTotalElements());
+	}
+
+	public Page<FestivalInfo> getFestivalsByQuery(Long userId, String query, Pageable pageable) {
+		Page<FestivalWithBookmarkAndSido> festivalsByQuery = festivalRepository.findFestivalsByQuery(userId, query,
+			pageable);
+
+		List<FestivalInfo> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByQuery);
+
+		return new PageImpl<>(responses, pageable, festivalsByQuery.getTotalElements());
+	}
+
+	@Transactional
+	public void updateSearchRanking(String rankingKey, FestivalBasic searchItem) {
+		log.warn("update search raking, {}", searchItem);
+
+		final Double SCORE_INCREMENT_AMOUNT = 1.0;
+
+		String fetivalIdToString = searchItem.getFestivalId().toString();
+
+		Double currentScore = redisUtils.zScore(rankingKey, fetivalIdToString);
+		Double newScore = (currentScore != null) ? currentScore + SCORE_INCREMENT_AMOUNT : SCORE_INCREMENT_AMOUNT;
+
+		redisUtils.zAdd(rankingKey, fetivalIdToString, newScore);
+
+		log.warn("item = {}, score = {} -> {}", searchItem.getName(), currentScore, newScore);
+	}
+
+	@Transactional
+	public PageResponse<FestivalBasic> getTrendingFestival(String rankingKey, Long page, Integer size) {
+		Set<ZSetOperations.TypedTuple<String>> set = redisUtils.zRevrange(rankingKey, page * size,
+			(page * size) + size);
+
+		log.error("set - {}", set);
+		List<FestivalBasic> festivals = festivalRepository.findAllById(
+				set.stream().map(tuple -> Long.parseLong(tuple.getValue())).toList())
+			.stream().map(FestivalBasic::of).toList();
+
+		return new PageResponse(festivals, 0L, size, page.intValue(),
+			redisUtils.zSize(rankingKey),
+			(page.intValue() / size) + 1);
+	}
+
+	private List<FestivalInfo> getFestivalWithBookmarkAndSidoAndThumbnailImage(
+		Page<FestivalWithBookmarkAndSido> festivalsByFilters) {
+		return festivalsByFilters.getContent().stream().map(festival -> {
+			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
+			return FestivalInfo.of(festival, thumbnailImage);
+		}).toList();
 	}
 
 	public Page<FestivalThisWeekResponse> getFestivalsInThisWeek(Pageable pageable) {
@@ -123,14 +176,6 @@ public class FestivalService {
 		return festivals.getContent().stream().map(festival -> {
 			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
 			return FestivalThisWeekResponse.of(festival, thumbnailImage);
-		}).toList();
-	}
-
-	private List<FestivalInfoResponse> getFestivalWithBookmarkAndSidoAndThumbnailImage(
-		Page<FestivalWithBookmarkAndSido> festivalsByFilters) {
-		return festivalsByFilters.getContent().stream().map(festival -> {
-			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
-			return FestivalInfoResponse.of(festival, thumbnailImage);
 		}).toList();
 	}
 
@@ -183,7 +228,7 @@ public class FestivalService {
 			.map(date -> DailyFestivalContents.builder()
 				.date(date)
 				.festivals(groupedByDate.getOrDefault(date, List.of()).stream()
-					.map(FestivalBasicResponse::of)
+					.map(FestivalBasic::of)
 					.limit(3)
 					.collect(toList()))
 				.totalElements(groupedByDate.getOrDefault(date, List.of()).size())

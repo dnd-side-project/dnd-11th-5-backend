@@ -18,6 +18,6 @@ public class DailyFestivalContents {
 
 	@JsonFormat(shape = STRING, pattern = "yyyy-MM-dd")
 	private LocalDate date;
-	private List<FestivalBasicResponse> festivals;
+	private List<FestivalBasic> festivals;
 	private Integer totalElements;
 }

@@ -38,7 +38,8 @@ public enum ErrorCode {
 	FESTIVAL_CATEGORY_NOT_FOUND(400, "F004", "존재하지 않는 페스티벌 카테고리 입니다."),
 	INVALID_CURRENT_LOCATION(400, "F005", "현재 위치 값을 알 수 없습니다."),
 	FESTIVAL_NOT_FOUND(400, "F006", "페스티벌의 정보를 찾을 수 없습니다."),
-
+	QUERY_CANNOT_BE_EMPTY(400, "F007", "검색어는 필수입니다."),
+	QUERY_CANNOT_BE_BLANK(400, "F008", "공백으로는 검색할 수 없습니다."),
 	// LOG
 	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다.");
 
