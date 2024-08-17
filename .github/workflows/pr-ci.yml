@@ -4,8 +4,7 @@ on:
   pull_request_target:
     types: [labeled]
 
-permissions:
-  contents: read
+permissions: write-all
 
 jobs:
   build:
