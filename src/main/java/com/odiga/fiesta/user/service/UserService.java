@@ -46,7 +46,7 @@ public class UserService {
     private String REDIRECT_URI;
 
     @Transactional
-    public UserResponse.loginDTO kakaoLogin(String code, HttpServletRequest request, HttpServletResponse response) {
+    public UserResponse.loginDTO kakaoLogin(String code) {
         //인가코드로 OAuth2 액세스 토큰 요청
         String oauthAccessToken = getAccessToken(code);
 
@@ -94,7 +94,7 @@ public class UserService {
 
         // HTTP Header 생성
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         // HTTP Body 생성
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
@@ -140,8 +140,8 @@ public class UserService {
     private JsonNode getKakaoUserInfo(String accessToken) {
         // HTTP Header 생성
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken);
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+        headers.setBearerAuth(accessToken);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         // HTTP 요청 보내기
         HttpEntity<MultiValueMap<String, String>> userInfoRequest = new HttpEntity<>(headers);
