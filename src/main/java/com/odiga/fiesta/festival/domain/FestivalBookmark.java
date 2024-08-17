@@ -31,4 +31,8 @@ public class FestivalBookmark extends BaseEntity {
 
 	@Column(name = "festival_id", nullable = false)
 	private Long festivalId;
+
+	public static FestivalBookmark of(Long userId, Long festivalId) {
+		return new FestivalBookmark(null, userId, festivalId);
+	}
 }
