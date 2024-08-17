@@ -34,6 +34,7 @@ import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.sido.domain.Sido;
@@ -63,7 +64,7 @@ class FestivalServiceTest {
 	private Clock clock;
 
 	@BeforeEach
-	void beforeEach(){
+	void beforeEach() {
 		doReturn(Instant.now(CURRENT_CLOCK))
 			.when(clock)
 			.instant();
@@ -93,7 +94,7 @@ class FestivalServiceTest {
 		List<DailyFestivalContents> contents = response.getContents();
 		YearMonth yearMonth = YearMonth.of(year, month);
 
-		assertEquals(yearMonth.lengthOfMonth(), contents.size()); 
+		assertEquals(yearMonth.lengthOfMonth(), contents.size());
 
 		List<LocalDate> allDatesInApril = Stream.iterate(yearMonth.atDay(1), date -> date.plusDays(1))
 			.limit(yearMonth.lengthOfMonth())
@@ -101,10 +102,10 @@ class FestivalServiceTest {
 
 		for (int i = 0; i < contents.size(); i++) {
 			DailyFestivalContents dailyContent = contents.get(i);
-			assertEquals(allDatesInApril.get(i), dailyContent.getDate()); 
-			assertEquals(1, dailyContent.getFestivals().size()); 
-			assertEquals(festival1.getName(), dailyContent.getFestivals().get(0).getName()); 
-			assertEquals(1, dailyContent.getTotalElements()); 
+			assertEquals(allDatesInApril.get(i), dailyContent.getDate());
+			assertEquals(1, dailyContent.getFestivals().size());
+			assertEquals(festival1.getName(), dailyContent.getFestivals().get(0).getName());
+			assertEquals(1, dailyContent.getTotalElements());
 		}
 	}
 
@@ -250,6 +251,32 @@ class FestivalServiceTest {
 			.extracting("name")
 			.containsExactly(
 				"1", "4", "2", "3"
+			);
+	}
+
+	@DisplayName("이번 주 페스티벌 조회")
+	@Test
+	void getFestivalsInThisWeek() {
+		// given
+		Festival festival1 = createFestival(LocalDate.of(2023, 12, 31), LocalDate.of(2024, 1, 1));
+		Festival festival2 = createFestival(LocalDate.of(2023, 12, 30), LocalDate.of(2023, 12, 30));
+		Festival festival3 = createFestival(LocalDate.of(2024, 1, 7), LocalDate.of(2024, 1, 10));
+		Festival festival4 = createFestival(LocalDate.of(2024, 1, 8), LocalDate.of(2024, 1, 10));
+
+		Pageable pageable = PageRequest.of(0, 3);
+
+		festivalRepository.saveAll(List.of(festival1, festival2, festival3, festival4));
+
+		// when
+		Page<FestivalThisWeekResponse> responses = festivalService.getFestivalsInThisWeek(pageable);
+
+		// then
+		assertThat(responses.getContent())
+			.hasSize(2)
+			.extracting("startDate")
+			.containsExactly(
+				LocalDate.of(2023, 12 ,31),
+				LocalDate.of(2024, 1, 7)
 			);
 	}
 
