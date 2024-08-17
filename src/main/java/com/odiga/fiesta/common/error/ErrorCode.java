@@ -28,17 +28,23 @@ public enum ErrorCode {
     INVALID_EXTENSION_TYPE(400, "C008", "파일의 확장자가 잘못되었습니다."),
     MISSING_REQUEST_PARAMETER(400, "C009", "필수 파라미터가 누락되었습니다."),
 
-    // Domain
+	// Domain
 
-    // Festival
-    INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."),
-    INVALID_FESTIVAL_DATE(400, "F002", "유효하지 않은 날짜입니다."),
-    FESTIVAL_AREA_NOT_FOUND(400, "F003", "존재하지 않는 지역 id 입니다."),
-    FESTIVAL_CATEGORY_NOT_FOUND(400, "F004", "존재하지 않는 페스티벌 카테고리 입니다."),
-    INVALID_CURRENT_LOCATION(400, "F005", "현재 위치 값을 알 수 없습니다."),
+	// User
+	USER_NOT_FOUND(403, "U001", "사용자의 정보를 찾을 수 없습니다."),
+
+	// Festival
+	INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."),
+	INVALID_FESTIVAL_DATE(400, "F002", "유효하지 않은 날짜입니다."),
+	FESTIVAL_AREA_NOT_FOUND(400, "F003", "존재하지 않는 지역 id 입니다."),
+	FESTIVAL_CATEGORY_NOT_FOUND(400, "F004", "존재하지 않는 페스티벌 카테고리 입니다."),
+	INVALID_CURRENT_LOCATION(400, "F005", "현재 위치 값을 알 수 없습니다."),
+	FESTIVAL_NOT_FOUND(400, "F006", "페스티벌의 정보를 찾을 수 없습니다."),
+	QUERY_CANNOT_BE_EMPTY(400, "F007", "검색어는 필수입니다."),
+	QUERY_CANNOT_BE_BLANK(400, "F008", "공백으로는 검색할 수 없습니다."),
 
     // LOG
-    LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다."),
+	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다."),
 
     // USER
     INVALID_CODE(400, "U001", "유효하지 않은 인가코드입니다."),

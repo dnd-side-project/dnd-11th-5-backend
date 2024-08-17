@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
+import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 
 public interface FestivalCustomRepository {
@@ -19,4 +20,9 @@ public interface FestivalCustomRepository {
 	Page<FestivalWithBookmarkAndSido> findFestivalsByFiltersAndSort(Long userId,
 		FestivalFilterCondition festivalFilterCondition, Double latitude, Double longitude,
 		LocalDate date, Pageable pageable);
+
+	Page<FestivalWithSido> findFestivalsAndSidoWithinDateRange(LocalDate startDate, LocalDate endDate,
+		Pageable pageable);
+
+	Page<FestivalWithBookmarkAndSido> findFestivalsByQuery(Long userId, String query, Pageable pageable);
 }

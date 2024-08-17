@@ -16,7 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 
 import com.odiga.fiesta.ControllerTestSupport;
-import com.odiga.fiesta.festival.dto.response.FestivalInfoResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.service.FestivalService;
 
@@ -43,7 +43,7 @@ class FestivalControllerTest extends ControllerTestSupport {
 		when(festivalService.getMonthlyFestivals(2024, 10)).thenReturn(mockResponse);
 
 		// when // then
-		mockMvc.perform(get("/api/v1/festivals//monthly")
+		mockMvc.perform(get("/api/v1/festivals/monthly")
 				.param("year", "2024")
 				.param("month", "10")
 				.contentType(MediaType.APPLICATION_JSON))
@@ -57,13 +57,13 @@ class FestivalControllerTest extends ControllerTestSupport {
 	void getFestivalsByDay() throws Exception {
 		// given
 		Pageable pageable = PageRequest.of(0, 6);
-		PageImpl<FestivalInfoResponse> page =
-			new PageImpl<>(List.of(FestivalInfoResponse.builder().build()), pageable, 1);
+		PageImpl<FestivalInfo> page =
+			new PageImpl<>(List.of(FestivalInfo.builder().build()), pageable, 1);
 
 		when(festivalService.getFestivalsByDay(null, 2023, 10, 4, pageable)).thenReturn(page);
 
 		// when // then
-		mockMvc.perform(get("/api/v1/festivals//daily")
+		mockMvc.perform(get("/api/v1/festivals/daily")
 				.param("year", "2023")
 				.param("month", "10")
 				.param("day", "4")
@@ -77,7 +77,7 @@ class FestivalControllerTest extends ControllerTestSupport {
 	@Test
 	void getFestivalsByDay_invalidParameter() throws Exception {
 		// given // when // then
-		mockMvc.perform(get("/api/v1/festivals//daily")
+		mockMvc.perform(get("/api/v1/festivals/daily")
 				.param("year", "2023")
 				.param("month", "11")
 				.param("day", "43")
@@ -90,7 +90,7 @@ class FestivalControllerTest extends ControllerTestSupport {
 	@Test
 	void getFestivalsByFilters_InvalidLocation() throws Exception {
 		// given // when // then
-		mockMvc.perform(get("/api/v1/festivals//filter")
+		mockMvc.perform(get("/api/v1/festivals/filter")
 				.param("areas", "1,3")
 				.param("months", "1,2,3,4,5")
 				.param("categories", "")
@@ -100,5 +100,27 @@ class FestivalControllerTest extends ControllerTestSupport {
 			)
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value(INVALID_CURRENT_LOCATION.getMessage()));
+	}
+
+	@DisplayName("페스티벌 이름 검색 - 검색어가 비어있으면 에러가 발생한다.")
+	@Test
+	void getFestivalsByQuery_QueryIsNull() throws Exception {
+		// given // when // then
+		mockMvc.perform(get("/api/v1/festivals/search")
+				.param("query", "")
+			)
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value(QUERY_CANNOT_BE_EMPTY.getMessage()));
+	}
+
+	@DisplayName("페스티벌 이름 검색 - 검색어가 공백이면 에러가 발생한다.")
+	@Test
+	void getFestivalsByQuery_QueryIsBlank() throws Exception {
+		// given // when // then
+		mockMvc.perform(get("/api/v1/festivals/search")
+				.param("query", " ")
+			)
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value(QUERY_CANNOT_BE_BLANK.getMessage()));
 	}
 }

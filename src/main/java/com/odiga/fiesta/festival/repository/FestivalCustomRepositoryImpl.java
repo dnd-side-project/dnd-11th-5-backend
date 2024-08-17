@@ -19,6 +19,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmark;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
+import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
@@ -44,10 +45,8 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 		return queryFactory
 			.select(festival)
 			.from(festival)
-			.where(festival.startDate.between(startDate, endDate)
-				.or(festival.endDate.between(startDate, endDate))
-				.or(festival.startDate.loe(startDate).and(festival.endDate.goe(endDate)))
-			).fetch();
+			.where(getDateBetweenCondition(startDate, endDate))
+			.fetch();
 	}
 
 	@Override
@@ -89,6 +88,40 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
 	}
 
+	@Override
+	public Page<FestivalWithSido> findFestivalsAndSidoWithinDateRange(LocalDate startDate, LocalDate endDate,
+		Pageable pageable) {
+		List<FestivalWithSido> festivals = selectFestivalWithSido()
+			.where(getDateBetweenCondition(startDate, endDate))
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.orderBy(festival.startDate.asc())
+			.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory
+			.select(festival.count())
+			.from(festival)
+			.where(getDateBetweenCondition(startDate, endDate));
+
+		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
+	}
+
+	@Override
+	public Page<FestivalWithBookmarkAndSido> findFestivalsByQuery(Long userId, String query, Pageable pageable) {
+		List<FestivalWithBookmarkAndSido> festivals =
+			selectFestivalsWithBookmarkAndSido(pageable, userId)
+				.where(festivalNameContains(query))
+				.orderBy(festival.startDate.asc())
+				.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory
+			.select(festival.count())
+			.from(festival)
+			.where(festivalNameContains(query));
+
+		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
+	}
+
 	private List<OrderSpecifier> getAllOrderSpecifiers(Pageable pageable, Double latitude, Double longitude) {
 		List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
 
@@ -100,7 +133,7 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 			String property = order.getProperty();
 
 			// 정렬 조건이 dist 인 경우, 위도/경도 값을 받아서 새로운 specifier 를 만든다.
-			if ("dist".equals(property)) {
+			if ("dist" .equals(property)) {
 				OrderSpecifier distSpecifier = FestivalSortType.getDistanceOrderSpecifier(
 					order.getDirection().isAscending() ?
 						Order.ASC : Order.DESC, latitude, longitude);
@@ -206,6 +239,22 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 				festivalBookmarkUserIdEq(userId));
 	}
 
+	private JPAQuery<FestivalWithSido> selectFestivalWithSido() {
+
+		return queryFactory.select(
+				Projections.fields(FestivalWithSido.class,
+					festival.id.as("festivalId"),
+					festival.name,
+					sido.name.as("sido"),
+					festival.sigungu,
+					festival.startDate,
+					festival.endDate
+				)
+			).from(festival)
+			.leftJoin(sido)
+			.on(festival.sidoId.eq(sido.id));
+	}
+
 	private static BooleanExpression getOngoingFestivalCondition(LocalDate date) {
 		return festival.endDate.goe(Expressions.asDate(date));
 	}
@@ -220,6 +269,16 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 
 	private BooleanExpression getDateRangeCondition(LocalDate date) {
 		return festival.startDate.loe(date).and(festival.endDate.goe(date));
+	}
+
+	private BooleanExpression getDateBetweenCondition(LocalDate startDate, LocalDate endDate) {
+		return festival.startDate.between(startDate, endDate)
+			.or(festival.endDate.between(startDate, endDate))
+			.or(festival.startDate.loe(startDate).and(festival.endDate.goe(endDate)));
+	}
+
+	private BooleanExpression festivalNameContains(String name) {
+		return festival.name.contains(name);
 	}
 }
 

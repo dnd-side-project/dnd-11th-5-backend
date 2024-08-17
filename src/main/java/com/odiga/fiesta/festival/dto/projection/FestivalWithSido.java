@@ -7,7 +7,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @Getter
 @NoArgsConstructor
-public class FestivalWithBookmarkAndSido extends FestivalWithBookmark {
+public class FestivalWithSido extends FestivalData {
 
 	private String sido;
 }

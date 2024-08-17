@@ -21,7 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "Festival", description = "페스티벌 관련 API")
+@Tag(name = "Festival Static Data", description = "페스티벌 관련 정적 데이터 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/festivals")
