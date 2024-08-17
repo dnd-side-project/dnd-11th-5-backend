@@ -6,7 +6,7 @@ import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 
 import lombok.Builder;
 
-public class FestivalThisWeekResponse extends FestivalBasicResponse {
+public class FestivalThisWeekResponse extends FestivalBasic {
 
 	private String sido;
 	private String sigungu;
