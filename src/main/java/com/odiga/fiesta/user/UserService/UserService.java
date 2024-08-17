@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.jwt.TokenProvider;
 import com.odiga.fiesta.common.util.RedisUtils;
-import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.domain.accounts.OauthUser;
 import com.odiga.fiesta.user.repository.OauthUserRepository;
 import com.odiga.fiesta.user.dto.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,9 +23,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
+import java.util.Optional;
 
-import static com.odiga.fiesta.common.error.ErrorCode.INVALID_CODE;
-import static com.odiga.fiesta.common.error.ErrorCode.INVALID_TOKEN;
+import static com.odiga.fiesta.common.error.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -53,14 +53,18 @@ public class UserService {
         //OAuth2 액세스 토큰으로 회원 정보 요청
         JsonNode responseJson = getKakaoUserInfo(oauthAccessToken);
 
-        //회원 정보가 데이터베이스에 없으면 oauthId를 반환, 존재하면 null
-        Long oauthId = getProviderIdIfNotRegistered(responseJson);
+        //oauthId 조회
+        String oauthIdString = responseJson.get("id").asText();
+        Long oauthId = Long.parseLong(oauthIdString);
 
         String accessToken = null;
         String refreshToken = null;
 
-        if (oauthId == null) {
-            User user = oauthUserRepository.findByProviderId(oauthId);
+        Optional<OauthUser> optionalUser = oauthUserRepository.findByProviderId(oauthId);
+
+        //DB에 회원정보가 있을때 토큰 발급
+        if (optionalUser.isPresent()) {
+            OauthUser user = optionalUser.get();
 
             //토큰 생성
             accessToken = tokenProvider.generateToken(user, Duration.ofHours(2), "access");
@@ -118,9 +122,8 @@ public class UserService {
             try {
                 jsonNode = objectMapper.readTree(responseBody);
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                throw new CustomException(JSON_PARSING_ERROR);
             }
-            System.out.println("kakao_access_token : " + jsonNode.get("access_token").asText());
             return jsonNode.get("access_token").asText();
 
         } catch (HttpClientErrorException e) {
@@ -158,28 +161,9 @@ public class UserService {
             return objectMapper.readTree(responseBody);
 
         } catch (HttpClientErrorException e) { // HTTP 오류 응답 처리
-            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) { // 유효한 토큰 X
-                throw new CustomException(INVALID_TOKEN);
-            }
-            throw new RuntimeException("HTTP error occurred: " + e.getStatusCode(), e);
+            throw new CustomException(INVALID_TOKEN);
         } catch (JsonProcessingException e) { // JSON 파싱 오류 처리
-            throw new RuntimeException("JSON processing error", e);
+            throw new CustomException(JSON_PARSING_ERROR);
         }
-    }
-
-    /**
-     * 카카오 회원 정보가 데이터베이스에 존재하는지 확인하고,
-     * 존재하면 null을, 존재하지 않으면 providerId를 반환하는 메서드이다.
-     *
-     * @param responseJson JSON 형식의 카카오 회원 정보
-     * @return 존재하지 않으면 providerId, 존재하면 null
-     */
-    private Long getProviderIdIfNotRegistered(JsonNode responseJson) {
-        String oauthIdString = responseJson.get("id").asText();
-        Long oauthId = Long.parseLong(oauthIdString);
-
-        boolean userExists = oauthUserRepository.existsByProviderId(oauthId);
-
-        return userExists ? null : oauthId;
     }
 }

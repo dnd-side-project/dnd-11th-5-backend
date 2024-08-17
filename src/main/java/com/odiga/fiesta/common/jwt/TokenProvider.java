@@ -1,5 +1,7 @@
 package com.odiga.fiesta.common.jwt;
 
+import com.odiga.fiesta.common.error.ErrorCode;
+import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.user.domain.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -9,29 +11,36 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
 
 @RequiredArgsConstructor
-@Service
+@Component
 @Slf4j
 public class TokenProvider {
 
     @Value("${spring.jwt.secret}")
     private String secretKeyString; // secretKey는 String으로 저장됨
 
+    private final Clock clock;
+
     private Key getSecretKey() {
         return Keys.hmacShaKeyFor(secretKeyString.getBytes()); // Key 객체로 변환
     }
 
     public String generateToken(User user, Duration expiredAt, String category) {
-        Date now = new Date();
-        return makeToken(new Date(now.getTime() + expiredAt.toMillis()), user, category);
+        LocalDateTime now = LocalDateTime.now(clock);
+        Date expiryDate = Date.from(now.plus(expiredAt).atZone(ZoneId.systemDefault()).toInstant());
+
+        return makeToken(expiryDate, user, category);
     }
 
     /**
@@ -42,18 +51,18 @@ public class TokenProvider {
      * @return 생성된 토큰
      */
     private String makeToken(Date expiry, User user, String category) {
-        Date now = new Date();
-        System.out.println("Token issued at: " + now);
-        System.out.println("Token expires at: " + expiry);
+        Date now = Date.from(LocalDateTime.now(clock).atZone(ZoneId.systemDefault()).toInstant());
+        log.info("Token issued at: {}", now);
+        log.info("Token expires at: {}", expiry);
 
         return Jwts.builder()
-                .setHeaderParam(Header.TYPE, Header.JWT_TYPE)   // 헤더 typ(타입) : JWT
-                .setIssuedAt(now)                               // 내용 iat(발급 일시) : 현재 시간
-                .setExpiration(expiry)                          // 내용 exp(만료일시) : expiry 멤버 변수값
-                .setSubject(String.valueOf(user.getId()))     // 내용 sub(토큰 제목) : 회원 ID
-                .claim("id", user.getId())              // 클레임 id : 회원 ID
-                .claim("category", category)  // access or refresh
-                .signWith(getSecretKey(), SignatureAlgorithm.HS256) // HS256 방식으로 암호화
+                .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .setSubject(String.valueOf(user.getId()))
+                .claim("id", user.getId())
+                .claim("category", category)
+                .signWith(getSecretKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -72,12 +81,12 @@ public class TokenProvider {
             return true;
         } catch (ExpiredJwtException e) {
             // 토큰이 만료되었음을 명시적으로 처리
-            System.out.println("Expired JWT token: " + e.getMessage());
-            throw e;
+            log.info("Expired JWT token: {}", e.getMessage());
+            throw new CustomException(ErrorCode.TOKEN_EXPIRED);
         } catch (Exception e) {
             // 서명 오류, 잘못된 토큰 등 기타 JWT 관련 오류를 처리
-            System.out.println("Invalid JWT token: " + e.getMessage());
-            throw e;
+            log.info("Invalid JWT token: {}", e.getMessage());
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
     }
 

@@ -1,6 +1,8 @@
 package com.odiga.fiesta.common.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.odiga.fiesta.common.error.ErrorCode;
+import com.odiga.fiesta.common.error.exception.CustomException;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -48,13 +50,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             Authentication authentication = tokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        } catch (ExpiredJwtException e) {
-            // 만료된 토큰 처리
-            sendErrorResponse(response, "만료된 토큰입니다.", "U402");
-            return;
-        } catch (Exception e) {
-            // 유효하지 않은 토큰 처리
-            sendErrorResponse(response, "유효하지 않은 토큰입니다.", "U401");
+        } catch (CustomException e) {
+            sendErrorResponse(response, e.getErrorCode());
             return;
         }
 
@@ -62,7 +59,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String category = tokenProvider.getCategory(token);
         if (!"access".equals(category)) {
             System.out.println("category: " + category);
-            sendErrorResponse(response, "카테고리가 다른 토큰입니다.", "U402");
+            sendErrorResponse(response, ErrorCode.DIFFERENT_CATEGORY);
             return;
         }
 
@@ -76,16 +73,16 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private void sendErrorResponse(HttpServletResponse response, String message, String code) throws IOException {
+    private void sendErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setStatus(errorCode.getStatus());
 
         // JSON 객체 생성
         Map<String, Object> errorResponse = new LinkedHashMap<>();
-        errorResponse.put("statusCode", 401);
-        errorResponse.put("code", code);
-        errorResponse.put("message", message);
+        errorResponse.put("statusCode", errorCode.getStatus());
+        errorResponse.put("code", errorCode.getCode());
+        errorResponse.put("message", errorCode.getMessage());
 
         // JSON 변환기 생성
         ObjectMapper objectMapper = new ObjectMapper();

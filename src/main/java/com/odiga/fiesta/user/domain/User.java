@@ -3,6 +3,7 @@ package com.odiga.fiesta.user.domain;
 import com.odiga.fiesta.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
