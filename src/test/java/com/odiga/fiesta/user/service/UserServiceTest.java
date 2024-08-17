@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
-import com.odiga.fiesta.user.UserService.UserService;
 import com.odiga.fiesta.user.domain.accounts.OauthUser;
 import com.odiga.fiesta.user.domain.oauth.OauthProvider;
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,5 +63,68 @@ class UserServiceTest {
         assertThatThrownBy(() -> userService.kakaoLogin(invalidCode, request, response))
                 .isInstanceOf(CustomException.class)
                 .hasMessageContaining("유효하지 않은 인가코드입니다.");
+    }
+
+
+    @DisplayName("카카오 로그인 - 신규 사용자 등록 시 토큰 생성 및 반환")
+    @Test
+    void kakaoLogin_newUser() {
+        // given
+        String code = "sample-code";
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        String accessToken = "sample-access-token";
+        String refreshToken = "sample-refresh-token";
+
+        // Mocking repository and token provider
+        when(oauthUserRepository.findByProviderId(anyLong())).thenReturn(null);
+        when(tokenProvider.generateToken(any(User.class), any(), any()))
+                .thenReturn(accessToken)  // 첫 번째 호출 반환값
+                .thenReturn(refreshToken); // 두 번째 호출 반환값
+
+        // when
+        UserResponse.loginDTO result = userService.kakaoLogin(code, request, response);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getAccessToken()).isEqualTo(accessToken);
+        assertThat(result.getRefreshToken()).isEqualTo(refreshToken);
+    }
+
+    @DisplayName("카카오 로그인 - 기존 사용자일 때")
+    @Test
+    void kakaoLogin_existingUser() {
+        // given
+        String code = "sample-code";
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        OauthUser existingUser = new OauthUser(
+                1L,          // userTypeId
+                1L,                    // roleId
+                "testNickname",        // nickname
+                "statusMessage",       // statusMessage
+                "profileImageUrl",     // profileImage
+                123L,                  // providerId
+                OauthProvider.KAKAO    // provider
+        );
+
+        String accessToken = "sample-access-token";
+        String refreshToken = "sample-refresh-token";
+
+        // Mocking repository and token provider
+        when(oauthUserRepository.findByProviderId(anyLong())).thenReturn(Optional.of(existingUser));
+        when(tokenProvider.generateToken(any(User.class), any(), any()))
+                .thenReturn(accessToken)  // 첫 번째 호출 반환값
+                .thenReturn(refreshToken); // 두 번째 호출 반환값
+
+        // when
+        UserResponse.loginDTO result = userService.kakaoLogin(code, request, response);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getAccessToken()).isEqualTo(accessToken);
+        assertThat(result.getRefreshToken()).isEqualTo(refreshToken);
     }
 }
