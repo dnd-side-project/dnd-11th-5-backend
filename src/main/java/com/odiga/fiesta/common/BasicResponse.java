@@ -43,4 +43,8 @@ public class BasicResponse<T> {
 	public static <T> BasicResponse<T> ok(String message, T data) {
 		return of(HttpStatus.OK, message, data);
 	}
+
+	public static <T> BasicResponse<T> created(String message, T data) {
+		return of(HttpStatus.CREATED, message, data);
+	}
 }
