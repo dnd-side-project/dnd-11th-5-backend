@@ -185,7 +185,7 @@ public class FestivalController {
 	}
 
 	@Operation(summary = "HOT 페스티벌 조회", description = "스크랩 수 순서대로 페스티벌을 조회합니다.")
-	@GetMapping("/mostlkie")
+	@GetMapping("/mostlike")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfo>>> getHotFestival(
 		@PageableDefault(size = 6) Pageable pageable
 	) {
