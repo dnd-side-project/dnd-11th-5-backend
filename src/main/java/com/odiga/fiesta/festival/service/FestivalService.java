@@ -165,7 +165,7 @@ public class FestivalService {
 	private List<FestivalInfoWithBookmark> getFestivalWithBookmarkAndSidoAndThumbnailImage(
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters) {
 		return festivalsByFilters.getContent().stream().map(festival -> {
-			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
+			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
 			return FestivalInfoWithBookmark.of(festival, thumbnailImage);
 		}).toList();
 	}
@@ -193,7 +193,7 @@ public class FestivalService {
 	private List<FestivalInfo> getFestivalAndSidoWithThumbnailImage(
 		Page<FestivalWithSido> festivals) {
 		return festivals.getContent().stream().map(festival -> {
-			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
+			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
 			return FestivalInfo.of(festival, thumbnailImage);
 		}).toList();
 	}
