@@ -3,8 +3,6 @@ package com.odiga.fiesta.sido.domain;
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
 
-import com.odiga.fiesta.common.domain.BaseEntity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,7 +19,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)
 @Table(name = "Sido")
-public class Sido extends BaseEntity {
+public class Sido {
 
 	@Id
 	@GeneratedValue(strategy = IDENTITY)

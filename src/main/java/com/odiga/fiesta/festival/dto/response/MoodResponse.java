@@ -12,12 +12,12 @@ import lombok.RequiredArgsConstructor;
 public class MoodResponse {
 
 	private final Long moodId;
-	private final String mood;
+	private final String name;
 
 	public static MoodResponse of(final Mood mood) {
 		return new MoodResponse(
 			mood.getId(),
-			mood.getMood()
+			mood.getName()
 		);
 	}
 }
