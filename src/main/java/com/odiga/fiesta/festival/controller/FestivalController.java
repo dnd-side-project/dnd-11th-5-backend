@@ -162,16 +162,6 @@ public class FestivalController {
 		return ResponseEntity.ok(BasicResponse.ok("페스티벌 상세 조회 성공", festival));
 	}
 
-	private void validateQuery(String query) {
-		if (isNull(query) || query.isEmpty()) {
-			throw new CustomException(QUERY_CANNOT_BE_EMPTY);
-		}
-
-		if (query.isBlank()) {
-			throw new CustomException(QUERY_CANNOT_BE_BLANK);
-		}
-	}
-
 	@Operation(
 		summary = "이번 주 페스티벌 조회",
 		description = "이번 주에 진행되고 있는 페스티벌을 조회한다."
