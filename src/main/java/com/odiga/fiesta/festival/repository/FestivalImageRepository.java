@@ -12,7 +12,7 @@ import com.odiga.fiesta.festival.domain.FestivalImage;
 public interface FestivalImageRepository extends JpaRepository<FestivalImage, Long> {
 
 	@Query("SELECT fi.imageUrl FROM FestivalImage fi WHERE fi.festivalId = :festivalId")
-	String findImageUrlByFestivalId(@Param("festivalId") Long festivalId);
+	String findFirstImageUrlByFestivalId(@Param("festivalId") Long festivalId);
 
 	List<FestivalImage> findAllByFestivalId(Long festivalId);
 }

@@ -43,7 +43,8 @@ public enum ErrorCode {
 	FESTIVAL_IS_PENDING(400, "F009", "승인되지 않은 페스티벌입니다."),
 
 	// LOG
-	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다.");
+	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다."),
+	LOG_IMAGE_COUNT_EXCEEDED(400, "L002", "이미지는 최대 3개까지 업로드 가능합니다.");
 
 	private final int status;
 	private final String code;
