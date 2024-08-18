@@ -16,6 +16,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Getter
 @NoArgsConstructor(access = PROTECTED)
 @DiscriminatorValue("oauth")
+@SuperBuilder
 public class OauthUser extends User {
 
     @Column(name = "provider_id", nullable = false)
@@ -25,11 +26,4 @@ public class OauthUser extends User {
     @NotNull
     @ColumnDefault("KAKAO")
     private OauthProvider provider;
-
-    public OauthUser(Long userTypeId, Long roleId, String nickname, String statusMessage, String profileImage,
-                     Long providerId, OauthProvider provider) {
-        super(userTypeId, roleId, nickname, statusMessage, profileImage); // User 클래스의 필드 초기화
-        this.providerId = providerId;
-        this.provider = provider;
-    }
 }

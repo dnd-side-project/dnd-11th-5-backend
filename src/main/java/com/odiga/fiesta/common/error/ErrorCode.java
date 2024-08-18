@@ -36,6 +36,7 @@ public enum ErrorCode {
     INVALID_TOKEN(401, "U003", "유효하지 않은 토큰입니다."),
     TOKEN_EXPIRED(401, "U004", "만료된 토큰입니다."),
     DIFFERENT_CATEGORY(401, "U005", "카테고리가 다른 토큰입니다."),
+    ALREADY_JOINED(400, "U006", "이미 존재하는 유저입니다."),
 
     // Festival
     INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."),

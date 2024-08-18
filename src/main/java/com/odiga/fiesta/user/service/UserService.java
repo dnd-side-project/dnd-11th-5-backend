@@ -6,8 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.jwt.TokenProvider;
 import com.odiga.fiesta.common.util.RedisUtils;
+import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.domain.accounts.OauthUser;
-import com.odiga.fiesta.user.repository.OauthUserRepository;
+import com.odiga.fiesta.user.domain.mapping.UserCategory;
+import com.odiga.fiesta.user.domain.mapping.UserCompanion;
+import com.odiga.fiesta.user.domain.mapping.UserMood;
+import com.odiga.fiesta.user.domain.mapping.UserPriority;
+import com.odiga.fiesta.user.domain.oauth.OauthProvider;
+import com.odiga.fiesta.user.dto.UserRequest;
+import com.odiga.fiesta.user.repository.*;
 import com.odiga.fiesta.user.dto.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,9 +30,11 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
+import static com.odiga.fiesta.common.error.ErrorCode.ALREADY_JOINED;
 
 @Slf4j
 @Service
@@ -34,10 +43,16 @@ import static com.odiga.fiesta.common.error.ErrorCode.*;
 public class UserService {
 
     private final OauthUserRepository oauthUserRepository;
+    private final UserCategoryRepository userCategoryRepository;
+    private final UserCompanionRepository userCompanionRepository;
+    private final UserMoodRepository userMoodRepository;
+    private final UserPriorityRepository userPriorityRepository;
 
     private final TokenProvider tokenProvider;
 
-    private final RedisUtils redisUtils;
+    private final RedisUtils<String> redisUtils;
+
+    private final UserTypeService userTypeService;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String CLIENT_ID;
@@ -45,6 +60,7 @@ public class UserService {
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
 
+    // 카카오 로그인
     @Transactional
     public UserResponse.loginDTO kakaoLogin(String code) {
         //인가코드로 OAuth2 액세스 토큰 요청
@@ -79,6 +95,51 @@ public class UserService {
         //응답 설정
         return UserResponse.loginDTO.builder()
                 .oauthId(oauthId)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    // 프로필 생성
+    @Transactional
+    public UserResponse.createProfileDTO createProfile(Long oauthId, UserRequest.createProfileDTO request) {
+
+        // 이미 존재하는 회원 정보인지 검사
+        if (oauthUserRepository.existsByProviderId(oauthId)) throw new CustomException(ALREADY_JOINED);
+
+        // 유저 유형 도출
+        UserType userType = userTypeService.getUserType(request);
+
+        // DB에 OUATH 회원 정보 저장
+        OauthUser user = OauthUser.builder()
+                .userTypeId(userType.getId())
+                .roleId(1L)
+                .nickname(generateRandomNickname())
+                .profileImage(userType.getProfileImage())
+                .statusMessage("페스티벌의 시작 피에스타와 함께!")
+                .provider(OauthProvider.KAKAO)
+                .providerId(oauthId)
+                .build();
+
+        oauthUserRepository.save(user);
+
+        // 온보딩 정보 저장
+        saveOnBoardingInfo(user.getId(), request);
+
+        //토큰 생성
+        String accessToken = tokenProvider.generateToken(user, Duration.ofHours(2), "access");
+        String refreshToken = tokenProvider.generateToken(user, Duration.ofDays(14), "refresh");
+        log.info("access: " + accessToken);
+        log.info("refresh : " + refreshToken);
+
+        //Refresh 토큰 저장
+        redisUtils.setData(user.getId().toString(), refreshToken, Duration.ofDays(14).toMillis());
+
+        // DTO 반환
+        return UserResponse.createProfileDTO.builder()
+                .userTypeId(userType.getId())
+                .userTypeName(userType.getName())
+                .userTypeImage(userType.getProfileImage())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -165,5 +226,74 @@ public class UserService {
         } catch (JsonProcessingException e) { // JSON 파싱 오류 처리
             throw new CustomException(JSON_PARSING_ERROR);
         }
+    }
+
+    private static final String[] ADJECTIVES = {
+            "심야의", "섬세한", "은밀한", "산책하는", "졸린", "자유로운", "따분한",
+            "차분한", "우아한", "소심한", "활발한", "용감한", "신비로운", "산뜻한",
+            "겁많은", "피곤한", "말많은", "달리는", "화려한", "활기찬"
+    };
+
+    private static final String[] ANIMALS = {
+            "족제비", "독수리", "여우", "고양이", "판다", "돌고래", "곰", "거북이",
+            "백조", "토끼", "다람쥐", "강아지", "올빼미", "오리", "코끼리", "사자",
+            "원숭이", "치타", "플라밍고", "호랑이"
+    };
+
+    private static final Random RANDOM = new Random();
+
+    // 랜덤 닉네임 생성 메소드
+    private String generateRandomNickname() {
+        String adjective = ADJECTIVES[RANDOM.nextInt(ADJECTIVES.length)];
+        String animal = ANIMALS[RANDOM.nextInt(ANIMALS.length)];
+        return adjective + " " + animal;
+    }
+
+    // 온보딩 정보 저장
+    private void saveOnBoardingInfo(Long userId, UserRequest.createProfileDTO request) {
+        List<Long> categories = request.getCategory();
+        List<Long> moods = request.getMood();
+        List<Long> companions = request.getCompanion();
+        List<Long> priorities = request.getPriority();
+
+        // 카테고리 정보 저장
+        List<UserCategory> userCategories = categories.stream()
+                .map(categoryId -> UserCategory.builder()
+                        .userId(userId)
+                        .categoryId(categoryId)
+                        .build())
+                .collect(Collectors.toList());
+
+        userCategoryRepository.saveAll(userCategories);
+
+        // 분위기 정보 저장
+        List<UserMood> userMoods = moods.stream()
+                .map(moodId -> UserMood.builder()
+                        .userId(userId)
+                        .moodId(moodId)
+                        .build())
+                .collect(Collectors.toList());
+
+        userMoodRepository.saveAll(userMoods);
+
+        // 동행유형 정보 저장
+        List<UserCompanion> userCompanions = companions.stream()
+                .map(companionId -> UserCompanion.builder()
+                        .userId(userId)
+                        .companionId(companionId)
+                        .build())
+                .collect(Collectors.toList());
+
+        userCompanionRepository.saveAll(userCompanions);
+
+        // 우선순위 정보 저장
+        List<UserPriority> userPriorities = priorities.stream()
+                .map(priorityId -> UserPriority.builder()
+                        .userId(userId)
+                        .priorityId(priorityId)
+                        .build())
+                .collect(Collectors.toList());
+
+        userPriorityRepository.saveAll(userPriorities);
     }
 }

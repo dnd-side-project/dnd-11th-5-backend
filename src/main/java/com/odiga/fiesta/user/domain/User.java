@@ -15,6 +15,7 @@ import static lombok.AccessLevel.PROTECTED;
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "account_type")
 @Table(name = "`user`")
+@SuperBuilder
 public class User extends BaseEntity {
 
     @Id
@@ -37,12 +38,4 @@ public class User extends BaseEntity {
     @Column(name = "profile_image", length = 1024)
     private String profileImage;
 
-    @Builder
-    public User(Long userTypeId, Long roleId, String nickname, String statusMessage, String profileImage) {
-        this.userTypeId = userTypeId;
-        this.roleId = roleId;
-        this.nickname = nickname;
-        this.statusMessage = statusMessage;
-        this.profileImage = profileImage;
-    }
 }
