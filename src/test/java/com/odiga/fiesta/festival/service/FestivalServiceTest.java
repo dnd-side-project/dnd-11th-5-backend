@@ -10,17 +10,13 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,21 +25,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.domain.FestivalBookmark;
 import com.odiga.fiesta.festival.domain.FestivalImage;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
-import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
-import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
+import com.odiga.fiesta.festival.repository.FestivalBookmarkRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.sido.domain.Sido;
@@ -68,6 +62,9 @@ class FestivalServiceTest {
 
 	@Autowired
 	private SidoRepository sidoRepository;
+
+	@Autowired
+	private FestivalBookmarkRepository festivalBookmarkRepository;
 
 	@SpyBean
 	private Clock clock;
@@ -194,7 +191,7 @@ class FestivalServiceTest {
 		Pageable pageable = PageRequest.of(0, 10);
 
 		// when
-		Page<FestivalInfo> result = festivalService.getFestivalsByDay(null, 2024, 10, 4, pageable);
+		Page<FestivalInfoWithBookmark> result = festivalService.getFestivalsByDay(null, 2024, 10, 4, pageable);
 
 		// then
 		assertThat(result.getContent()).hasSize(1)
@@ -225,7 +222,7 @@ class FestivalServiceTest {
 		festivalRepository.saveAll(List.of(festival1, festival2, festival3, festival4));
 
 		// when
-		Page<FestivalInfo> responses = festivalService.getFestivalByFiltersAndSort(null,
+		Page<FestivalInfoWithBookmark> responses = festivalService.getFestivalByFiltersAndSort(null,
 			filterRequest, null, null, pageable);
 
 		System.out.println("response: " + responses.getContent());
@@ -252,7 +249,7 @@ class FestivalServiceTest {
 		festivalRepository.saveAll(List.of(festival1, festival2, festival3, festival4));
 
 		// when
-		Page<FestivalInfo> responses = festivalService.getFestivalByFiltersAndSort(null,
+		Page<FestivalInfoWithBookmark> responses = festivalService.getFestivalByFiltersAndSort(null,
 			filterRequest, currentLatitude, currentLongitude, pageable);
 
 		// then
@@ -278,7 +275,7 @@ class FestivalServiceTest {
 		Pageable pageable = PageRequest.of(0, 6);
 
 		// when
-		Page<FestivalInfo> festivals = festivalService.getFestivalsByQuery(null, "펜타", pageable);
+		Page<FestivalInfoWithBookmark> festivals = festivalService.getFestivalsByQuery(null, "펜타", pageable);
 
 		// then
 		assertThat(festivals.getContent())
@@ -299,7 +296,7 @@ class FestivalServiceTest {
 		Pageable pageable = PageRequest.of(0, 6);
 
 		// when
-		Page<FestivalInfo> festivals = festivalService.getFestivalsByQuery(null, "마바사아", pageable);
+		Page<FestivalInfoWithBookmark> festivals = festivalService.getFestivalsByQuery(null, "마바사아", pageable);
 
 		// then
 		assertThat(festivals.getContent()).isEmpty();
@@ -341,7 +338,7 @@ class FestivalServiceTest {
 		festivalRepository.saveAll(List.of(festival1, festival2, festival3, festival4));
 
 		// when
-		Page<FestivalThisWeekResponse> responses = festivalService.getFestivalsInThisWeek(pageable);
+		Page<FestivalInfo> responses = festivalService.getFestivalsInThisWeek(pageable);
 
 		// then
 		assertThat(responses.getContent())
@@ -351,6 +348,88 @@ class FestivalServiceTest {
 				LocalDate.of(2023, 12, 31),
 				LocalDate.of(2024, 1, 7)
 			);
+	}
+
+	@DisplayName("HOT 한 페스티벌 조회")
+	@Test
+	void getHotFestivals() {
+		// given
+		Long userId = 1L;
+
+		Festival festival1 = festivalRepository.save(createFestival("북마크 5"));
+		Festival festival2 = festivalRepository.save(createFestival("북마크 3"));
+		Festival festival3 = festivalRepository.save(createFestival("북마크 2"));
+		Festival festival4 = festivalRepository.save(createFestival("북마크 4"));
+		Festival festival5 = festivalRepository.save(createFestival("북마크 0"));
+		Festival festival6 = festivalRepository.save(createFestival("북마크 1"));
+
+		for (int i = 0; i < 5; i++) {
+			FestivalBookmark bookmark = festivalBookmarkRepository.save(
+				createFestivalBookmark(festival1.getId(), userId));
+		}
+
+		for (int i = 0; i < 3; i++) {
+			FestivalBookmark bookmark = festivalBookmarkRepository.save(
+				createFestivalBookmark(festival2.getId(), userId));
+		}
+
+		for (int i = 0; i < 2; i++) {
+			FestivalBookmark bookmark = festivalBookmarkRepository.save(
+				createFestivalBookmark(festival3.getId(), userId));
+		}
+
+		for (int i = 0; i < 4; i++) {
+			FestivalBookmark bookmark = festivalBookmarkRepository.save(
+				createFestivalBookmark(festival4.getId(), userId));
+		}
+
+		FestivalBookmark bookmark6 = festivalBookmarkRepository.save(createFestivalBookmark(festival6.getId(), userId));
+
+		// when
+		Page<FestivalInfo> hotFestivals = festivalService.getHotFestivals(PageRequest.of(0, 3));
+
+		// then -> 북마크 5, 북마크 4, 북마크 3
+		assertEquals(6, hotFestivals.getTotalElements());
+
+		System.out.println(hotFestivals.getContent());
+
+		assertThat(hotFestivals.getContent())
+			.hasSize(3)
+			.extracting("name")
+			.containsExactly(
+				"북마크 5",
+				"북마크 4",
+				"북마크 3"
+			);
+	}
+
+	private static FestivalBookmark createFestivalBookmark(Long festvialId, Long userId) {
+		return FestivalBookmark.builder()
+			.festivalId(festvialId)
+			.userId(userId)
+			.build();
+	}
+
+	private static Festival createFestival() {
+		return Festival.builder()
+			.userId(1L)
+			.name("페스티벌 이름")
+			.startDate(LocalDate.of(2024, 10, 4))
+			.endDate(LocalDate.of(2024, 10, 4))
+			.address("페스티벌 주소")
+			.sidoId(1L)
+			.sigungu("시군구")
+			.latitude(10.1)
+			.longitude(10.1)
+			.tip("페스티벌 팁")
+			.homepageUrl("홈페이지 url")
+			.instagramUrl("인스타그램 url")
+			.fee("비용")
+			.description("페스티벌 상세 설명")
+			.ticketLink("티켓 링크")
+			.playtime("페스티벌 진행 시간")
+			.isPending(false)
+			.build();
 	}
 
 	private static Festival createFestival(LocalDate startDate, LocalDate endDate, Long sidoId) {

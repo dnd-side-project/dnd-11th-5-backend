@@ -10,4 +10,16 @@ import lombok.experimental.SuperBuilder;
 public class FestivalWithSido extends FestivalData {
 
 	private String sido;
+
+	public static FestivalWithSido of(FestivalWithBookmarkCountAndSido festival) {
+		return FestivalWithSido.builder()
+			.festivalId(festival.getFestivalId())
+			.name(festival.getName())
+			.sigungu(festival.getSigungu())
+			.startDate(festival.getStartDate())
+			.endDate(festival.getEndDate())
+			.sido(festival.getSido())
+			.build();
+	}
+
 }
