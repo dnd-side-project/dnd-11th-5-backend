@@ -21,7 +21,7 @@ import com.odiga.fiesta.log.dto.request.LogCreateRequest;
 import com.odiga.fiesta.log.repository.LogImageRepository;
 import com.odiga.fiesta.s3.service.S3Service;
 import com.odiga.fiesta.user.domain.User;
-import com.odiga.fiesta.user.domain.repository.UserRepository;
+import com.odiga.fiesta.user.repository.UserRepository;
 
 class LogMockServiceTest extends MockTestSupport {
 
