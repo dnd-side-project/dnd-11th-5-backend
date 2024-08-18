@@ -119,7 +119,7 @@ class LogControllerTest extends ControllerTestSupport {
 			.sigungu("강남구")
 			.address("어디 어디")
 			.content("방문일지 내용")
-			.keywordIds(List.of(1, 2))
+			.keywordIds(List.of(1L, 2L))
 			.build();
 
 		MockMultipartFile file1 = new MockMultipartFile("files", "image1.jpg", "image/jpeg", "image data".getBytes());
@@ -157,7 +157,7 @@ class LogControllerTest extends ControllerTestSupport {
 			.sigungu("강남구")
 			.address("어디 어디")
 			.content("방문일지 내용")
-			.keywordIds(List.of(1, 2))
+			.keywordIds(List.of(1L, 2L))
 			.build();
 
 		MockMultipartFile file1 = new MockMultipartFile("files", "image1.jpg", "image/jpeg", "image data".getBytes());
@@ -192,7 +192,7 @@ class LogControllerTest extends ControllerTestSupport {
 			.sigungu("강남구")
 			.address("어디 어디")
 			.content("방문일지 내용")
-			.keywordIds(List.of(1, 2))
+			.keywordIds(List.of(1L, 2L))
 			.build();
 
 		MockMultipartFile file1 = new MockMultipartFile("files", "image1.exe", "application/octet-stream",
@@ -236,7 +236,7 @@ class LogControllerTest extends ControllerTestSupport {
 			.sigungu("강남구")
 			.address("어디 어디")
 			.content("방문일지 내용")
-			.keywordIds(List.of(1, 2))
+			.keywordIds(List.of(1L, 2L))
 			.build();
 
 		MockMultipartFile file1 = new MockMultipartFile("files", "image1.jpg", "image/jpeg", "image data".getBytes());
