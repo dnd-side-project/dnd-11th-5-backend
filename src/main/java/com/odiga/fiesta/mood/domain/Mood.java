@@ -21,12 +21,12 @@ public class Mood {
 	@Column(name = "mood_id")
 	private Long id;
 
-	@Column(nullable = false)
-	private String mood;
+	@Column(name = "mood", nullable = false)
+	private String name;
 
 	@Builder
-	public Mood(Long id, String mood) {
+	public Mood(Long id, String name) {
 		this.id = id;
-		this.mood = mood;
+		this.name = name;
 	}
 }

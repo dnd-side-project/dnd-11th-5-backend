@@ -27,6 +27,7 @@ import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalBookmarkResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
@@ -150,6 +151,18 @@ public class FestivalController {
 	}
 
 	@Operation(
+		summary = "페스티벌 상세 조회",
+		description = "페스티벌을 상세 조회합니다."
+	)
+	@GetMapping("/{festivalId}")
+	public ResponseEntity<BasicResponse<FestivalDetailResponse>> getFestival(
+		@AuthenticationPrincipal User user, @PathVariable Long festivalId) {
+
+		FestivalDetailResponse festival = festivalService.getFestival(isNull(user) ? null : user.getId(), festivalId);
+		return ResponseEntity.ok(BasicResponse.ok("페스티벌 상세 조회 성공", festival));
+	}
+
+	@Operation(
 		summary = "이번 주 페스티벌 조회",
 		description = "이번 주에 진행되고 있는 페스티벌을 조회한다."
 	)
@@ -193,7 +206,7 @@ public class FestivalController {
 		for (Sort.Order order : pageable.getSort()) {
 			String property = order.getProperty();
 
-			if ("dist" .equals(property) && (isNull(latitude) || isNull(longitude))) {
+			if ("dist".equals(property) && (isNull(latitude) || isNull(longitude))) {
 				throw new CustomException(INVALID_CURRENT_LOCATION);
 			}
 		}

@@ -28,8 +28,8 @@ class MoodServiceTest extends MockTestSupport {
 	void getAllMoods() {
 		// given
 		List<Mood> moods = List.of(
-			Mood.builder().id(1L).mood("낭만적인").build(),
-			Mood.builder().id(2L).mood("모험적인").build()
+			Mood.builder().id(1L).name("낭만적인").build(),
+			Mood.builder().id(2L).name("모험적인").build()
 		);
 
 		given(moodRepository.findAll())

@@ -1,4 +1,4 @@
-package com.odiga.fiesta.sido.domain;
+package com.odiga.fiesta.festival.domain;
 
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
@@ -15,19 +15,20 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Table(name = "festival_mood")
 @Builder
 @AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)
-@Table(name = "sido")
-public class Sido {
+public class FestivalMood {
 
 	@Id
 	@GeneratedValue(strategy = IDENTITY)
-	@Column(name = "sido_id")
+	@Column(name = "festival_mood_id", nullable = false)
 	private Long id;
 
-	@Column(name = "sido")
-	private String name;
+	@Column(name = "festival_id", nullable = false)
+	private Long festivalId;
 
-	private Integer code;
+	@Column(name = "mood_id", nullable = false)
+	private Long moodId;
 }

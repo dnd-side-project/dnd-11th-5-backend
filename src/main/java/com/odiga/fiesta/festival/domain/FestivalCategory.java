@@ -1,7 +1,9 @@
-package com.odiga.fiesta.sido.domain;
+package com.odiga.fiesta.festival.domain;
 
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
+
+import com.odiga.fiesta.common.domain.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,19 +17,20 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Table(name = "festival_category")
 @Builder
 @AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)
-@Table(name = "sido")
-public class Sido {
+public class FestivalCategory extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = IDENTITY)
-	@Column(name = "sido_id")
+	@Column(name = "festival_category_id", nullable = false)
 	private Long id;
 
-	@Column(name = "sido")
-	private String name;
+	@Column(name = "festival_id", nullable = false)
+	private Long festivalId;
 
-	private Integer code;
+	@Column(name = "category_id", nullable = false)
+	private Long categoryId;
 }
