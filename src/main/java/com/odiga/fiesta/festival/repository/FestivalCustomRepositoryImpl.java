@@ -260,8 +260,8 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 					sido.name.as("sido")
 				)
 			).from(festival)
-			.leftJoin(festivalBookmark)
-			.on(festivalBookmark.festivalId.eq(festival.id),
+			.leftJoin(festivalBookmarkForIsBookmarked)
+			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id),
 				festivalBookmarkUserIdEq(userId))
 			.leftJoin(sido)
 			.on(sido.id.eq(festival.sidoId))
