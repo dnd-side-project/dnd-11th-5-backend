@@ -27,6 +27,7 @@ import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalBookmarkResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
@@ -149,6 +150,18 @@ public class FestivalController {
 		return ResponseEntity.ok(BasicResponse.ok("실시간 급상승 페스티벌 조회 성공", trendingFestival));
 	}
 
+	@Operation(
+		summary = "페스티벌 상세 조회",
+		description = "페스티벌을 상세 조회합니다."
+	)
+	@GetMapping("/{festivalId}")
+	public ResponseEntity<BasicResponse<FestivalDetailResponse>> getFestival(
+		@AuthenticationPrincipal User user, @PathVariable Long festivalId) {
+
+		FestivalDetailResponse festival = festivalService.getFestival(isNull(user) ? null : user.getId(), festivalId);
+		return ResponseEntity.ok(BasicResponse.ok("페스티벌 상세 조회 성공", festival));
+	}
+
 	private void validateQuery(String query) {
 		if (isNull(query) || query.isEmpty()) {
 			throw new CustomException(QUERY_CANNOT_BE_EMPTY);
@@ -169,7 +182,7 @@ public class FestivalController {
 
 		Page<FestivalThisWeekResponse> festivalsInThisWeek = festivalService.getFestivalsInThisWeek(pageable);
 		return ResponseEntity.ok(BasicResponse.ok("이번 주 페스티벌 조회 성공", PageResponse.of(festivalsInThisWeek)));
-  }
+	}
 
 	@Operation(summary = "페스티벌 북마크 등록/해제", description = "페스티벌 북마크를 등록 또는 해제합니다.")
 	@PatchMapping("/{festivalId}/bookmark")
@@ -193,7 +206,7 @@ public class FestivalController {
 		for (Sort.Order order : pageable.getSort()) {
 			String property = order.getProperty();
 
-			if ("dist".equals(property) && (isNull(latitude) || isNull(longitude))) {
+			if ("dist" .equals(property) && (isNull(latitude) || isNull(longitude))) {
 				throw new CustomException(INVALID_CURRENT_LOCATION);
 			}
 		}

@@ -27,17 +27,25 @@ import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.dto.projection.FestivalDetailData;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
+import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
+import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
+import com.odiga.fiesta.festival.dto.response.MoodResponse;
+import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
+import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -48,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @Slf4j
 public class FestivalService {
+	private final MoodRepository moodRepository;
 
 	private final Clock clock;
 
@@ -56,6 +65,8 @@ public class FestivalService {
 
 	private final FestivalRepository festivalRepository;
 	private final FestivalImageRepository festivalImageRepository;
+	private final FestivalCategoryRepository festivalCategoryRepository;
+	private final FestivalMoodRepository festivalMoodRepository;
 
 	private final RedisUtils redisUtils;
 
@@ -179,7 +190,27 @@ public class FestivalService {
 		}).toList();
 	}
 
+	public FestivalDetailResponse getFestival(Long userId, Long festivalId) {
+		validateFestival(festivalId);
+
+		FestivalDetailData festivalDetail = festivalRepository.findFestivalDetail(userId, festivalId)
+			.orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
+
+		List<Long> festivalCategoryIds = festivalCategoryRepository.findAllCategoryIdByFestivalId(festivalId);
+		List<Long> festivalMoodIds = festivalMoodRepository.findAllMoodIdByFestivalId(festivalId);
+
+		List<FestivalImageResponse> images = festivalImageRepository.findAllByFestivalId(festivalId)
+			.stream().map(FestivalImageResponse::of).toList();
+		List<CategoryResponse> categories = categoryRepository.findByIdIn(festivalCategoryIds)
+			.stream().map(CategoryResponse::of).toList();
+		List<MoodResponse> moods = moodRepository.findByIdIn(festivalMoodIds)
+			.stream().map(MoodResponse::of).toList();
+
+		return FestivalDetailResponse.of(festivalDetail, categories, moods, images);
+	}
+
 	// 필터링을 위해, request list 내부의 중복 제거
+
 	private FestivalFilterCondition getFestivalFilterCondition(FestivalFilterRequest festivalFilterRequest) {
 		Optional.ofNullable(festivalFilterRequest.getMonths())
 			.orElse(Collections.emptyList())
@@ -255,6 +286,16 @@ public class FestivalService {
 
 		if (!yearMonth.isValidDay(day)) {
 			throw new CustomException(INVALID_FESTIVAL_DATE);
+		}
+	}
+
+	private void validateFestival(Long festivalId) {
+		Festival festival = festivalRepository.findById(festivalId)
+			.orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
+
+		if (festival.isPending()) {
+			// TODO 이후에 권한으로 처리
+			throw new CustomException(FESTIVAL_IS_PENDING);
 		}
 	}
 

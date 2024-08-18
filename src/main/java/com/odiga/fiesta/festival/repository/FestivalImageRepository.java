@@ -1,6 +1,8 @@
 package com.odiga.fiesta.festival.repository;
 
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,4 +13,6 @@ public interface FestivalImageRepository extends JpaRepository<FestivalImage, Lo
 
 	@Query("SELECT fi.imageUrl FROM FestivalImage fi WHERE fi.festivalId = :festivalId")
 	String findImageUrlByFestivalId(@Param("festivalId") Long festivalId);
+
+	List<FestivalImage> findAllByFestivalId(Long festivalId);
 }
