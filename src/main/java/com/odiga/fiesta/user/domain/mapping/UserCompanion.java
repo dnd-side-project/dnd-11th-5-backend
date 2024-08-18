@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PRIVATE;
@@ -12,7 +13,7 @@ import static lombok.AccessLevel.PROTECTED;
 
 @Entity
 @Table(name = "user_companion")
-@Builder
+@SuperBuilder
 @NoArgsConstructor(access = PROTECTED)
 @AllArgsConstructor(access = PRIVATE)
 public class UserCompanion extends BaseEntity {
@@ -27,4 +28,11 @@ public class UserCompanion extends BaseEntity {
 
     @Column(name = "companion_type_id", nullable = false)
     private Long companionId;
+
+    public static UserCompanion of(Long userId, Long companionId) {
+        return UserCompanion.builder()
+                .userId(userId)
+                .companionId(companionId)
+                .build();
+    }
 }

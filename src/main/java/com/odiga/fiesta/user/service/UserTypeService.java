@@ -1,5 +1,7 @@
 package com.odiga.fiesta.user.service;
 
+import com.odiga.fiesta.common.error.ErrorCode;
+import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.dto.UserRequest;
 import com.odiga.fiesta.user.repository.UserTypeRepository;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -35,17 +38,22 @@ public class UserTypeService {
         int maxScore = Math.max(Math.max(romanticScore, partyPeopleScore),
                 Math.max(Math.max(inspireScore, healingScore), exploreScore));
 
+        String userTypeName;
         if (maxScore == romanticScore) {
-            return userTypeRepository.findByName("로맨티스트");
+            userTypeName = "로맨티스트";
         } else if (maxScore == partyPeopleScore) {
-            return userTypeRepository.findByName("파티피플러");
+            userTypeName = "파티피플러";
         } else if (maxScore == inspireScore) {
-            return userTypeRepository.findByName("인스파이어러");
+            userTypeName = "인스파이어러";
         } else if (maxScore == healingScore) {
-            return userTypeRepository.findByName("몽글몽글 힐링러");
+            userTypeName = "몽글몽글 힐링러";
         } else {
-            return userTypeRepository.findByName("탐험러");
+            userTypeName = "탐험러";
         }
+
+        Optional<UserType> userTypeOptional = userTypeRepository.findByName(userTypeName);
+
+        return userTypeOptional.orElseThrow(() -> new CustomException(ErrorCode.USER_TYPE_NOT_FOUND));
     }
 
     // 로맨티스트 점수 계산

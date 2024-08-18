@@ -14,11 +14,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "log_image")
 @Getter
 @NoArgsConstructor(access = PROTECTED)
+@SuperBuilder
 public class LogImage extends BaseEntity {
 
 	@Id
@@ -34,10 +36,4 @@ public class LogImage extends BaseEntity {
 	@NotNull
 	private String imageUrl;
 
-	@Builder
-	public LogImage(Long id, Long logId, String imageUrl) {
-		this.id = id;
-		this.logId = logId;
-		this.imageUrl = imageUrl;
-	}
 }

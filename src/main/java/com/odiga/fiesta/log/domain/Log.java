@@ -15,10 +15,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = PROTECTED)
+@SuperBuilder
 public class Log extends BaseEntity {
 
 	@Id
@@ -53,17 +55,4 @@ public class Log extends BaseEntity {
 	@Column(name = "is_public")
 	@NotNull
 	private Boolean isPublic;
-
-	@Builder
-	private Log(Long userId, String sido, String sigungu, String address, String title, String content,
-		LocalDateTime date, Boolean isPublic) {
-		this.userId = userId;
-		this.sido = sido;
-		this.sigungu = sigungu;
-		this.address = address;
-		this.title = title;
-		this.content = content;
-		this.date = date;
-		this.isPublic = isPublic;
-	}
 }

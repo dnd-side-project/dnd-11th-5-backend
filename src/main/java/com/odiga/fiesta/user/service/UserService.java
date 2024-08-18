@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.jwt.TokenProvider;
+import com.odiga.fiesta.common.util.NicknameUtils;
 import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.domain.accounts.OauthUser;
@@ -51,6 +52,8 @@ public class UserService {
     private final TokenProvider tokenProvider;
 
     private final RedisUtils<String> redisUtils;
+
+    private final NicknameUtils nicknameUtils;
 
     private final UserTypeService userTypeService;
 
@@ -114,7 +117,7 @@ public class UserService {
         OauthUser user = OauthUser.builder()
                 .userTypeId(userType.getId())
                 .roleId(1L)
-                .nickname(generateRandomNickname())
+                .nickname(nicknameUtils.generateRandomNickname())
                 .profileImage(userType.getProfileImage())
                 .statusMessage("페스티벌의 시작 피에스타와 함께!")
                 .provider(OauthProvider.KAKAO)
@@ -228,27 +231,6 @@ public class UserService {
         }
     }
 
-    private static final String[] ADJECTIVES = {
-            "심야의", "섬세한", "은밀한", "산책하는", "졸린", "자유로운", "따분한",
-            "차분한", "우아한", "소심한", "활발한", "용감한", "신비로운", "산뜻한",
-            "겁많은", "피곤한", "말많은", "달리는", "화려한", "활기찬"
-    };
-
-    private static final String[] ANIMALS = {
-            "족제비", "독수리", "여우", "고양이", "판다", "돌고래", "곰", "거북이",
-            "백조", "토끼", "다람쥐", "강아지", "올빼미", "오리", "코끼리", "사자",
-            "원숭이", "치타", "플라밍고", "호랑이"
-    };
-
-    private static final Random RANDOM = new Random();
-
-    // 랜덤 닉네임 생성 메소드
-    private String generateRandomNickname() {
-        String adjective = ADJECTIVES[RANDOM.nextInt(ADJECTIVES.length)];
-        String animal = ANIMALS[RANDOM.nextInt(ANIMALS.length)];
-        return adjective + " " + animal;
-    }
-
     // 온보딩 정보 저장
     private void saveOnBoardingInfo(Long userId, UserRequest.createProfileDTO request) {
         List<Long> categories = request.getCategory();
@@ -258,40 +240,28 @@ public class UserService {
 
         // 카테고리 정보 저장
         List<UserCategory> userCategories = categories.stream()
-                .map(categoryId -> UserCategory.builder()
-                        .userId(userId)
-                        .categoryId(categoryId)
-                        .build())
+                .map(categoryId -> UserCategory.of(userId, categoryId))
                 .collect(Collectors.toList());
 
         userCategoryRepository.saveAll(userCategories);
 
         // 분위기 정보 저장
         List<UserMood> userMoods = moods.stream()
-                .map(moodId -> UserMood.builder()
-                        .userId(userId)
-                        .moodId(moodId)
-                        .build())
+                .map(moodId -> UserMood.of(userId, moodId))
                 .collect(Collectors.toList());
 
         userMoodRepository.saveAll(userMoods);
 
         // 동행유형 정보 저장
         List<UserCompanion> userCompanions = companions.stream()
-                .map(companionId -> UserCompanion.builder()
-                        .userId(userId)
-                        .companionId(companionId)
-                        .build())
+                .map(companionId -> UserCompanion.of(userId, companionId))
                 .collect(Collectors.toList());
 
         userCompanionRepository.saveAll(userCompanions);
 
         // 우선순위 정보 저장
         List<UserPriority> userPriorities = priorities.stream()
-                .map(priorityId -> UserPriority.builder()
-                        .userId(userId)
-                        .priorityId(priorityId)
-                        .build())
+                .map(priorityId -> UserPriority.of(userId, priorityId))
                 .collect(Collectors.toList());
 
         userPriorityRepository.saveAll(userPriorities);
