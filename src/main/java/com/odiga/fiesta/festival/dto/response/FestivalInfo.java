@@ -2,11 +2,13 @@ package com.odiga.fiesta.festival.dto.response;
 
 import java.time.LocalDate;
 
-import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
+import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
+@SuperBuilder
 @Getter
 public class FestivalInfo extends FestivalBasic {
 
@@ -15,21 +17,18 @@ public class FestivalInfo extends FestivalBasic {
 	private String thumbnailImage;
 	private LocalDate startDate;
 	private LocalDate endDate;
-	private Boolean isBookmarked;
 
-	@Builder
 	public FestivalInfo(Long festivalId, String name, String sido, String sigungu, String thumbnailImage,
-		LocalDate startDate, LocalDate endDate, Boolean isBookmarked) {
+		LocalDate startDate, LocalDate endDate) {
 		super(festivalId, name);
 		this.sido = sido;
 		this.sigungu = sigungu;
 		this.thumbnailImage = thumbnailImage;
 		this.startDate = startDate;
 		this.endDate = endDate;
-		this.isBookmarked = isBookmarked;
 	}
 
-	public static FestivalInfo of(FestivalWithBookmarkAndSido festival, String thumbnailImage) {
+	public static FestivalInfo of(FestivalWithSido festival, String thumbnailImage) {
 		return FestivalInfo.builder()
 			.festivalId(festival.getFestivalId())
 			.name(festival.getName())
@@ -38,7 +37,7 @@ public class FestivalInfo extends FestivalBasic {
 			.thumbnailImage(thumbnailImage)
 			.startDate(festival.getStartDate())
 			.endDate(festival.getEndDate())
-			.isBookmarked(festival.getIsBookMarked())
 			.build();
 	}
+
 }

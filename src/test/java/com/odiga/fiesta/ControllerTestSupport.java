@@ -8,6 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.festival.controller.FestivalController;
 import com.odiga.fiesta.festival.controller.FestivalStaticDataController;
 import com.odiga.fiesta.festival.service.CategoryService;
@@ -56,4 +57,7 @@ public abstract class ControllerTestSupport {
 
 	@MockBean
 	protected FestivalBookmarkService festivalBookmarkService;
+
+	@MockBean
+	private FileUtils fileUtils;
 }

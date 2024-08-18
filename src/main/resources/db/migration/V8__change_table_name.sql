@@ -1,0 +1,1 @@
+ALTER TABLE `Sido` RENAME sido;

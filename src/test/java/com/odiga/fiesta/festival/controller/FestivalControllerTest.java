@@ -16,7 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 
 import com.odiga.fiesta.ControllerTestSupport;
-import com.odiga.fiesta.festival.dto.response.FestivalInfo;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.service.FestivalService;
 
@@ -57,8 +57,8 @@ class FestivalControllerTest extends ControllerTestSupport {
 	void getFestivalsByDay() throws Exception {
 		// given
 		Pageable pageable = PageRequest.of(0, 6);
-		PageImpl<FestivalInfo> page =
-			new PageImpl<>(List.of(FestivalInfo.builder().build()), pageable, 1);
+		PageImpl<FestivalInfoWithBookmark> page =
+			new PageImpl<>(List.of(FestivalInfoWithBookmark.builder().build()), pageable, 1);
 
 		when(festivalService.getFestivalsByDay(null, 2023, 10, 4, pageable)).thenReturn(page);
 

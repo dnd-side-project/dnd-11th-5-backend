@@ -31,6 +31,12 @@ public class Log extends BaseEntity {
 	private Long userId; // 작성한 유저 아이디
 
 	@NotNull
+	private String sido;
+
+	@NotNull
+	private String sigungu;
+
+	@NotNull
 	private String address;
 
 	@NotNull
@@ -49,17 +55,15 @@ public class Log extends BaseEntity {
 	private Boolean isPublic;
 
 	@Builder
-	private Log(Long userId, String address, String title, String content, LocalDateTime date, Boolean isPublic) {
+	private Log(Long userId, String sido, String sigungu, String address, String title, String content,
+		LocalDateTime date, Boolean isPublic) {
 		this.userId = userId;
+		this.sido = sido;
+		this.sigungu = sigungu;
 		this.address = address;
 		this.title = title;
 		this.content = content;
 		this.date = date;
 		this.isPublic = isPublic;
-	}
-
-	public static Log of(Long userId, String address, String title, String content, LocalDateTime date,
-		Boolean isPublic) {
-		return new Log(userId, address, title, content, date, isPublic);
 	}
 }

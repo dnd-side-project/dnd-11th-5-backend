@@ -27,17 +27,25 @@ import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.dto.projection.FestivalDetailData;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
+import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
+import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
-import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
+import com.odiga.fiesta.festival.dto.response.MoodResponse;
+import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
+import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -53,9 +61,12 @@ public class FestivalService {
 
 	private final CategoryRepository categoryRepository;
 	private final SidoRepository sidoRepository;
+	private final MoodRepository moodRepository;
 
 	private final FestivalRepository festivalRepository;
 	private final FestivalImageRepository festivalImageRepository;
+	private final FestivalCategoryRepository festivalCategoryRepository;
+	private final FestivalMoodRepository festivalMoodRepository;
 
 	private final RedisUtils redisUtils;
 
@@ -82,7 +93,7 @@ public class FestivalService {
 			.build();
 	}
 
-	public Page<FestivalInfo> getFestivalsByDay(Long userId, int year, int month, int day,
+	public Page<FestivalInfoWithBookmark> getFestivalsByDay(Long userId, int year, int month, int day,
 		Pageable pageable) {
 		validateFestivalDay(year, month, day);
 
@@ -91,12 +102,12 @@ public class FestivalService {
 		Page<FestivalWithBookmarkAndSido> festivals = festivalRepository.findFestivalsInDate(date,
 			pageable, userId);
 
-		List<FestivalInfo> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivals);
+		List<FestivalInfoWithBookmark> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivals);
 
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
 	}
 
-	public Page<FestivalInfo> getFestivalByFiltersAndSort(Long userId,
+	public Page<FestivalInfoWithBookmark> getFestivalByFiltersAndSort(Long userId,
 		FestivalFilterRequest festivalFilterRequest,
 		Double latitude, Double longitude, Pageable pageable) {
 
@@ -106,16 +117,16 @@ public class FestivalService {
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters = festivalRepository.findFestivalsByFiltersAndSort(userId,
 			festivalFilterCondition, latitude, longitude, date, pageable);
 
-		List<FestivalInfo> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
+		List<FestivalInfoWithBookmark> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
 
 		return new PageImpl<>(responses, pageable, festivalsByFilters.getTotalElements());
 	}
 
-	public Page<FestivalInfo> getFestivalsByQuery(Long userId, String query, Pageable pageable) {
+	public Page<FestivalInfoWithBookmark> getFestivalsByQuery(Long userId, String query, Pageable pageable) {
 		Page<FestivalWithBookmarkAndSido> festivalsByQuery = festivalRepository.findFestivalsByQuery(userId, query,
 			pageable);
 
-		List<FestivalInfo> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByQuery);
+		List<FestivalInfoWithBookmark> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByQuery);
 
 		return new PageImpl<>(responses, pageable, festivalsByQuery.getTotalElements());
 	}
@@ -151,15 +162,15 @@ public class FestivalService {
 			(page.intValue() / size) + 1);
 	}
 
-	private List<FestivalInfo> getFestivalWithBookmarkAndSidoAndThumbnailImage(
+	private List<FestivalInfoWithBookmark> getFestivalWithBookmarkAndSidoAndThumbnailImage(
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters) {
 		return festivalsByFilters.getContent().stream().map(festival -> {
-			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
-			return FestivalInfo.of(festival, thumbnailImage);
+			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
+			return FestivalInfoWithBookmark.of(festival, thumbnailImage);
 		}).toList();
 	}
 
-	public Page<FestivalThisWeekResponse> getFestivalsInThisWeek(Pageable pageable) {
+	public Page<FestivalInfo> getFestivalsInThisWeek(Pageable pageable) {
 
 		LocalDate now = LocalDate.now(clock);
 		LocalDate startDayOfWeek = now.with(DayOfWeek.MONDAY);
@@ -167,16 +178,45 @@ public class FestivalService {
 
 		Page<FestivalWithSido> festivals = festivalRepository.findFestivalsAndSidoWithinDateRange(startDayOfWeek,
 			endDayOfWeek, pageable);
-		List<FestivalThisWeekResponse> responses = getFestivalAndSidoWithThumbnailImage(festivals);
+		List<FestivalInfo> responses = getFestivalAndSidoWithThumbnailImage(festivals);
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
 	}
 
-	private List<FestivalThisWeekResponse> getFestivalAndSidoWithThumbnailImage(
+	public Page<FestivalInfo> getHotFestivals(Pageable pageable) {
+
+		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable);
+
+		// TODO: 배치로 변경할 수 있다.
+		List<FestivalInfo> responses = getFestivalAndSidoWithThumbnailImage(festivals);
+
+		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
+	}
+
+	private List<FestivalInfo> getFestivalAndSidoWithThumbnailImage(
 		Page<FestivalWithSido> festivals) {
 		return festivals.getContent().stream().map(festival -> {
-			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
-			return FestivalThisWeekResponse.of(festival, thumbnailImage);
+			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
+			return FestivalInfo.of(festival, thumbnailImage);
 		}).toList();
+	}
+
+	public FestivalDetailResponse getFestival(Long userId, Long festivalId) {
+		validateFestival(festivalId);
+
+		FestivalDetailData festivalDetail = festivalRepository.findFestivalDetail(userId, festivalId)
+			.orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
+
+		List<Long> festivalCategoryIds = festivalCategoryRepository.findAllCategoryIdByFestivalId(festivalId);
+		List<Long> festivalMoodIds = festivalMoodRepository.findAllMoodIdByFestivalId(festivalId);
+
+		List<FestivalImageResponse> images = festivalImageRepository.findAllByFestivalId(festivalId)
+			.stream().map(FestivalImageResponse::of).toList();
+		List<CategoryResponse> categories = categoryRepository.findByIdIn(festivalCategoryIds)
+			.stream().map(CategoryResponse::of).toList();
+		List<MoodResponse> moods = moodRepository.findByIdIn(festivalMoodIds)
+			.stream().map(MoodResponse::of).toList();
+
+		return FestivalDetailResponse.of(festivalDetail, categories, moods, images);
 	}
 
 	// 필터링을 위해, request list 내부의 중복 제거
@@ -255,6 +295,16 @@ public class FestivalService {
 
 		if (!yearMonth.isValidDay(day)) {
 			throw new CustomException(INVALID_FESTIVAL_DATE);
+		}
+	}
+
+	private void validateFestival(Long festivalId) {
+		Festival festival = festivalRepository.findById(festivalId)
+			.orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
+
+		if (festival.isPending()) {
+			// TODO 이후에 권한으로 처리
+			throw new CustomException(FESTIVAL_IS_PENDING);
 		}
 	}
 

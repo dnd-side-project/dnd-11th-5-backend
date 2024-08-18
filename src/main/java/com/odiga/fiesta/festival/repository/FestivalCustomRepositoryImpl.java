@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,17 +18,23 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.support.PageableExecutionUtils;
 
 import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.domain.QFestivalBookmark;
+import com.odiga.fiesta.festival.dto.projection.FestivalDetailData;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmark;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
+import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkCountAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringPath;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -39,6 +46,10 @@ import lombok.extern.slf4j.Slf4j;
 public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 
 	private final JPAQueryFactory queryFactory;
+	private final QFestivalBookmark festivalBookmarkForBookmarkCount = new QFestivalBookmark(
+		"festivalBookmarkForBookmarkCount");
+	private final QFestivalBookmark festivalBookmarkForIsBookmarked = new QFestivalBookmark(
+		"festivalBookmarkForIsBookmarked");
 
 	@Override
 	public List<Festival> findFestivalsWithinDateRange(LocalDate startDate, LocalDate endDate) {
@@ -122,6 +133,93 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
 	}
 
+	@Override
+	public Page<FestivalWithSido> findMostLikeFestival(Pageable pageable) {
+
+		StringPath bookmarkCount = Expressions.stringPath("bookmarkCount");
+
+		List<FestivalWithSido> festivals =
+			queryFactory.select(
+					Projections.fields(
+						FestivalWithBookmarkCountAndSido.class,
+						festival.id.as("festivalId"),
+						festival.name,
+						festival.sigungu,
+						sido.name.as("sido"),
+						festival.startDate,
+						festival.endDate,
+						ExpressionUtils.as(
+							JPAExpressions
+								.select(festivalBookmark.id.countDistinct())
+								.from(festivalBookmark)
+								.where(festivalBookmark.festivalId.eq(festival.id)),
+							"bookmarkCount"
+						)
+					)
+				)
+				.from(festival)
+				.leftJoin(sido)
+				.on(festival.sidoId.eq(sido.id))
+				.where(
+					festival.isPending.isFalse()
+				)
+				.orderBy(bookmarkCount.desc())
+				.offset(pageable.getOffset())
+				.limit(pageable.getPageSize())
+				.fetch()
+				.stream().map(FestivalWithSido::of)
+				.toList();
+
+		JPAQuery<Long> countQuery = queryFactory
+			.select(festival.count())
+			.from(festival);
+
+		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
+	}
+
+	@Override
+	public Optional<FestivalDetailData> findFestivalDetail(Long userId, Long festivalId) {
+		FestivalDetailData festivalDetailData = queryFactory.select(
+				Projections.fields(
+					FestivalDetailData.class,
+					festival.id.as("festivalId"),
+					festival.name,
+					sido.name.as("sido"),
+					festival.sigungu,
+					festival.startDate,
+					festival.endDate,
+					festival.description,
+					festival.address,
+					festival.tip,
+					festival.homepageUrl,
+					festival.instagramUrl,
+					festival.fee,
+					festival.ticketLink,
+					festivalBookmarkForBookmarkCount.id.countDistinct().as("bookmarkCount"),
+					new CaseBuilder()
+						.when(festivalBookmarkUserIdEq(userId))
+						.then(true)
+						.otherwise(false).as("isBookmarked")
+				)
+			)
+			.from(festival)
+			.leftJoin(festivalBookmarkForIsBookmarked)
+			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id), festivalBookmarkUserIdEq(userId))
+			.leftJoin(festivalBookmarkForBookmarkCount)
+			.on(festivalBookmarkForBookmarkCount.festivalId.eq(festival.id))
+			.leftJoin(sido)
+			.on(festival.sidoId.eq(sido.id))
+			.leftJoin(festivalBookmark)
+			.on(festival.id.eq(festivalBookmark.festivalId))
+			.where(
+				festival.id.eq(festivalId),
+				festival.isPending.isFalse()
+			)
+			.fetchOne();
+
+		return Optional.ofNullable(festivalDetailData);
+	}
+
 	private List<OrderSpecifier> getAllOrderSpecifiers(Pageable pageable, Double latitude, Double longitude) {
 		List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
 
@@ -145,7 +243,6 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 
 				orderSpecifiers.add(specifier);
 			}
-
 		}
 
 		return orderSpecifiers;
@@ -210,8 +307,8 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 					sido.name.as("sido")
 				)
 			).from(festival)
-			.leftJoin(festivalBookmark)
-			.on(festivalBookmark.festivalId.eq(festival.id),
+			.leftJoin(festivalBookmarkForIsBookmarked)
+			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id),
 				festivalBookmarkUserIdEq(userId))
 			.leftJoin(sido)
 			.on(sido.id.eq(festival.sidoId))
@@ -240,7 +337,6 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 	}
 
 	private JPAQuery<FestivalWithSido> selectFestivalWithSido() {
-
 		return queryFactory.select(
 				Projections.fields(FestivalWithSido.class,
 					festival.id.as("festivalId"),
@@ -264,7 +360,7 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 			return Expressions.asBoolean(false).isTrue();
 		}
 
-		return festivalBookmark.userId.eq(userId);
+		return festivalBookmarkForIsBookmarked.userId.eq(userId);
 	}
 
 	private BooleanExpression getDateRangeCondition(LocalDate date) {
