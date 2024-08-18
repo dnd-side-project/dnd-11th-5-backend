@@ -26,7 +26,7 @@ import com.odiga.fiesta.log.repository.LogImageRepository;
 import com.odiga.fiesta.log.repository.LogKeywordRepository;
 import com.odiga.fiesta.log.repository.LogRepository;
 import com.odiga.fiesta.s3.service.S3Service;
-import com.odiga.fiesta.user.domain.repository.UserRepository;
+import com.odiga.fiesta.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
