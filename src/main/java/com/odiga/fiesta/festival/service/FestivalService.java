@@ -185,6 +185,8 @@ public class FestivalService {
 	public Page<FestivalInfo> getHotFestivals(Pageable pageable) {
 
 		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable);
+
+		// TODO: 배치로 변경할 수 있다.
 		List<FestivalInfo> responses = getFestivalAndSidoWithThumbnailImage(festivals);
 
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
