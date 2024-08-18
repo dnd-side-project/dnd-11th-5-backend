@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)
-@Table(name = "Sido")
+@Table(name = "sido")
 public class Sido {
 
 	@Id
@@ -28,5 +28,6 @@ public class Sido {
 
 	@Column(name = "sido")
 	private String name;
+
 	private Integer code;
 }

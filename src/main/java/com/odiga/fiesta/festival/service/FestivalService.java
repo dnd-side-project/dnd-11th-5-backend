@@ -38,6 +38,7 @@ import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalThisWeekResponse;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
@@ -56,12 +57,12 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @Slf4j
 public class FestivalService {
-	private final MoodRepository moodRepository;
 
 	private final Clock clock;
 
 	private final CategoryRepository categoryRepository;
 	private final SidoRepository sidoRepository;
+	private final MoodRepository moodRepository;
 
 	private final FestivalRepository festivalRepository;
 	private final FestivalImageRepository festivalImageRepository;
@@ -93,7 +94,7 @@ public class FestivalService {
 			.build();
 	}
 
-	public Page<FestivalInfo> getFestivalsByDay(Long userId, int year, int month, int day,
+	public Page<FestivalInfoWithBookmark> getFestivalsByDay(Long userId, int year, int month, int day,
 		Pageable pageable) {
 		validateFestivalDay(year, month, day);
 
@@ -102,12 +103,12 @@ public class FestivalService {
 		Page<FestivalWithBookmarkAndSido> festivals = festivalRepository.findFestivalsInDate(date,
 			pageable, userId);
 
-		List<FestivalInfo> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivals);
+		List<FestivalInfoWithBookmark> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivals);
 
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
 	}
 
-	public Page<FestivalInfo> getFestivalByFiltersAndSort(Long userId,
+	public Page<FestivalInfoWithBookmark> getFestivalByFiltersAndSort(Long userId,
 		FestivalFilterRequest festivalFilterRequest,
 		Double latitude, Double longitude, Pageable pageable) {
 
@@ -117,16 +118,16 @@ public class FestivalService {
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters = festivalRepository.findFestivalsByFiltersAndSort(userId,
 			festivalFilterCondition, latitude, longitude, date, pageable);
 
-		List<FestivalInfo> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
+		List<FestivalInfoWithBookmark> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
 
 		return new PageImpl<>(responses, pageable, festivalsByFilters.getTotalElements());
 	}
 
-	public Page<FestivalInfo> getFestivalsByQuery(Long userId, String query, Pageable pageable) {
+	public Page<FestivalInfoWithBookmark> getFestivalsByQuery(Long userId, String query, Pageable pageable) {
 		Page<FestivalWithBookmarkAndSido> festivalsByQuery = festivalRepository.findFestivalsByQuery(userId, query,
 			pageable);
 
-		List<FestivalInfo> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByQuery);
+		List<FestivalInfoWithBookmark> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByQuery);
 
 		return new PageImpl<>(responses, pageable, festivalsByQuery.getTotalElements());
 	}
@@ -162,15 +163,15 @@ public class FestivalService {
 			(page.intValue() / size) + 1);
 	}
 
-	private List<FestivalInfo> getFestivalWithBookmarkAndSidoAndThumbnailImage(
+	private List<FestivalInfoWithBookmark> getFestivalWithBookmarkAndSidoAndThumbnailImage(
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters) {
 		return festivalsByFilters.getContent().stream().map(festival -> {
 			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
-			return FestivalInfo.of(festival, thumbnailImage);
+			return FestivalInfoWithBookmark.of(festival, thumbnailImage);
 		}).toList();
 	}
 
-	public Page<FestivalThisWeekResponse> getFestivalsInThisWeek(Pageable pageable) {
+	public Page<FestivalInfo> getFestivalsInThisWeek(Pageable pageable) {
 
 		LocalDate now = LocalDate.now(clock);
 		LocalDate startDayOfWeek = now.with(DayOfWeek.MONDAY);
@@ -178,15 +179,23 @@ public class FestivalService {
 
 		Page<FestivalWithSido> festivals = festivalRepository.findFestivalsAndSidoWithinDateRange(startDayOfWeek,
 			endDayOfWeek, pageable);
-		List<FestivalThisWeekResponse> responses = getFestivalAndSidoWithThumbnailImage(festivals);
+		List<FestivalInfo> responses = getFestivalAndSidoWithThumbnailImage(festivals);
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
 	}
 
-	private List<FestivalThisWeekResponse> getFestivalAndSidoWithThumbnailImage(
+	public Page<FestivalInfo> getHotFestivals(Pageable pageable) {
+
+		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable);
+		List<FestivalInfo> responses = getFestivalAndSidoWithThumbnailImage(festivals);
+
+		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
+	}
+
+	private List<FestivalInfo> getFestivalAndSidoWithThumbnailImage(
 		Page<FestivalWithSido> festivals) {
 		return festivals.getContent().stream().map(festival -> {
 			String thumbnailImage = festivalImageRepository.findImageUrlByFestivalId(festival.getFestivalId());
-			return FestivalThisWeekResponse.of(festival, thumbnailImage);
+			return FestivalInfo.of(festival, thumbnailImage);
 		}).toList();
 	}
 
@@ -210,7 +219,6 @@ public class FestivalService {
 	}
 
 	// 필터링을 위해, request list 내부의 중복 제거
-
 	private FestivalFilterCondition getFestivalFilterCondition(FestivalFilterRequest festivalFilterRequest) {
 		Optional.ofNullable(festivalFilterRequest.getMonths())
 			.orElse(Collections.emptyList())
