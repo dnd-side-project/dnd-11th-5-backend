@@ -3,6 +3,7 @@ package com.odiga.fiesta.user.domain.accounts;
 import com.odiga.fiesta.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
+
 import static lombok.AccessLevel.PROTECTED;
 
 @Entity

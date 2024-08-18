@@ -5,8 +5,10 @@ import com.odiga.fiesta.user.domain.oauth.OauthProvider;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
 import static lombok.AccessLevel.PROTECTED;
 
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
 
 @Entity
@@ -24,4 +26,10 @@ public class OauthUser extends User {
     @ColumnDefault("KAKAO")
     private OauthProvider provider;
 
+    public OauthUser(Long userTypeId, Long roleId, String nickname, String statusMessage, String profileImage,
+                     Long providerId, OauthProvider provider) {
+        super(userTypeId, roleId, nickname, statusMessage, profileImage); // User 클래스의 필드 초기화
+        this.providerId = providerId;
+        this.provider = provider;
+    }
 }

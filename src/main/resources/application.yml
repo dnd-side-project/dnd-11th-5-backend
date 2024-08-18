@@ -4,7 +4,10 @@ spring:
     group:
       local:
         - cloud
+        - localjwt
       prod:
         - cloud
+      test:
+        - localjwt
 
     active: local

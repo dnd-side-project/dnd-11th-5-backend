@@ -13,7 +13,7 @@ import com.odiga.fiesta.festival.dto.response.FestivalBookmarkResponse;
 import com.odiga.fiesta.festival.repository.FestivalBookmarkRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.user.domain.User;
-import com.odiga.fiesta.user.domain.repository.UserRepository;
+import com.odiga.fiesta.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
