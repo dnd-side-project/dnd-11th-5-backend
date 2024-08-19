@@ -139,7 +139,7 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 	}
 
 	@Override
-	public Page<FestivalWithSido> findMostLikeFestival(Pageable pageable) {
+	public Page<FestivalWithSido> findMostLikeFestival(Pageable pageable, LocalDate date) {
 
 		StringPath bookmarkCount = Expressions.stringPath("bookmarkCount");
 

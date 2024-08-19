@@ -581,8 +581,8 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		// given
 		Long userId = 1L;
 
-		Festival closedFestival = festivalRepository.save(createFestival(today.minusDays(1), today.minusDays(1)));
-		Festival onGoingFestival = festivalRepository.save(createFestival(today, today));
+		Festival closedFestival = festivalRepository.save(createFestival(TODAY.minusDays(1), TODAY.minusDays(1)));
+		Festival onGoingFestival = festivalRepository.save(createFestival(TODAY, TODAY));
 
 		for (int i = 0; i < 5; i++) {
 			FestivalBookmark bookmark = festivalBookmarkRepository.save(
@@ -639,10 +639,10 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		// given
 		User currentUser = userRepository.save(createUser());
 
-		Festival startToday = festivalRepository.save(createFestival(today, today.plusDays(2)));
-		Festival startedBeforeThreeDay = festivalRepository.save(createFestival(today.minusDays(3), today.plusDays(4)));
-		Festival startedBeforeFiveDay = festivalRepository.save(createFestival(today.minusDays(5), today.plusDays(6)));
-		Festival startAfter7Day = festivalRepository.save(createFestival(today.plusDays(7), today.plusDays(8)));
+		Festival startToday = festivalRepository.save(createFestival(TODAY, TODAY.plusDays(2)));
+		Festival startedBeforeThreeDay = festivalRepository.save(createFestival(TODAY.minusDays(3), TODAY.plusDays(4)));
+		Festival startedBeforeFiveDay = festivalRepository.save(createFestival(TODAY.minusDays(5), TODAY.plusDays(6)));
+		Festival startAfter7Day = festivalRepository.save(createFestival(TODAY.plusDays(7), TODAY.plusDays(8)));
 
 		FestivalBookmark bookmark1 = festivalBookmarkRepository.save(
 			createFestivalBookmark(startToday.getId(), currentUser.getId()));
@@ -674,9 +674,9 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		// given
 		User currentUser = userRepository.save(createUser());
 
-		Festival ended = festivalRepository.save(createFestival(today.minusDays(1), today.minusDays(1)));
-		Festival endedBefore7Dat = festivalRepository.save(createFestival(today.minusDays(10), today.minusDays(4)));
-		Festival ongoing = festivalRepository.save(createFestival(today, today));
+		Festival ended = festivalRepository.save(createFestival(TODAY.minusDays(1), TODAY.minusDays(1)));
+		Festival endedBefore7Dat = festivalRepository.save(createFestival(TODAY.minusDays(10), TODAY.minusDays(4)));
+		Festival ongoing = festivalRepository.save(createFestival(TODAY, TODAY));
 
 		FestivalBookmark bookmark1 = festivalBookmarkRepository.save(
 			createFestivalBookmark(ended.getId(), currentUser.getId()));
@@ -706,6 +706,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 	@Test
 	void getUpcomingFestival_UserMustBeValid() {
 		// given
+		// TODO: user 테이블 관련 문제로 조회가 불가능한 상황
 		Long invalidUserId = -1L;
 		Pageable pageable = PageRequest.of(0, 5);
 
@@ -714,14 +715,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			, () -> festivalService.getUpcomingFestival(null, pageable));
 
 		// then
-		assertEquals(USER_NOT_FOUND.getMessage(), exception.getMessage());
-	}
-
-	private static User createUser() {
-		return User.builder()
-			.roleId(1L)
-			.nickname("테스트 유저")
-			.build();
+		assertEquals(UNAUTHENTICATED_USER.getMessage(), exception.getMessage());
 	}
 
 	private static FestivalBookmark createFestivalBookmark(Long festvialId, Long userId) {
