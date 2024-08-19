@@ -9,10 +9,7 @@ import com.odiga.fiesta.common.util.NicknameUtils;
 import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.domain.accounts.OauthUser;
-import com.odiga.fiesta.user.domain.mapping.UserCategory;
-import com.odiga.fiesta.user.domain.mapping.UserCompanion;
-import com.odiga.fiesta.user.domain.mapping.UserMood;
-import com.odiga.fiesta.user.domain.mapping.UserPriority;
+import com.odiga.fiesta.user.domain.mapping.*;
 import com.odiga.fiesta.user.domain.oauth.OauthProvider;
 import com.odiga.fiesta.user.dto.UserRequest;
 import com.odiga.fiesta.user.repository.*;
@@ -48,6 +45,7 @@ public class UserService {
     private final UserCompanionRepository userCompanionRepository;
     private final UserMoodRepository userMoodRepository;
     private final UserPriorityRepository userPriorityRepository;
+    private final UserRoleRepository userRoleRepository;
 
     private final TokenProvider tokenProvider;
 
@@ -128,6 +126,15 @@ public class UserService {
 
         // 온보딩 정보 저장
         saveOnBoardingInfo(user.getId(), request);
+
+        // UserRole 저장
+        UserRoleId userRoleId = new UserRoleId(user.getId(), 1L);
+
+        UserRole userRole = UserRole.builder()
+                .id(userRoleId)
+                .build();
+
+        userRoleRepository.save(userRole);
 
         //토큰 생성
         String accessToken = tokenProvider.generateToken(user, Duration.ofHours(2), "access");
