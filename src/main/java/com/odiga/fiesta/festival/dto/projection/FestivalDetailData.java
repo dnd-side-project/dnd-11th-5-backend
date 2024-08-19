@@ -19,6 +19,8 @@ public class FestivalDetailData extends FestivalData {
 	private String instagramUrl;
 	private String fee;
 	private String ticketLink;
+	private Double latitude;
+	private Double longitude;
 	private Long bookmarkCount;
 	private Boolean isBookmarked;
 }

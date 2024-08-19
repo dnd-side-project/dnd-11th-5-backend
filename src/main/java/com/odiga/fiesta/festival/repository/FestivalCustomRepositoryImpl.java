@@ -193,6 +193,8 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 					festival.tip,
 					festival.homepageUrl,
 					festival.instagramUrl,
+					festival.latitude,
+					festival.longitude,
 					festival.fee,
 					festival.ticketLink,
 					festivalBookmarkForBookmarkCount.id.countDistinct().as("bookmarkCount"),
@@ -231,7 +233,7 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 			String property = order.getProperty();
 
 			// 정렬 조건이 dist 인 경우, 위도/경도 값을 받아서 새로운 specifier 를 만든다.
-			if ("dist" .equals(property)) {
+			if ("dist".equals(property)) {
 				OrderSpecifier distSpecifier = FestivalSortType.getDistanceOrderSpecifier(
 					order.getDirection().isAscending() ?
 						Order.ASC : Order.DESC, latitude, longitude);
