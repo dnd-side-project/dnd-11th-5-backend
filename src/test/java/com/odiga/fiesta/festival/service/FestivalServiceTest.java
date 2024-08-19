@@ -21,16 +21,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
+import com.odiga.fiesta.IntegrationTestSupport;
 import com.odiga.fiesta.category.domain.Category;
 import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.error.exception.CustomException;
@@ -47,8 +45,8 @@ import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
-import com.odiga.fiesta.festival.repository.FestivalBookmarkRepository;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
+import com.odiga.fiesta.festival.repository.FestivalBookmarkRepository;
 import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
@@ -58,11 +56,8 @@ import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.domain.Sido;
 import com.odiga.fiesta.sido.repository.SidoRepository;
 
-@ActiveProfiles("test")
-@Transactional
-@SpringBootTest
 @ExtendWith(MockitoExtension.class)
-class FestivalServiceTest {
+class FestivalServiceTest extends IntegrationTestSupport {
 
 	private static final Clock CURRENT_CLOCK = Clock.fixed(Instant.parse("2024-01-01T10:00:00Z"), ZoneOffset.UTC);
 

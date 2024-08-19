@@ -8,6 +8,8 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.odiga.fiesta.IntegrationTestSupport;
@@ -25,8 +27,11 @@ import com.odiga.fiesta.log.repository.LogRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+
 class LogServiceTest extends IntegrationTestSupport {
 
+
+	@InjectMocks
 	@Autowired
 	private LogService logService;
 
@@ -131,6 +136,8 @@ class LogServiceTest extends IntegrationTestSupport {
 			.content("활동일지 내용")
 			.date(date)
 			.isPublic(true)
+			.sido("부산광역시")
+			.sigungu("금정구")
 			.build();
 	}
 

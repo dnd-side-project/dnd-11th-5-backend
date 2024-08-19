@@ -1,15 +1,21 @@
 package com.odiga.fiesta.user.domain.accounts;
 
+import static lombok.AccessLevel.*;
+
+import org.hibernate.annotations.ColumnDefault;
+
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.domain.oauth.OauthProvider;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
-
-import static lombok.AccessLevel.PROTECTED;
-
-import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.ColumnDefault;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @AllArgsConstructor

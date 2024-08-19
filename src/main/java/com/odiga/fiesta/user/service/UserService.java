@@ -1,20 +1,16 @@
 package com.odiga.fiesta.user.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.odiga.fiesta.common.error.exception.CustomException;
-import com.odiga.fiesta.common.jwt.TokenProvider;
-import com.odiga.fiesta.common.util.RedisUtils;
-import com.odiga.fiesta.user.domain.accounts.OauthUser;
-import com.odiga.fiesta.user.repository.OauthUserRepository;
-import com.odiga.fiesta.user.dto.UserResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import static com.odiga.fiesta.common.error.ErrorCode.*;
+
+import java.time.Duration;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
@@ -22,10 +18,18 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
-import java.util.Optional;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.common.jwt.TokenProvider;
+import com.odiga.fiesta.common.util.RedisUtils;
+import com.odiga.fiesta.user.domain.accounts.OauthUser;
+import com.odiga.fiesta.user.dto.UserResponse;
+import com.odiga.fiesta.user.repository.OauthUserRepository;
 
-import static com.odiga.fiesta.common.error.ErrorCode.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
