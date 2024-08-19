@@ -3,10 +3,12 @@ package com.odiga.fiesta.user.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.jwt.TokenProvider;
 import com.odiga.fiesta.common.util.NicknameUtils;
 import com.odiga.fiesta.common.util.RedisUtils;
+import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.domain.accounts.OauthUser;
 import com.odiga.fiesta.user.domain.mapping.*;
@@ -14,6 +16,7 @@ import com.odiga.fiesta.user.domain.oauth.OauthProvider;
 import com.odiga.fiesta.user.dto.UserRequest;
 import com.odiga.fiesta.user.repository.*;
 import com.odiga.fiesta.user.dto.UserResponse;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +33,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
-import static com.odiga.fiesta.common.error.ErrorCode.ALREADY_JOINED;
 
 @Slf4j
 @Service
@@ -44,6 +46,7 @@ public class UserService {
     private final UserMoodRepository userMoodRepository;
     private final UserPriorityRepository userPriorityRepository;
     private final UserRoleRepository userRoleRepository;
+    private final UserRepository userRepository;
 
     private final TokenProvider tokenProvider;
 
@@ -81,14 +84,9 @@ public class UserService {
         if (optionalUser.isPresent()) {
             OauthUser user = optionalUser.get();
 
-            //토큰 생성
-            accessToken = tokenProvider.generateToken(user, Duration.ofHours(2), "access");
-            refreshToken = tokenProvider.generateToken(user, Duration.ofDays(14), "refresh");
-            log.info("access: " + accessToken);
-            log.info("refresh : " + refreshToken);
-
-            //Refresh 토큰 저장
-            redisUtils.setData(user.getId().toString(), refreshToken, Duration.ofDays(14).toMillis());
+            //토큰 발급
+            accessToken = issueAccessToken(user);
+            refreshToken = issueRefreshToken(user);
         }
 
         //응답 설정
@@ -134,14 +132,9 @@ public class UserService {
 
         userRoleRepository.save(userRole);
 
-        //토큰 생성
-        String accessToken = tokenProvider.generateToken(user, Duration.ofHours(2), "access");
-        String refreshToken = tokenProvider.generateToken(user, Duration.ofDays(14), "refresh");
-        log.info("access: " + accessToken);
-        log.info("refresh : " + refreshToken);
-
-        //Refresh 토큰 저장
-        redisUtils.setData(user.getId().toString(), refreshToken, Duration.ofDays(14).toMillis());
+        //토큰 발급
+        String accessToken = issueAccessToken(user);
+        String refreshToken = issueRefreshToken(user);
 
         // DTO 반환
         return UserResponse.createProfileDTO.builder()
@@ -151,6 +144,66 @@ public class UserService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    // JWT 토큰 재발급
+    @Transactional
+    public UserResponse.reissueDTO reissue(String refreshToken) {
+
+        // 유효 검사
+        try {
+            tokenProvider.validateToken(refreshToken);
+        } catch (CustomException e) {
+            if (e.getErrorCode() == ErrorCode.TOKEN_EXPIRED) {
+                throw new CustomException(ErrorCode.TOKEN_EXPIRED); // 만료된 토큰 처리
+            } else {
+                throw new CustomException(ErrorCode.INVALID_TOKEN);
+            }
+        }
+
+        // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
+        String category = tokenProvider.getCategory(refreshToken);
+        if (!"refresh".equals(category)) {
+            log.info("category: {}", category);
+            throw new CustomException(INVALID_TOKEN);
+        }
+
+        //토큰에서 유저 조회
+        Long userId = tokenProvider.getUserId(refreshToken);
+
+        //DB에서 리프레시 토큰 확인
+        if(!redisUtils.getData(userId.toString(), String.class).equals(refreshToken)) throw new CustomException(INVALID_TOKEN);
+
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        String newAccess = null;
+        String newRefresh = null;
+
+        //DB에 회원정보가 있을때 토큰 발급
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            newAccess = issueAccessToken(user);
+            newRefresh = issueRefreshToken(user);
+        }
+
+        return new UserResponse.reissueDTO(newAccess, newRefresh);
+    }
+
+    // AccessToken 생성
+    public String issueAccessToken(User user) {
+        String accessToken = tokenProvider.generateToken(user, Duration.ofHours(2), "access");
+        log.info("access: " + accessToken);
+
+        return accessToken;
+    }
+
+    // RefreshToken 생성 및 저장
+    public String issueRefreshToken(User user) {
+        String refreshToken = tokenProvider.generateToken(user, Duration.ofDays(14), "refresh");
+        log.info("refresh : " + refreshToken);
+
+        redisUtils.setData(user.getId().toString(), refreshToken, Duration.ofDays(14).toMillis());
+        return refreshToken;
     }
 
     /**
