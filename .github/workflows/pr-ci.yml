@@ -46,9 +46,6 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: ${{ always() }}
         with:
-          commit: ${{ github.event.workflow_run.head_sha }}
-          event_file: artifacts/event-file/event.json
-          event_name: ${{ github.event.workflow_run.event }}
           files: 'build/test-results/**/*.xml'
 
       - name: Reports JUnit Test Results
