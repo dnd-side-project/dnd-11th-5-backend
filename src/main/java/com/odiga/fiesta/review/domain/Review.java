@@ -1,23 +1,17 @@
 package com.odiga.fiesta.review.domain;
 
-import static jakarta.persistence.GenerationType.*;
-import static lombok.AccessLevel.*;
-
 import com.odiga.fiesta.common.domain.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static lombok.AccessLevel.PROTECTED;
 
 @Entity
 @AllArgsConstructor
 @Getter
-@Builder
+@SuperBuilder
 @NoArgsConstructor(access = PROTECTED)
 public class Review extends BaseEntity {
 
@@ -36,5 +30,4 @@ public class Review extends BaseEntity {
 
     @Column(nullable = false)
     private String content;
-
 }

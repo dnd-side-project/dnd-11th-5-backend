@@ -13,6 +13,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -365,7 +366,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 					.categoryId(category.getId())
 					.festivalId(festival.getId())
 					.build())
-				.toList()
+					.collect(Collectors.toList())
 		);
 
 		List<FestivalMood> festivalMoods = festivalMoodRepository.saveAll(
@@ -374,7 +375,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 					.moodId(mood.getId())
 					.festivalId(festival.getId())
 					.build())
-				.toList()
+					.collect(Collectors.toList())
 		);
 
 		FestivalImage image1 = FestivalImage.builder().festivalId(festival.getId()).imageUrl("imageUrl1").build();

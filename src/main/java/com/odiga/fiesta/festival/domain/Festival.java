@@ -20,11 +20,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @AllArgsConstructor
 @Getter
-@Builder
+@SuperBuilder
 @NoArgsConstructor(access = PROTECTED)
 @ToString
 public class Festival extends BaseEntity {

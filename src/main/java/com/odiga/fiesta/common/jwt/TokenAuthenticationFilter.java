@@ -60,7 +60,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String category = tokenProvider.getCategory(token);
         if (!"access".equals(category)) {
             System.out.println("category: " + category);
-            sendErrorResponse(response, ErrorCode.DIFFERENT_CATEGORY);
+            sendErrorResponse(response, ErrorCode.INVALID_TOKEN);
             return;
         }
 

@@ -15,6 +15,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(500, "S001", "서버에 문제가 생겼습니다."),
     UPLOAD_FAIL(500, "S002", "파일 업로드에 실패하였습니다."),
     JSON_PARSING_ERROR(500, "S003", "JSON 파싱 오류가 발생했습니다."),
+    USER_TYPE_NOT_FOUND(500, "S004", "유저 유형 도출에 실패했습니다."),
 
     // Client Error
     METHOD_NOT_ALLOWED(405, "C001", "적절하지 않은 HTTP 메소드입니다."),
@@ -34,7 +35,7 @@ public enum ErrorCode {
     INVALID_CODE(400, "U002", "유효하지 않은 인가코드입니다."),
     INVALID_TOKEN(401, "U003", "유효하지 않은 토큰입니다."),
     TOKEN_EXPIRED(401, "U004", "만료된 토큰입니다."),
-    DIFFERENT_CATEGORY(401, "U005", "카테고리가 다른 토큰입니다."),
+    ALREADY_JOINED(409, "U005", "이미 존재하는 유저입니다."),
 
     // Festival
     INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."),

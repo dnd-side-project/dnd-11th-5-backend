@@ -1,21 +1,19 @@
 package com.odiga.fiesta.user.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.odiga.fiesta.common.BasicResponse;
-import com.odiga.fiesta.user.dto.UserResponse;
+import com.odiga.fiesta.user.dto.UserRequest;
 import com.odiga.fiesta.user.service.UserService;
-
+import com.odiga.fiesta.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -34,5 +32,15 @@ public class UserController {
 
         String message = "카카오 로그인 성공";
         return ResponseEntity.ok(BasicResponse.ok(message, loginResponse));
+    }
+
+    @PostMapping("/profile")
+    @Operation(summary = "프로필 생성", description = "oauthId를 통해 프로필을 생성합니다.")
+    public ResponseEntity<BasicResponse<UserResponse.createProfileDTO>> createProfile(@RequestHeader Long oauthId,
+                                                                                      @RequestBody  @Valid UserRequest.createProfileDTO request) {
+        UserResponse.createProfileDTO response = userService.createProfile(oauthId, request);
+
+        String message = "프로필 생성 성공";
+        return ResponseEntity.ok(BasicResponse.ok(message, response));
     }
 }
