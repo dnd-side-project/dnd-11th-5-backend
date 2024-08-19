@@ -2,6 +2,7 @@ package com.odiga.fiesta.festival.service;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static com.odiga.fiesta.festival.domain.Festival.*;
+import static java.util.Objects.*;
 import static java.util.stream.Collectors.*;
 
 import java.time.Clock;
@@ -47,6 +48,9 @@ import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
+import com.odiga.fiesta.user.domain.UserType;
+import com.odiga.fiesta.user.repository.UserRepository;
+import com.odiga.fiesta.user.repository.UserTypeRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @Slf4j
 public class FestivalService {
+	private final UserRepository userRepository;
 
 	private final Clock clock;
 
@@ -67,6 +72,8 @@ public class FestivalService {
 	private final FestivalImageRepository festivalImageRepository;
 	private final FestivalCategoryRepository festivalCategoryRepository;
 	private final FestivalMoodRepository festivalMoodRepository;
+
+	private final UserTypeRepository userTypeRepository;
 
 	private final RedisUtils redisUtils;
 
@@ -219,6 +226,22 @@ public class FestivalService {
 		return FestivalDetailResponse.of(festivalDetail, categories, moods, images);
 	}
 
+	public List<FestivalInfo> getRecommendFestivals(Long userId, Long size) {
+		validateUserId(userId);
+
+		Long userTypeId = userRepository.findUserTypeIdById(userId)
+			.orElseThrow(() -> new CustomException(USER_TYPE_NOT_FOUND));
+
+		LocalDate date = LocalDate.now(clock);
+
+		List<FestivalWithSido> festivals = festivalRepository.findRecommendFestivals(userTypeId, size, date);
+
+		return festivals.stream().map(festival -> {
+			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
+			return FestivalInfo.of(festival, thumbnailImage);
+		}).toList();
+	}
+
 	// 필터링을 위해, request list 내부의 중복 제거
 	private FestivalFilterCondition getFestivalFilterCondition(FestivalFilterRequest festivalFilterRequest) {
 		Optional.ofNullable(festivalFilterRequest.getMonths())
@@ -308,4 +331,11 @@ public class FestivalService {
 		}
 	}
 
+	private void validateUserId(Long userId) {
+		if (isNull(userId)) {
+			throw new CustomException(UNAUTHENTICATED_USER);
+		}
+
+		userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+	}
 }

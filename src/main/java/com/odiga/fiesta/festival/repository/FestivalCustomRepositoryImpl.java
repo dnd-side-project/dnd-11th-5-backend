@@ -3,7 +3,9 @@ package com.odiga.fiesta.festival.repository;
 import static com.odiga.fiesta.category.domain.QCategory.*;
 import static com.odiga.fiesta.festival.domain.QFestival.*;
 import static com.odiga.fiesta.festival.domain.QFestivalBookmark.*;
+import static com.odiga.fiesta.festival.domain.QFestivalUserType.*;
 import static com.odiga.fiesta.sido.domain.QSido.*;
+import static com.odiga.fiesta.user.domain.QUserType.*;
 import static java.util.Objects.*;
 
 import java.time.LocalDate;
@@ -19,12 +21,14 @@ import org.springframework.data.support.PageableExecutionUtils;
 
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.QFestivalBookmark;
+import com.odiga.fiesta.festival.domain.QFestivalUserType;
 import com.odiga.fiesta.festival.dto.projection.FestivalDetailData;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmark;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkCountAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
+import com.odiga.fiesta.user.domain.QUserType;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Order;
@@ -220,6 +224,31 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 		return Optional.ofNullable(festivalDetailData);
 	}
 
+	@Override
+	public List<FestivalWithSido> findRecommendFestivals(Long userTypeId, Long size, LocalDate date) {
+		List<FestivalWithSido> festivals = queryFactory.select(
+				Projections.fields(
+					FestivalWithSido.class,
+					festival.id.as("festivalId"),
+					festival.name,
+					sido.name.as("sido"),
+					festival.sigungu,
+					festival.startDate,
+					festival.endDate
+				)
+			)
+			.from(festival)
+			.leftJoin(sido)
+			.on(sidoIdFestivalSidoIdEq())
+			.leftJoin(festivalUserType).on(festival.id.eq(festivalUserType.festivalId))
+			.where(festival.isPending.isFalse(), getOngoingFestivalCondition(date), festivalUserType.userTypeId.eq(userTypeId))
+			.orderBy(Expressions.numberTemplate(Double.class, "rand()").asc())
+			.limit(size)
+			.fetch();
+
+		return festivals;
+	}
+
 	private List<OrderSpecifier> getAllOrderSpecifiers(Pageable pageable, Double latitude, Double longitude) {
 		List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
 
@@ -231,7 +260,7 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 			String property = order.getProperty();
 
 			// 정렬 조건이 dist 인 경우, 위도/경도 값을 받아서 새로운 specifier 를 만든다.
-			if ("dist" .equals(property)) {
+			if ("dist".equals(property)) {
 				OrderSpecifier distSpecifier = FestivalSortType.getDistanceOrderSpecifier(
 					order.getDirection().isAscending() ?
 						Order.ASC : Order.DESC, latitude, longitude);
@@ -311,9 +340,13 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id),
 				festivalBookmarkUserIdEq(userId))
 			.leftJoin(sido)
-			.on(sido.id.eq(festival.sidoId))
+			.on(sidoIdFestivalSidoIdEq())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize());
+	}
+
+	private static BooleanExpression sidoIdFestivalSidoIdEq() {
+		return sido.id.eq(festival.sidoId);
 	}
 
 	private JPAQuery<FestivalWithBookmark> selectFestivalWithBookmark(Long userId) {
