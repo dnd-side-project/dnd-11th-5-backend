@@ -188,9 +188,10 @@ public class FestivalService {
 
 	public Page<FestivalInfo> getHotFestivals(Pageable pageable) {
 
-		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable);
+		LocalDate date = LocalDate.now(clock);
+		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable, date);
 
-		// TODO: 배치로 변경할 수 있다.
+		// TODO: 배치로 변경할 수 있을듯...
 		List<FestivalInfo> responses = getFestivalAndSidoWithThumbnailImage(festivals);
 
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());

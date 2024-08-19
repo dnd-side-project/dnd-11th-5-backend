@@ -27,7 +27,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import com.odiga.fiesta.IntegrationTestSupport;
 import com.odiga.fiesta.category.domain.Category;
@@ -370,7 +369,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 					.categoryId(category.getId())
 					.festivalId(festival.getId())
 					.build())
-					.collect(Collectors.toList())
+				.collect(Collectors.toList())
 		);
 
 		List<FestivalMood> festivalMoods = festivalMoodRepository.saveAll(
@@ -379,7 +378,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 					.moodId(mood.getId())
 					.festivalId(festival.getId())
 					.build())
-					.collect(Collectors.toList())
+				.collect(Collectors.toList())
 		);
 
 		FestivalImage image1 = FestivalImage.builder().festivalId(festival.getId()).imageUrl("imageUrl1").build();
@@ -497,8 +496,6 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		// then -> 북마크 5, 북마크 4, 북마크 3
 		assertEquals(6, hotFestivals.getTotalElements());
 
-		System.out.println(hotFestivals.getContent());
-
 		assertThat(hotFestivals.getContent())
 			.hasSize(3)
 			.extracting("name")
@@ -507,6 +504,28 @@ class FestivalServiceTest extends IntegrationTestSupport {
 				"북마크 4",
 				"북마크 3"
 			);
+	}
+
+	@DisplayName("HOT 한 페스티벌 조회  - 종료된 페스티벌은 제외한다.")
+	@Test
+	void getHotFestivals_NotContainClosedFestival() {
+		// given
+		Long userId = 1L;
+
+		Festival closedFestival = festivalRepository.save(createFestival(today.minusDays(1), today.minusDays(1)));
+		Festival onGoingFestival = festivalRepository.save(createFestival(today, today));
+
+		for (int i = 0; i < 5; i++) {
+			FestivalBookmark bookmark = festivalBookmarkRepository.save(
+				createFestivalBookmark(closedFestival.getId(), userId));
+		}
+
+		// when
+		Page<FestivalInfo> hotFestivals = festivalService.getHotFestivals(PageRequest.of(0, 1));
+
+		// then
+		assertEquals(1, hotFestivals.getTotalElements());
+		assertEquals(onGoingFestival.getName(), hotFestivals.getContent().get(0).getName());
 	}
 
 	@DisplayName("다가오는 페스티벌 조회 - 성공")
