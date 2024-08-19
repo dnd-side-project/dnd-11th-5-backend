@@ -28,6 +28,7 @@ public enum ErrorCode {
     INVALID_EXTENSION_TYPE(400, "C008", "파일의 확장자가 잘못되었습니다."),
     MISSING_REQUEST_PARAMETER(400, "C009", "필수 파라미터가 누락되었습니다."),
     UNAUTHENTICATED_USER(401, "C010", "인증되지 않은 사용자입니다."),
+    NOT_LOGGED_IN(401, "C011", "로그인이 필요합니다."),
 
     // Domain
 

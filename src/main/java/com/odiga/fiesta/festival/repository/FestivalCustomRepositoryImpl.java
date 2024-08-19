@@ -29,6 +29,7 @@ import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkCountAndSido
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.user.domain.QUserType;
+import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Order;
@@ -152,31 +153,70 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 						sido.name.as("sido"),
 						festival.startDate,
 						festival.endDate,
-						ExpressionUtils.as(
-							JPAExpressions
-								.select(festivalBookmark.id.countDistinct())
-								.from(festivalBookmark)
-								.where(festivalBookmark.festivalId.eq(festival.id)),
-							"bookmarkCount"
-						)
+						festivalBookmarkForBookmarkCount.id.countDistinct().as("bookmarkCount")
 					)
 				)
 				.from(festival)
-				.leftJoin(sido)
-				.on(festival.sidoId.eq(sido.id))
+				.leftJoin(sido).on(festival.sidoId.eq(sido.id))
+				.leftJoin(festivalBookmarkForBookmarkCount)
+				.on(festivalBookmarkForBookmarkCount.festivalId.eq(festival.id))
 				.where(
-					festival.isPending.isFalse()
+					festival.isPending.isFalse(),
+					getOngoingFestivalCondition(date)
 				)
-				.orderBy(bookmarkCount.desc())
+				.orderBy(festivalBookmarkForBookmarkCount.id.countDistinct().desc())
 				.offset(pageable.getOffset())
 				.limit(pageable.getPageSize())
+				.groupBy(festival.id)
 				.fetch()
 				.stream().map(FestivalWithSido::of)
 				.toList();
 
 		JPAQuery<Long> countQuery = queryFactory
 			.select(festival.count())
-			.from(festival);
+			.from(festival)
+			.where(getOngoingFestivalCondition(date), festival.isPending.isFalse());
+
+		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
+	}
+
+	@Override
+	public Page<FestivalAndLocation> findUpcomingFestivalAndLocation(Long userId, LocalDate localDate,
+		Pageable pageable) {
+		List<FestivalAndLocation> festivals = queryFactory.select(
+				Projections.fields(
+					FestivalAndLocation.class,
+					festival.id.as("festivalId"),
+					festival.name,
+					festival.address,
+					festival.latitude,
+					festival.longitude,
+					festival.startDate,
+					festival.endDate
+				)
+			)
+			.from(festival)
+			.leftJoin(festivalBookmarkForIsBookmarked)
+			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id))
+			.where(
+				festivalBookmarkUserIdEq(userId),
+				festival.startDate.goe(Expressions.asDate(localDate)),
+				getOngoingFestivalCondition(localDate)
+			)
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.orderBy(festival.startDate.asc())
+			.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory.select(festival.count())
+			.from(festival)
+			.leftJoin(festivalBookmarkForIsBookmarked)
+			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id), festivalBookmarkUserIdEq(userId))
+			.where(
+				festivalBookmarkUserIdEq(userId),
+				festival.startDate.goe(Expressions.asDate(localDate)),
+				getOngoingFestivalCondition(localDate)
+			);
 
 		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
 	}
@@ -197,6 +237,8 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 					festival.tip,
 					festival.homepageUrl,
 					festival.instagramUrl,
+					festival.latitude,
+					festival.longitude,
 					festival.fee,
 					festival.ticketLink,
 					festivalBookmarkForBookmarkCount.id.countDistinct().as("bookmarkCount"),
@@ -241,7 +283,8 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 			.leftJoin(sido)
 			.on(sidoIdFestivalSidoIdEq())
 			.leftJoin(festivalUserType).on(festival.id.eq(festivalUserType.festivalId))
-			.where(festival.isPending.isFalse(), getOngoingFestivalCondition(date), festivalUserType.userTypeId.eq(userTypeId))
+			.where(festival.isPending.isFalse(), getOngoingFestivalCondition(date),
+				festivalUserType.userTypeId.eq(userTypeId))
 			.orderBy(Expressions.numberTemplate(Double.class, "rand()").asc())
 			.limit(size)
 			.fetch();

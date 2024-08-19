@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,7 +27,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import com.odiga.fiesta.IntegrationTestSupport;
 import com.odiga.fiesta.category.domain.Category;
@@ -43,6 +41,7 @@ import com.odiga.fiesta.festival.domain.FestivalUserType;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
+import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
@@ -110,9 +109,6 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.when(clock)
 			.instant();
 	}
-
-	@Autowired
-	private RedisTemplate redisTemplate;
 
 	@DisplayName("페스티벌 월간 조회 - startDate 와 endDate 사이에 해당 월이 끼어있어도 페스티벌이 포함되어야 한다.")
 	@Test
@@ -410,6 +406,8 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.endDate(festival.getEndDate())
 			.description(festival.getDescription())
 			.address(festival.getAddress())
+			.latitude(festival.getLatitude())
+			.longitude(festival.getLongitude())
 			.tip(festival.getTip())
 			.homepageUrl(festival.getHomepageUrl())
 			.instagramUrl(festival.getInstagramUrl())
@@ -503,8 +501,6 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		// then -> 북마크 5, 북마크 4, 북마크 3
 		assertEquals(6, hotFestivals.getTotalElements());
 
-		System.out.println(hotFestivals.getContent());
-
 		assertThat(hotFestivals.getContent())
 			.hasSize(3)
 			.extracting("name")
@@ -576,6 +572,155 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.userTypeId(1L)
 			.statusMessage("상태 메시지")
 			.profileImage("프로필 이미지")
+			.build();
+	}
+
+	@DisplayName("HOT 한 페스티벌 조회  - 종료된 페스티벌은 제외한다.")
+	@Test
+	void getHotFestivals_NotContainClosedFestival() {
+		// given
+		Long userId = 1L;
+
+		Festival closedFestival = festivalRepository.save(createFestival(today.minusDays(1), today.minusDays(1)));
+		Festival onGoingFestival = festivalRepository.save(createFestival(today, today));
+
+		for (int i = 0; i < 5; i++) {
+			FestivalBookmark bookmark = festivalBookmarkRepository.save(
+				createFestivalBookmark(closedFestival.getId(), userId));
+		}
+
+		// when
+		Page<FestivalInfo> hotFestivals = festivalService.getHotFestivals(PageRequest.of(0, 1));
+
+		// then
+		assertEquals(1, hotFestivals.getTotalElements());
+		assertEquals(onGoingFestival.getName(), hotFestivals.getContent().get(0).getName());
+	}
+
+	@DisplayName("다가오는 페스티벌 조회 - 성공")
+	@Test
+	void getUpcomingFestival_Success() {
+		// given
+		User currentUser = userRepository.save(createUser());
+		LocalDate today = LocalDate.now();
+
+		Festival festival1 = festivalRepository.save(createFestival(today.plusDays(1), today.plusDays(2)));
+		Festival festival2 = festivalRepository.save(createFestival(today.plusDays(3), today.plusDays(4)));
+		Festival festival3 = festivalRepository.save(createFestival(today.plusDays(5), today.plusDays(6)));
+		Festival festival4 = festivalRepository.save(createFestival(today.plusDays(7), today.plusDays(8)));
+
+		FestivalBookmark bookmark1 = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival1.getId(), currentUser.getId()));
+		FestivalBookmark bookmark2 = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival3.getId(), currentUser.getId()));
+		FestivalBookmark bookmark3 = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival4.getId(), currentUser.getId()));
+
+		Pageable pageable = PageRequest.of(0, 5);
+
+		// when
+		Page<FestivalAndLocation> upcomingFestivals = festivalService.getUpcomingFestival(currentUser.getId(),
+			pageable);
+
+		// then
+		assertThat(upcomingFestivals.getContent())
+			.hasSize(3)
+			.extracting("festivalId")
+			.containsExactly(
+				festival1.getId(),
+				festival3.getId(),
+				festival4.getId()
+			);
+	}
+
+	@DisplayName("다가오는 페스티벌 조회 - 현재 날짜 이후의 페스티벌을 조회할 수 있다.")
+	@Test
+	void getUpcomingFestival_StartDateShouldBeGoeToday() {
+		// given
+		User currentUser = userRepository.save(createUser());
+
+		Festival startToday = festivalRepository.save(createFestival(today, today.plusDays(2)));
+		Festival startedBeforeThreeDay = festivalRepository.save(createFestival(today.minusDays(3), today.plusDays(4)));
+		Festival startedBeforeFiveDay = festivalRepository.save(createFestival(today.minusDays(5), today.plusDays(6)));
+		Festival startAfter7Day = festivalRepository.save(createFestival(today.plusDays(7), today.plusDays(8)));
+
+		FestivalBookmark bookmark1 = festivalBookmarkRepository.save(
+			createFestivalBookmark(startToday.getId(), currentUser.getId()));
+		FestivalBookmark bookmark2 = festivalBookmarkRepository.save(
+			createFestivalBookmark(startedBeforeFiveDay.getId(), currentUser.getId()));
+		FestivalBookmark bookmark3 = festivalBookmarkRepository.save(
+			createFestivalBookmark(startAfter7Day.getId(), currentUser.getId()));
+
+		Pageable pageable = PageRequest.of(0, 5);
+
+		// when
+		Page<FestivalAndLocation> upcomingFestivals = festivalService.getUpcomingFestival(currentUser.getId(),
+			pageable);
+
+		// then
+		assertThat(upcomingFestivals.getContent())
+			.hasSize(2)
+			.extracting("festivalId")
+			.containsExactly(
+				startToday.getId(), startAfter7Day.getId()
+			);
+
+		assertEquals(2, upcomingFestivals.getTotalElements());
+	}
+
+	@DisplayName("다가오는 페스티벌 조회 - 종료된 페스티벌은 조회되지 않는다.")
+	@Test
+	void getUpcomingFestival_NotEndedFestival() {
+		// given
+		User currentUser = userRepository.save(createUser());
+
+		Festival ended = festivalRepository.save(createFestival(today.minusDays(1), today.minusDays(1)));
+		Festival endedBefore7Dat = festivalRepository.save(createFestival(today.minusDays(10), today.minusDays(4)));
+		Festival ongoing = festivalRepository.save(createFestival(today, today));
+
+		FestivalBookmark bookmark1 = festivalBookmarkRepository.save(
+			createFestivalBookmark(ended.getId(), currentUser.getId()));
+		FestivalBookmark bookmark2 = festivalBookmarkRepository.save(
+			createFestivalBookmark(endedBefore7Dat.getId(), currentUser.getId()));
+		FestivalBookmark bookmark3 = festivalBookmarkRepository.save(
+			createFestivalBookmark(ongoing.getId(), currentUser.getId()));
+
+		Pageable pageable = PageRequest.of(0, 5);
+
+		// when
+		Page<FestivalAndLocation> upcomingFestivals = festivalService.getUpcomingFestival(currentUser.getId(),
+			pageable);
+
+		// then
+		assertThat(upcomingFestivals.getContent())
+			.hasSize(1)
+			.extracting("festivalId")
+			.containsExactly(
+				ongoing.getId()
+			);
+
+		assertEquals(1, upcomingFestivals.getTotalElements());
+	}
+
+	@DisplayName("다가오는 페스티벌 조회 - 현재 유저의 정보가 존재해야 한다. ")
+	@Test
+	void getUpcomingFestival_UserMustBeValid() {
+		// given
+		Long invalidUserId = -1L;
+		Pageable pageable = PageRequest.of(0, 5);
+
+		// when
+		CustomException exception = assertThrows(CustomException.class
+			, () -> festivalService.getUpcomingFestival(null, pageable));
+
+		// then
+		assertEquals(USER_NOT_FOUND.getMessage(), exception.getMessage());
+	}
+
+	private static User createUser() {
+		return User.builder()
+			.roleId(1L)
+			.nickname("테스트 유저")
 			.build();
 	}
 

@@ -35,6 +35,7 @@ import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
+import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
@@ -140,8 +141,6 @@ public class FestivalService {
 
 	@Transactional
 	public void updateSearchRanking(String rankingKey, FestivalBasic searchItem) {
-		log.warn("update search raking, {}", searchItem);
-
 		final Double SCORE_INCREMENT_AMOUNT = 1.0;
 
 		String fetivalIdToString = searchItem.getFestivalId().toString();
@@ -150,8 +149,6 @@ public class FestivalService {
 		Double newScore = (currentScore != null) ? currentScore + SCORE_INCREMENT_AMOUNT : SCORE_INCREMENT_AMOUNT;
 
 		redisUtils.zAdd(rankingKey, fetivalIdToString, newScore);
-
-		log.warn("item = {}, score = {} -> {}", searchItem.getName(), currentScore, newScore);
 	}
 
 	@Transactional
@@ -159,7 +156,6 @@ public class FestivalService {
 		Set<ZSetOperations.TypedTuple<String>> set = redisUtils.zRevrange(rankingKey, page * size,
 			(page * size) + size);
 
-		log.error("set - {}", set);
 		List<FestivalBasic> festivals = festivalRepository.findAllById(
 				set.stream().map(tuple -> Long.parseLong(tuple.getValue())).toList())
 			.stream().map(FestivalBasic::of).toList();
@@ -191,12 +187,21 @@ public class FestivalService {
 
 	public Page<FestivalInfo> getHotFestivals(Pageable pageable) {
 
-		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable);
+		LocalDate date = LocalDate.now(clock);
+		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable, date);
 
-		// TODO: 배치로 변경할 수 있다.
+		// TODO: 배치로 변경할 수 있을듯...
 		List<FestivalInfo> responses = getFestivalAndSidoWithThumbnailImage(festivals);
 
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
+	}
+
+	public Page<FestivalAndLocation> getUpcomingFestival(Long userId, Pageable pageable) {
+		validateUserId(userId);
+		LocalDate date = LocalDate.now(clock);
+		Page<FestivalAndLocation> festivals = festivalRepository.findUpcomingFestivalAndLocation(userId, date,
+			pageable);
+		return new PageImpl<>(festivals.getContent(), pageable, festivals.getTotalElements());
 	}
 
 	private List<FestivalInfo> getFestivalAndSidoWithThumbnailImage(
