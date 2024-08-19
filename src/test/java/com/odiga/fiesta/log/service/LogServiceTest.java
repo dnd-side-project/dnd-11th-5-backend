@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
@@ -81,7 +82,7 @@ class LogServiceTest extends IntegrationTestSupport {
 					.keywordId(keyword.getId())
 					.logId(logId)
 					.build())
-			.toList();
+			.collect(Collectors.toList());
 
 		logKeywordRepository.saveAll(logKeywords);
 
