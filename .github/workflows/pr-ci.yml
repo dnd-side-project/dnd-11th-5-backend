@@ -12,6 +12,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     runs-on: ubuntu-latest
     permissions:
+      checks: write
       pull-requests: write
 
     steps:
@@ -43,7 +44,7 @@ jobs:
           ./gradlew --info test
 
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: ${{ always() }}
         with:
           files: 'build/test-results/**/*.xml'
