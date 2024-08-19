@@ -134,9 +134,7 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 	}
 
 	@Override
-	public Page<FestivalWithSido> findMostLikeFestival(Pageable pageable) {
-
-		StringPath bookmarkCount = Expressions.stringPath("bookmarkCount");
+	public Page<FestivalWithSido> findMostLikeFestival(Pageable pageable, LocalDate date) {
 
 		List<FestivalWithSido> festivals =
 			queryFactory.select(
@@ -148,31 +146,29 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 						sido.name.as("sido"),
 						festival.startDate,
 						festival.endDate,
-						ExpressionUtils.as(
-							JPAExpressions
-								.select(festivalBookmark.id.countDistinct())
-								.from(festivalBookmark)
-								.where(festivalBookmark.festivalId.eq(festival.id)),
-							"bookmarkCount"
-						)
+						festivalBookmarkForBookmarkCount.id.countDistinct().as("bookmarkCount")
 					)
 				)
 				.from(festival)
-				.leftJoin(sido)
-				.on(festival.sidoId.eq(sido.id))
+				.leftJoin(sido).on(festival.sidoId.eq(sido.id))
+				.leftJoin(festivalBookmarkForBookmarkCount)
+				.on(festivalBookmarkForBookmarkCount.festivalId.eq(festival.id))
 				.where(
-					festival.isPending.isFalse()
+					festival.isPending.isFalse(),
+					getOngoingFestivalCondition(date)
 				)
-				.orderBy(bookmarkCount.desc())
+				.orderBy(festivalBookmarkForBookmarkCount.id.countDistinct().desc())
 				.offset(pageable.getOffset())
 				.limit(pageable.getPageSize())
+				.groupBy(festival.id)
 				.fetch()
 				.stream().map(FestivalWithSido::of)
 				.toList();
 
 		JPAQuery<Long> countQuery = queryFactory
 			.select(festival.count())
-			.from(festival);
+			.from(festival)
+			.where(getOngoingFestivalCondition(date), festival.isPending.isFalse());
 
 		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
 	}

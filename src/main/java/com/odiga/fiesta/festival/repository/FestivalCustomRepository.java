@@ -28,7 +28,8 @@ public interface FestivalCustomRepository {
 
 	Page<FestivalWithBookmarkAndSido> findFestivalsByQuery(Long userId, String query, Pageable pageable);
 
-	Optional<FestivalDetailData> findFestivalDetail(Long userId, Long festivalId);
+	Page<FestivalWithSido> findMostLikeFestival(Pageable pageable, LocalDate date);
 
-	Page<FestivalWithSido> findMostLikeFestival(Pageable pageable);
+	Optional<FestivalDetailData> findFestivalDetail(Long userId, Long festivalId);
+	
 }
