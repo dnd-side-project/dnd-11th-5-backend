@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.odiga.fiesta.ControllerTestSupport;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
@@ -122,5 +123,19 @@ class FestivalControllerTest extends ControllerTestSupport {
 			)
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value(QUERY_CANNOT_BE_BLANK.getMessage()));
+	}
+
+	@DisplayName("다가오는 페스티벌 조회 -로그인하지 않는 경우 에러가 발생한다.")
+	@Test
+	void test() throws Exception {
+		// given
+		SecurityContextHolder.clearContext();
+
+		// when // then
+		mockMvc.perform(get("/api/v1/festivals/upcoming")
+				.param("query", " ")
+			)
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.message").value(NOT_LOGGED_IN.getMessage()));
 	}
 }
