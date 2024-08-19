@@ -7,10 +7,10 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
 @SpringBootTest
+@Import(S3MockConfig.class)
 class FiestaApplicationTests {
 
 	@Test
 	void contextLoads() {
 	}
-
 }

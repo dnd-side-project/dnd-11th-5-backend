@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 
 import lombok.Getter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder

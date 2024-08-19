@@ -1,10 +1,15 @@
 package com.odiga.fiesta.user.domain.accounts;
 
-import com.odiga.fiesta.user.domain.User;
-import jakarta.persistence.*;
-import lombok.*;
+import static lombok.AccessLevel.*;
 
-import static lombok.AccessLevel.PROTECTED;
+import com.odiga.fiesta.user.domain.User;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @AllArgsConstructor

@@ -16,17 +16,16 @@ import org.springframework.web.multipart.MultipartFile;
 import com.odiga.fiesta.MockTestSupport;
 import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.log.domain.LogImage;
 import com.odiga.fiesta.log.dto.request.LogCreateRequest;
 import com.odiga.fiesta.log.repository.LogImageRepository;
-import com.odiga.fiesta.s3.service.S3Service;
-import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.repository.UserRepository;
 
 class LogMockServiceTest extends MockTestSupport {
 
 	@Mock
-	private S3Service s3Service;
+	private FileUtils fileUtils;
 
 	@Mock
 	private LogImageRepository logImageRepository;
@@ -47,13 +46,13 @@ class LogMockServiceTest extends MockTestSupport {
 	void createLogImages_success() throws Exception {
 		// Given
 		String imageUrl = "https://s3.example.com/image.jpg";
-		when(s3Service.upload(any(MultipartFile.class), anyString())).thenReturn(imageUrl);
+		when(fileUtils.upload(any(MultipartFile.class), anyString())).thenReturn(imageUrl);
 
 		// When
 		logService.createLogImages(logId, List.of(multipartFile));
 
 		// Then
-		verify(s3Service, times(1)).upload(any(MultipartFile.class), anyString());
+		verify(fileUtils, times(1)).upload(any(MultipartFile.class), anyString());
 		verify(logImageRepository, times(1)).save(any(LogImage.class));
 	}
 
@@ -61,7 +60,7 @@ class LogMockServiceTest extends MockTestSupport {
 	@Test
 	void createLogImages_uploadFail() throws Exception {
 		// Given
-		when(s3Service.upload(any(MultipartFile.class), anyString())).thenThrow(new IOException("Upload failed"));
+		when(fileUtils.upload(any(MultipartFile.class), anyString())).thenThrow(new IOException("Upload failed"));
 
 		// When & Then
 		CustomException exception = assertThrows(CustomException.class, () -> {

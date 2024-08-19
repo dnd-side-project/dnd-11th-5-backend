@@ -17,3 +17,22 @@ spring:
     redis:
       host: localhost
       port: 6379
+
+  jwt:
+    header: Authorization
+    issuer: odiga
+    client-secret: mock
+    expiry-seconds: 2592000
+    secret: mock
+
+cloud:
+  aws:
+    credentials:
+      accessKey: mock
+      secretKey: mock
+    s3:
+      bucket: mock
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
