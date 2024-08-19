@@ -2,6 +2,7 @@ package com.odiga.fiesta.festival.service;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static com.odiga.fiesta.festival.domain.Festival.*;
+import static java.util.Objects.*;
 import static java.util.stream.Collectors.*;
 
 import java.time.Clock;
@@ -34,6 +35,7 @@ import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
+import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
@@ -47,6 +49,7 @@ import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
+import com.odiga.fiesta.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @Slf4j
 public class FestivalService {
+	private final UserRepository userRepository;
 
 	private final Clock clock;
 
@@ -193,6 +197,16 @@ public class FestivalService {
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
 	}
 
+	public Page<FestivalAndLocation> getUpcomingFestival(Long userId, Pageable pageable) {
+		validateUserId(userId);
+		LocalDate date = LocalDate.now(clock);
+
+		log.warn("date = {}", date);
+		Page<FestivalAndLocation> festivals = festivalRepository.findUpcomingFestivalAndLocation(userId, date,
+			pageable);
+		return new PageImpl<>(festivals.getContent(), pageable, festivals.getTotalElements());
+	}
+
 	private List<FestivalInfo> getFestivalAndSidoWithThumbnailImage(
 		Page<FestivalWithSido> festivals) {
 		return festivals.getContent().stream().map(festival -> {
@@ -307,6 +321,14 @@ public class FestivalService {
 			// TODO 이후에 권한으로 처리
 			throw new CustomException(FESTIVAL_IS_PENDING);
 		}
+	}
+
+	private void validateUserId(Long userId) {
+		if (isNull(userId)) {
+			throw new CustomException(USER_NOT_FOUND);
+		}
+
+		userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 	}
 
 }

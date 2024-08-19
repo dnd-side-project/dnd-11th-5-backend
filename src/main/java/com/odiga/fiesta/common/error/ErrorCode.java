@@ -27,6 +27,7 @@ public enum ErrorCode {
     INVALID_IMAGE_TYPE(400, "C007", "지원하지 않는 이미지 형식입니다."),
     INVALID_EXTENSION_TYPE(400, "C008", "파일의 확장자가 잘못되었습니다."),
     MISSING_REQUEST_PARAMETER(400, "C009", "필수 파라미터가 누락되었습니다."),
+    NOT_LOGGED_IN(401, "C010", "로그인이 필요합니다."),
 
     // Domain
 

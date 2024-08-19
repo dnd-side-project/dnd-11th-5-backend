@@ -25,6 +25,7 @@ import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkCountAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
+import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Order;
@@ -169,6 +170,47 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 			.select(festival.count())
 			.from(festival)
 			.where(getOngoingFestivalCondition(date), festival.isPending.isFalse());
+
+		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
+	}
+
+	@Override
+	public Page<FestivalAndLocation> findUpcomingFestivalAndLocation(Long userId, LocalDate localDate,
+		Pageable pageable) {
+		List<FestivalAndLocation> festivals = queryFactory.select(
+				Projections.fields(
+					FestivalAndLocation.class,
+					festival.id.as("festivalId"),
+					festival.name,
+					festival.address,
+					festival.latitude,
+					festival.longitude,
+					festival.startDate,
+					festival.endDate
+				)
+			)
+			.from(festival)
+			.leftJoin(festivalBookmarkForIsBookmarked)
+			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id))
+			.where(
+				festivalBookmarkUserIdEq(userId),
+				festival.startDate.goe(Expressions.asDate(localDate)),
+				getOngoingFestivalCondition(localDate)
+			)
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.orderBy(festival.startDate.asc())
+			.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory.select(festival.count())
+			.from(festival)
+			.leftJoin(festivalBookmarkForIsBookmarked)
+			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id), festivalBookmarkUserIdEq(userId))
+			.where(
+				festivalBookmarkUserIdEq(userId),
+				festival.startDate.goe(Expressions.asDate(localDate)),
+				getOngoingFestivalCondition(localDate)
+			);
 
 		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
 	}
