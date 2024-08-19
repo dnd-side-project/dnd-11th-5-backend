@@ -1,18 +1,16 @@
 name: 'PR CI'
 
 on:
-  pull_request_target:
-    types: [labeled]
+  pull_request:
+    branches: [ main ]
 
 permissions:
-  contents: read
+  checks: write
+  pull-requests: write
 
 jobs:
   build:
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
 
     steps:
       - name: Checkout Repository
@@ -42,16 +40,15 @@ jobs:
           ./gradlew copySecret
           ./gradlew --info test
 
-      - name: Upload Event File
-        uses: actions/upload-artifact@v4
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: ${{ always() }}
         with:
-          name: event-file
-          path: ${{ github.event_path }}
+          files: 'build/test-results/**/*.xml'
 
-      - name: Upload Test Report
-        uses: actions/upload-artifact@v3
-        if: always() # always run even if the previous step fails
+      - name: Reports JUnit Test Results
+        uses: mikepenz/action-junit-report@v3
+        if: success() || failure()
         with:
-          name: junit-test-results
-          path: '**/build/test-results/test/TEST-*.xml'
-          retention-days: 1
+          commit: ${{github.event.workflow_run.head_sha}}
+          report_paths: '**/build/test-results/test/TEST-*.xml'

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.keyword.domain.Keyword;
@@ -25,7 +24,6 @@ import com.odiga.fiesta.log.dto.response.LogKeywordResponse;
 import com.odiga.fiesta.log.repository.LogImageRepository;
 import com.odiga.fiesta.log.repository.LogKeywordRepository;
 import com.odiga.fiesta.log.repository.LogRepository;
-import com.odiga.fiesta.s3.service.S3Service;
 import com.odiga.fiesta.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -42,8 +40,6 @@ public class LogService {
 	private final LogKeywordRepository logKeywordRepository;
 	private final LogRepository logRepository;
 	private final UserRepository userRepository;
-
-	private final S3Service s3Service;
 
 	private final FileUtils fileUtils;
 
@@ -83,6 +79,7 @@ public class LogService {
 			.build();
 	}
 
+	@Transactional
 	public LogIdResponse createLog(Long userId, LogCreateRequest request, List<MultipartFile> files) {
 		validateUser(userId);
 
@@ -104,10 +101,11 @@ public class LogService {
 		return LogIdResponse.of(savedLog.getId());
 	}
 
+	@Transactional
 	public void createLogImages(Long logId, List<MultipartFile> files) {
 		files.forEach(file -> {
 			try {
-				String imageUrl = s3Service.upload(file, IMAGE_DIR_NAME);
+				String imageUrl = fileUtils.upload(file, IMAGE_DIR_NAME);
 				logImageRepository.save(LogImage.builder()
 					.logId(logId)
 					.imageUrl(imageUrl)

@@ -14,8 +14,6 @@ import com.odiga.fiesta.user.domain.oauth.OauthProvider;
 import com.odiga.fiesta.user.dto.UserRequest;
 import com.odiga.fiesta.user.repository.*;
 import com.odiga.fiesta.user.dto.UserResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
