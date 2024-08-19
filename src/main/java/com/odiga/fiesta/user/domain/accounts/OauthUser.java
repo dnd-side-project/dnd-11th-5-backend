@@ -2,6 +2,7 @@ package com.odiga.fiesta.user.domain.accounts;
 
 import static lombok.AccessLevel.*;
 
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
 
 import com.odiga.fiesta.user.domain.User;
