@@ -397,6 +397,8 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.endDate(festival.getEndDate())
 			.description(festival.getDescription())
 			.address(festival.getAddress())
+			.latitude(festival.getLatitude())
+			.longitude(festival.getLongitude())
 			.tip(festival.getTip())
 			.homepageUrl(festival.getHomepageUrl())
 			.instagramUrl(festival.getInstagramUrl())
