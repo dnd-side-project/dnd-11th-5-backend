@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.odiga.fiesta.common.BasicResponse;
@@ -28,6 +30,7 @@ import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalBookmarkResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalCreateResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
@@ -55,6 +58,21 @@ public class FestivalController {
 
 	private final FestivalService festivalService;
 	private final FestivalBookmarkService festivalBookmarkService;
+
+	@Operation(
+		summary = "페스티벌 생성",
+		description = "페스티벌을 생성합니다."
+	)
+	@PostMapping
+	public ResponseEntity<BasicResponse<FestivalCreateResponse>> createFestival(
+		@AuthenticationPrincipal User user,
+		@RequestPart
+
+		) {
+		return null;
+		// FestivalBasic festival = festivalService.createFestival(festivalBasic);
+		// return ResponseEntity.ok(BasicResponse.ok("페스티벌 생성 성공", festival));
+	}
 
 	@Operation(
 		summary = "페스티벌 월간 조회",
