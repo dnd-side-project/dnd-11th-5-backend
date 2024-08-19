@@ -27,7 +27,8 @@ public enum ErrorCode {
     INVALID_IMAGE_TYPE(400, "C007", "지원하지 않는 이미지 형식입니다."),
     INVALID_EXTENSION_TYPE(400, "C008", "파일의 확장자가 잘못되었습니다."),
     MISSING_REQUEST_PARAMETER(400, "C009", "필수 파라미터가 누락되었습니다."),
-    NOT_LOGGED_IN(401, "C010", "로그인이 필요합니다."),
+    UNAUTHENTICATED_USER(401, "C010", "인증되지 않은 사용자입니다."),
+    NOT_LOGGED_IN(401, "C011", "로그인이 필요합니다."),
 
     // Domain
 
@@ -37,6 +38,7 @@ public enum ErrorCode {
     INVALID_TOKEN(401, "U003", "유효하지 않은 토큰입니다."),
     TOKEN_EXPIRED(401, "U004", "만료된 토큰입니다."),
     ALREADY_JOINED(409, "U005", "이미 존재하는 유저입니다."),
+    INVALID_USER_TYPE(400, "U006", "유효하지 않은 유저 타입입니다."),
 
     // Festival
     INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."),

@@ -210,6 +210,26 @@ public class FestivalController {
 		return ResponseEntity.ok(BasicResponse.ok("HOT 페스티벌 조회 성공", PageResponse.of(hotFestivals)));
 	}
 
+	@Operation(summary = "유형별 추천 페스티벌 조회", description = "유저 유형 별 추천 페스티벌을 랜덤으로 조회합니다.")
+	@GetMapping("/recommend")
+	public ResponseEntity<BasicResponse<List<FestivalInfo>>> getRecommendFestival(
+		@AuthenticationPrincipal User user,
+		@RequestParam(required = false, defaultValue = "5") Long size
+	) {
+		checkLoginUser(user);
+
+		List<FestivalInfo> recommendFestivals = festivalService.getRecommendFestivals(
+			isNull(user) ? null : user.getId(), size);
+
+		return ResponseEntity.ok(BasicResponse.ok("유형별 추천 페스티벌 조회 성공", recommendFestivals));
+	}
+
+	private static void checkLoginUser(User user) {
+		if (isNull(user)) {
+			throw new CustomException(UNAUTHENTICATED_USER);
+		}
+	}
+
 	private void validateFestivalDay(int year, int month, int day) {
 		YearMonth yearMonth = YearMonth.of(year, month);
 

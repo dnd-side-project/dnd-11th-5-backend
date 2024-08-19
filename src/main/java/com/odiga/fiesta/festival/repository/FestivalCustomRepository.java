@@ -34,4 +34,6 @@ public interface FestivalCustomRepository {
 	Optional<FestivalDetailData> findFestivalDetail(Long userId, Long festivalId);
 
 	Page<FestivalAndLocation> findUpcomingFestivalAndLocation(Long userId, LocalDate date, Pageable pageable);
+
+	List<FestivalWithSido> findRecommendFestivals(Long userTypeId, Long size, LocalDate date);
 }
