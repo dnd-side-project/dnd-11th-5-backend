@@ -1,9 +1,10 @@
 package com.odiga.fiesta.user.repository;
 
-import com.odiga.fiesta.user.domain.accounts.OauthUser;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import com.odiga.fiesta.user.domain.accounts.OauthUser;
 
 public interface OauthUserRepository extends JpaRepository<OauthUser, Long> {
 

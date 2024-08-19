@@ -1,10 +1,8 @@
 package com.odiga.fiesta.common.config;
 
-import com.odiga.fiesta.common.jwt.JwtAccessDeniedHandler;
-import com.odiga.fiesta.common.jwt.JwtAuthenticationEntryPoint;
-import com.odiga.fiesta.common.jwt.TokenAuthenticationFilter;
-import com.odiga.fiesta.common.jwt.TokenProvider;
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+import java.util.Collections;
+
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,8 +15,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import java.util.Arrays;
-import java.util.Collections;
+import com.odiga.fiesta.common.jwt.JwtAccessDeniedHandler;
+import com.odiga.fiesta.common.jwt.JwtAuthenticationEntryPoint;
+import com.odiga.fiesta.common.jwt.TokenAuthenticationFilter;
+import com.odiga.fiesta.common.jwt.TokenProvider;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity

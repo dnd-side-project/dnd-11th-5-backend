@@ -45,6 +45,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'io.findify:s3mock_2.12:0.2.4'
 
     // h2
     runtimeOnly 'com.h2database:h2'
