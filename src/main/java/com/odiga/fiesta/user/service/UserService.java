@@ -7,6 +7,7 @@ import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.jwt.TokenProvider;
 import com.odiga.fiesta.common.util.NicknameUtils;
 import com.odiga.fiesta.common.util.RedisUtils;
+import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.domain.accounts.OauthUser;
 import com.odiga.fiesta.user.domain.mapping.*;
@@ -30,7 +31,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
-import static com.odiga.fiesta.common.error.ErrorCode.ALREADY_JOINED;
 
 @Slf4j
 @Service
@@ -44,6 +44,7 @@ public class UserService {
     private final UserMoodRepository userMoodRepository;
     private final UserPriorityRepository userPriorityRepository;
     private final UserRoleRepository userRoleRepository;
+    private final UserRepository userRepository;
 
     private final TokenProvider tokenProvider;
 
@@ -58,6 +59,16 @@ public class UserService {
 
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
+
+    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofHours(2);
+
+    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
+
+    private static final String REFRESH_TOKEN_CATEGORY = "refresh";
+
+    private static final String ACCESS_TOKEN_CATEGORY = "access";
+
+
 
     // 카카오 로그인
     @Transactional
@@ -75,20 +86,13 @@ public class UserService {
         String accessToken = null;
         String refreshToken = null;
 
-        Optional<OauthUser> optionalUser = oauthUserRepository.findByProviderId(oauthId);
+        //DB에서 회원 정보 조회
+        OauthUser user = oauthUserRepository.findByProviderId(oauthId).orElse(null);
 
-        //DB에 회원정보가 있을때 토큰 발급
-        if (optionalUser.isPresent()) {
-            OauthUser user = optionalUser.get();
-
-            //토큰 생성
-            accessToken = tokenProvider.generateToken(user, Duration.ofHours(2), "access");
-            refreshToken = tokenProvider.generateToken(user, Duration.ofDays(14), "refresh");
-            log.info("access: " + accessToken);
-            log.info("refresh : " + refreshToken);
-
-            //Refresh 토큰 저장
-            redisUtils.setData(user.getId().toString(), refreshToken, Duration.ofDays(14).toMillis());
+        //토큰 발급
+        if(user != null) {
+            accessToken = issueAccessToken(user);
+            refreshToken = issueRefreshToken(user);
         }
 
         //응답 설정
@@ -134,14 +138,9 @@ public class UserService {
 
         userRoleRepository.save(userRole);
 
-        //토큰 생성
-        String accessToken = tokenProvider.generateToken(user, Duration.ofHours(2), "access");
-        String refreshToken = tokenProvider.generateToken(user, Duration.ofDays(14), "refresh");
-        log.info("access: " + accessToken);
-        log.info("refresh : " + refreshToken);
-
-        //Refresh 토큰 저장
-        redisUtils.setData(user.getId().toString(), refreshToken, Duration.ofDays(14).toMillis());
+        //토큰 발급
+        String accessToken = issueAccessToken(user);
+        String refreshToken = issueRefreshToken(user);
 
         // DTO 반환
         return UserResponse.createProfileDTO.builder()
@@ -151,6 +150,56 @@ public class UserService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    // JWT 토큰 재발급
+    @Transactional
+    public UserResponse.reissueDTO reissue(String refreshToken) {
+
+        // 유효 검사
+        tokenProvider.validateToken(refreshToken);
+
+        // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
+        String category = tokenProvider.getCategory(refreshToken);
+        if (!REFRESH_TOKEN_CATEGORY.equals(category)) {
+            log.info("category: {}", category);
+            throw new CustomException(INVALID_TOKEN);
+        }
+
+        //토큰에서 유저 조회
+        Long userId = tokenProvider.getUserId(refreshToken);
+
+        if (!tokenProvider.isValidUserId(userId)) {
+            throw new CustomException(USER_NOT_FOUND);
+        }
+
+        //DB에서 리프레시 토큰 확인
+        tokenProvider.validateStoredRefreshToken(userId, refreshToken);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        String newAccess = issueAccessToken(user);
+        String newRefresh = issueRefreshToken(user);
+
+        return new UserResponse.reissueDTO(newAccess, newRefresh);
+    }
+
+    // AccessToken 생성
+    public String issueAccessToken(User user) {
+        String accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION, ACCESS_TOKEN_CATEGORY);
+        log.info("access: " + accessToken);
+
+        return accessToken;
+    }
+
+    // RefreshToken 생성 및 저장
+    public String issueRefreshToken(User user) {
+        String refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION, REFRESH_TOKEN_CATEGORY);
+        log.info("refresh : " + refreshToken);
+
+        redisUtils.setData(user.getId().toString(), refreshToken,REFRESH_TOKEN_DURATION.toMillis());
+        return refreshToken;
     }
 
     /**

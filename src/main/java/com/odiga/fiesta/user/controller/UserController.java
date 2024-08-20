@@ -43,4 +43,13 @@ public class UserController {
         String message = "프로필 생성 성공";
         return ResponseEntity.ok(BasicResponse.ok(message, response));
     }
+
+    @PostMapping("/reissue")
+    @Operation(summary = "JWT 토큰 재발급", description = "기존의 refresh 토큰을 사용하여 새로운 access 토큰과 refresh 토큰을 발급받습니다.")
+    public ResponseEntity<BasicResponse<UserResponse.reissueDTO>> reissue(@RequestHeader String refreshToken) {
+        UserResponse.reissueDTO tokenResponse = userService.reissue(refreshToken);
+
+        String message = "JWT 토큰 재발급 성공";
+        return ResponseEntity.ok(BasicResponse.ok(message, tokenResponse));
+    }
 }

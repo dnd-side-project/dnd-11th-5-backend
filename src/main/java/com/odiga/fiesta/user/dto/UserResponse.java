@@ -45,4 +45,17 @@ public class UserResponse {
         @Schema(description = "리프레시 토큰", nullable = false, example = "eyJ0eXAiOiJKV1QiL...")
         private String refreshToken;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class reissueDTO {
+
+        @Schema(description = "액세스 토큰", nullable = false, example = "eyJ0eXAiOiJKV1QiL...")
+        private String accessToken;
+
+        @Schema(description = "리프레시 토큰", nullable = false, example = "eyJ0eXAiOiJKV1QiL...")
+        private String refreshToken;
+    }
 }
