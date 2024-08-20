@@ -27,7 +27,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import com.odiga.fiesta.IntegrationTestSupport;
 import com.odiga.fiesta.category.domain.Category;
@@ -38,9 +37,11 @@ import com.odiga.fiesta.festival.domain.FestivalBookmark;
 import com.odiga.fiesta.festival.domain.FestivalCategory;
 import com.odiga.fiesta.festival.domain.FestivalImage;
 import com.odiga.fiesta.festival.domain.FestivalMood;
+import com.odiga.fiesta.festival.domain.FestivalUserType;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
+import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
@@ -52,15 +53,19 @@ import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.festival.repository.FestivalUserTypeRepository;
 import com.odiga.fiesta.mood.domain.Mood;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.domain.Sido;
 import com.odiga.fiesta.sido.repository.SidoRepository;
+import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class FestivalServiceTest extends IntegrationTestSupport {
 
 	private static final Clock CURRENT_CLOCK = Clock.fixed(Instant.parse("2024-01-01T10:00:00Z"), ZoneOffset.UTC);
+	private static final LocalDate TODAY = LocalDate.of(2024, 1, 1);
 
 	@Autowired
 	private FestivalService festivalService;
@@ -89,6 +94,12 @@ class FestivalServiceTest extends IntegrationTestSupport {
 	@Autowired
 	private MoodRepository moodRepository;
 
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private FestivalUserTypeRepository festivalUserTypeRepository;
+
 	@SpyBean
 	private Clock clock;
 
@@ -98,9 +109,6 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.when(clock)
 			.instant();
 	}
-
-	@Autowired
-	private RedisTemplate redisTemplate;
 
 	@DisplayName("페스티벌 월간 조회 - startDate 와 endDate 사이에 해당 월이 끼어있어도 페스티벌이 포함되어야 한다.")
 	@Test
@@ -366,7 +374,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 					.categoryId(category.getId())
 					.festivalId(festival.getId())
 					.build())
-					.collect(Collectors.toList())
+				.collect(Collectors.toList())
 		);
 
 		List<FestivalMood> festivalMoods = festivalMoodRepository.saveAll(
@@ -375,7 +383,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 					.moodId(mood.getId())
 					.festivalId(festival.getId())
 					.build())
-					.collect(Collectors.toList())
+				.collect(Collectors.toList())
 		);
 
 		FestivalImage image1 = FestivalImage.builder().festivalId(festival.getId()).imageUrl("imageUrl1").build();
@@ -493,8 +501,6 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		// then -> 북마크 5, 북마크 4, 북마크 3
 		assertEquals(6, hotFestivals.getTotalElements());
 
-		System.out.println(hotFestivals.getContent());
-
 		assertThat(hotFestivals.getContent())
 			.hasSize(3)
 			.extracting("name")
@@ -503,6 +509,213 @@ class FestivalServiceTest extends IntegrationTestSupport {
 				"북마크 4",
 				"북마크 3"
 			);
+	}
+
+	@DisplayName("유형별 페스티벌 조회 - 성공 케이스")
+	@Test
+	void getRecommendFestivals_Success() {
+		// given
+		User user = userRepository.save(createUser());
+		Long userTypeId = user.getUserTypeId();
+
+		Festival festival1 = festivalRepository.save(createFestival("페스티벌1"));
+		Festival festival2 = festivalRepository.save(createFestival("페스티벌2"));
+		Festival festival3 = festivalRepository.save(createFestival("페스티벌3"));
+		Festival festival4 = festivalRepository.save(createFestival("페스티벌4"));
+		Festival festival5 = festivalRepository.save(createFestival("페스티벌5"));
+
+		// 페스티벌의 타입 설정
+		festivalUserTypeRepository.save(createFestivalUserType(festival1.getId(), userTypeId));
+		festivalUserTypeRepository.save(createFestivalUserType(festival2.getId(), -1L));
+		festivalUserTypeRepository.save(createFestivalUserType(festival3.getId(), -1L));
+		festivalUserTypeRepository.save(createFestivalUserType(festival4.getId(), userTypeId));
+		festivalUserTypeRepository.save(createFestivalUserType(festival5.getId(), -1L));
+
+		// when
+		List<FestivalInfo> recommendFestivals = festivalService.getRecommendFestivals(user.getId(), 2L);
+
+		// then
+		assertThat(recommendFestivals)
+			.hasSize(2)
+			.extracting("name")
+			.contains(festival1.getName(), festival4.getName());
+	}
+
+	@DisplayName("유형별 페스티벌 조회 - 종료된 페스티벌은 조회되지 않는다.")
+	@Test
+	void getRecommendFestivals_ClosingFestivalNotContainn() {
+		// given
+		User user = userRepository.save(createUser());
+		Long userTypeId = user.getUserTypeId();
+
+		Festival closingFestival = festivalRepository.save(createFestival(TODAY.minusDays(1), TODAY.minusDays(1)));
+		festivalUserTypeRepository.save(createFestivalUserType(closingFestival.getId(), userTypeId));
+
+		// when
+		List<FestivalInfo> recommendFestivals = festivalService.getRecommendFestivals(user.getId(), 1L);
+
+		// then
+		assertThat(recommendFestivals).isEmpty();
+	}
+
+	private static FestivalUserType createFestivalUserType(Long festivalId, Long userTypeId) {
+		return FestivalUserType.builder()
+			.festivalId(festivalId)
+			.userTypeId(userTypeId)
+			.build();
+	}
+
+	private static User createUser() {
+		return User.builder()
+			.roleId(1L)
+			.nickname("테스트 유저")
+			.userTypeId(1L)
+			.statusMessage("상태 메시지")
+			.profileImage("프로필 이미지")
+			.build();
+	}
+
+	@DisplayName("HOT 한 페스티벌 조회  - 종료된 페스티벌은 제외한다.")
+	@Test
+	void getHotFestivals_NotContainClosedFestival() {
+		// given
+		Long userId = 1L;
+
+		Festival closedFestival = festivalRepository.save(createFestival(TODAY.minusDays(1), TODAY.minusDays(1)));
+		Festival onGoingFestival = festivalRepository.save(createFestival(TODAY, TODAY));
+
+		for (int i = 0; i < 5; i++) {
+			FestivalBookmark bookmark = festivalBookmarkRepository.save(
+				createFestivalBookmark(closedFestival.getId(), userId));
+		}
+
+		// when
+		Page<FestivalInfo> hotFestivals = festivalService.getHotFestivals(PageRequest.of(0, 1));
+
+		// then
+		assertEquals(1, hotFestivals.getTotalElements());
+		assertEquals(onGoingFestival.getName(), hotFestivals.getContent().get(0).getName());
+	}
+
+	@DisplayName("다가오는 페스티벌 조회 - 성공")
+	@Test
+	void getUpcomingFestival_Success() {
+		// given
+		User currentUser = userRepository.save(createUser());
+		LocalDate today = LocalDate.now();
+
+		Festival festival1 = festivalRepository.save(createFestival(today.plusDays(1), today.plusDays(2)));
+		Festival festival2 = festivalRepository.save(createFestival(today.plusDays(3), today.plusDays(4)));
+		Festival festival3 = festivalRepository.save(createFestival(today.plusDays(5), today.plusDays(6)));
+		Festival festival4 = festivalRepository.save(createFestival(today.plusDays(7), today.plusDays(8)));
+
+		FestivalBookmark bookmark1 = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival1.getId(), currentUser.getId()));
+		FestivalBookmark bookmark2 = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival3.getId(), currentUser.getId()));
+		FestivalBookmark bookmark3 = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival4.getId(), currentUser.getId()));
+
+		Pageable pageable = PageRequest.of(0, 5);
+
+		// when
+		Page<FestivalAndLocation> upcomingFestivals = festivalService.getUpcomingFestival(currentUser.getId(),
+			pageable);
+
+		// then
+		assertThat(upcomingFestivals.getContent())
+			.hasSize(3)
+			.extracting("festivalId")
+			.containsExactly(
+				festival1.getId(),
+				festival3.getId(),
+				festival4.getId()
+			);
+	}
+
+	@DisplayName("다가오는 페스티벌 조회 - 현재 날짜 이후의 페스티벌을 조회할 수 있다.")
+	@Test
+	void getUpcomingFestival_StartDateShouldBeGoeToday() {
+		// given
+		User currentUser = userRepository.save(createUser());
+
+		Festival startToday = festivalRepository.save(createFestival(TODAY, TODAY.plusDays(2)));
+		Festival startedBeforeThreeDay = festivalRepository.save(createFestival(TODAY.minusDays(3), TODAY.plusDays(4)));
+		Festival startedBeforeFiveDay = festivalRepository.save(createFestival(TODAY.minusDays(5), TODAY.plusDays(6)));
+		Festival startAfter7Day = festivalRepository.save(createFestival(TODAY.plusDays(7), TODAY.plusDays(8)));
+
+		FestivalBookmark bookmark1 = festivalBookmarkRepository.save(
+			createFestivalBookmark(startToday.getId(), currentUser.getId()));
+		FestivalBookmark bookmark2 = festivalBookmarkRepository.save(
+			createFestivalBookmark(startedBeforeFiveDay.getId(), currentUser.getId()));
+		FestivalBookmark bookmark3 = festivalBookmarkRepository.save(
+			createFestivalBookmark(startAfter7Day.getId(), currentUser.getId()));
+
+		Pageable pageable = PageRequest.of(0, 5);
+
+		// when
+		Page<FestivalAndLocation> upcomingFestivals = festivalService.getUpcomingFestival(currentUser.getId(),
+			pageable);
+
+		// then
+		assertThat(upcomingFestivals.getContent())
+			.hasSize(2)
+			.extracting("festivalId")
+			.containsExactly(
+				startToday.getId(), startAfter7Day.getId()
+			);
+
+		assertEquals(2, upcomingFestivals.getTotalElements());
+	}
+
+	@DisplayName("다가오는 페스티벌 조회 - 종료된 페스티벌은 조회되지 않는다.")
+	@Test
+	void getUpcomingFestival_NotEndedFestival() {
+		// given
+		User currentUser = userRepository.save(createUser());
+
+		Festival ended = festivalRepository.save(createFestival(TODAY.minusDays(1), TODAY.minusDays(1)));
+		Festival endedBefore7Dat = festivalRepository.save(createFestival(TODAY.minusDays(10), TODAY.minusDays(4)));
+		Festival ongoing = festivalRepository.save(createFestival(TODAY, TODAY));
+
+		FestivalBookmark bookmark1 = festivalBookmarkRepository.save(
+			createFestivalBookmark(ended.getId(), currentUser.getId()));
+		FestivalBookmark bookmark2 = festivalBookmarkRepository.save(
+			createFestivalBookmark(endedBefore7Dat.getId(), currentUser.getId()));
+		FestivalBookmark bookmark3 = festivalBookmarkRepository.save(
+			createFestivalBookmark(ongoing.getId(), currentUser.getId()));
+
+		Pageable pageable = PageRequest.of(0, 5);
+
+		// when
+		Page<FestivalAndLocation> upcomingFestivals = festivalService.getUpcomingFestival(currentUser.getId(),
+			pageable);
+
+		// then
+		assertThat(upcomingFestivals.getContent())
+			.hasSize(1)
+			.extracting("festivalId")
+			.containsExactly(
+				ongoing.getId()
+			);
+
+		assertEquals(1, upcomingFestivals.getTotalElements());
+	}
+
+	@DisplayName("다가오는 페스티벌 조회 - 현재 유저의 정보가 존재해야 한다. ")
+	@Test
+	void getUpcomingFestival_UserMustBeValid() {
+		// given
+		// TODO: user 테이블 관련 문제로 조회가 불가능한 상황
+		Long invalidUserId = -1L;
+		Pageable pageable = PageRequest.of(0, 5);
+
+		// when
+		CustomException exception = assertThrows(CustomException.class
+			, () -> festivalService.getUpcomingFestival(null, pageable));
+
+		// then
+		assertEquals(UNAUTHENTICATED_USER.getMessage(), exception.getMessage());
 	}
 
 	private static FestivalBookmark createFestivalBookmark(Long festvialId, Long userId) {

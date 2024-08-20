@@ -25,6 +25,7 @@ import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
+import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalBookmarkResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
@@ -136,6 +137,21 @@ public class FestivalController {
 	}
 
 	@Operation(
+		summary = "다가오는 페스티벌 조회",
+		description = "유저가 북마크 한 페스티벌 중 시작일이 빠른 순으로 조회합니다."
+	)
+	@GetMapping("/upcoming")
+	public ResponseEntity<BasicResponse<PageResponse<FestivalAndLocation>>> getUpcomingFestival(
+		@AuthenticationPrincipal User user,
+		@PageableDefault(size = 3) Pageable pageable) {
+
+		checkLogin(user);
+
+		Page<FestivalAndLocation> festivals = festivalService.getUpcomingFestival(user.getId(), pageable);
+		return ResponseEntity.ok(BasicResponse.ok("다가오는 페스티벌 조회 성공", PageResponse.of(festivals)));
+	}
+
+	@Operation(
 		summary = "실시간 급상승 페스티벌 조회",
 		description = "실시간 급상승 페스티벌을 조회합니다."
 	)
@@ -194,6 +210,26 @@ public class FestivalController {
 		return ResponseEntity.ok(BasicResponse.ok("HOT 페스티벌 조회 성공", PageResponse.of(hotFestivals)));
 	}
 
+	@Operation(summary = "유형별 추천 페스티벌 조회", description = "유저 유형 별 추천 페스티벌을 랜덤으로 조회합니다.")
+	@GetMapping("/recommend")
+	public ResponseEntity<BasicResponse<List<FestivalInfo>>> getRecommendFestival(
+		@AuthenticationPrincipal User user,
+		@RequestParam(required = false, defaultValue = "5") Long size
+	) {
+		checkLoginUser(user);
+
+		List<FestivalInfo> recommendFestivals = festivalService.getRecommendFestivals(
+			isNull(user) ? null : user.getId(), size);
+
+		return ResponseEntity.ok(BasicResponse.ok("유형별 추천 페스티벌 조회 성공", recommendFestivals));
+	}
+
+	private static void checkLoginUser(User user) {
+		if (isNull(user)) {
+			throw new CustomException(UNAUTHENTICATED_USER);
+		}
+	}
+
 	private void validateFestivalDay(int year, int month, int day) {
 		YearMonth yearMonth = YearMonth.of(year, month);
 
@@ -219,6 +255,12 @@ public class FestivalController {
 
 		if (query.isBlank()) {
 			throw new CustomException(QUERY_CANNOT_BE_BLANK);
+		}
+	}
+
+	private void checkLogin(User user) {
+		if (isNull(user)) {
+			throw new CustomException(NOT_LOGGED_IN);
 		}
 	}
 }

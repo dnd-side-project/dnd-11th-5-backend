@@ -12,6 +12,7 @@ import com.odiga.fiesta.festival.dto.projection.FestivalDetailData;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
+import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 
 public interface FestivalCustomRepository {
 
@@ -28,7 +29,11 @@ public interface FestivalCustomRepository {
 
 	Page<FestivalWithBookmarkAndSido> findFestivalsByQuery(Long userId, String query, Pageable pageable);
 
+	Page<FestivalWithSido> findMostLikeFestival(Pageable pageable, LocalDate date);
+
 	Optional<FestivalDetailData> findFestivalDetail(Long userId, Long festivalId);
 
-	Page<FestivalWithSido> findMostLikeFestival(Pageable pageable);
+	Page<FestivalAndLocation> findUpcomingFestivalAndLocation(Long userId, LocalDate date, Pageable pageable);
+
+	List<FestivalWithSido> findRecommendFestivals(Long userTypeId, Long size, LocalDate date);
 }

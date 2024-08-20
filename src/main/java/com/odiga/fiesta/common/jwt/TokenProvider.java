@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
 
+import com.odiga.fiesta.common.util.RedisUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,6 +38,8 @@ public class TokenProvider {
     private String secretKeyString; // secretKey는 String으로 저장됨
 
     private final Clock clock;
+
+    private final RedisUtils<String> redisUtils;
 
     private Key getSecretKey() {
         return Keys.hmacShaKeyFor(secretKeyString.getBytes()); // Key 객체로 변환
@@ -78,13 +81,12 @@ public class TokenProvider {
      * @param token 검증할 JWT 토큰
      * @return 토큰 유효 여부
      */
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(getSecretKey())
                     .build()
                     .parseClaimsJws(token);
-            return true;
         } catch (ExpiredJwtException e) {
             // 토큰이 만료되었음을 명시적으로 처리
             log.info("Expired JWT token: {}", e.getMessage());
@@ -92,6 +94,16 @@ public class TokenProvider {
         } catch (Exception e) {
             // 서명 오류, 잘못된 토큰 등 기타 JWT 관련 오류를 처리
             log.info("Invalid JWT token: {}", e.getMessage());
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+    }
+
+    // Redis에 저장된 리프레시 토큰과 입력된 리프레시 토큰이 일치하는지 판단
+    public void validateStoredRefreshToken(Long userId, String refreshToken) {
+        String storedToken = redisUtils.getData(userId.toString(), String.class);
+
+        // 저장된 토큰이 null이거나 입력된 토큰과 일치하지 않으면 예외를 던짐
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
     }
@@ -126,6 +138,11 @@ public class TokenProvider {
     public Long getUserId(String token) {
         Claims claims = getClaims(token);
         return claims.get("id", Long.class);
+    }
+
+    // 사용자가 ID의 유효성을 검증하는 메서드
+    public boolean isValidUserId(Long userId) {
+        return userId != null && userId > 0;
     }
 
     /**

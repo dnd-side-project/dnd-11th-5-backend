@@ -45,7 +45,7 @@ public class UserController {
     }
 
     @PostMapping("/reissue")
-    @Operation(summary = "JWT 토큰 재발급", description = "기존 refresh 토큰을 보낸 후 새로운 access & refresh 토큰을 받아옵니다.")
+    @Operation(summary = "JWT 토큰 재발급", description = "기존의 refresh 토큰을 사용하여 새로운 access 토큰과 refresh 토큰을 발급받습니다.")
     public ResponseEntity<BasicResponse<UserResponse.reissueDTO>> reissue(@RequestHeader String refreshToken) {
         UserResponse.reissueDTO tokenResponse = userService.reissue(refreshToken);
 

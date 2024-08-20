@@ -2,6 +2,7 @@ package com.odiga.fiesta.festival.service;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static com.odiga.fiesta.festival.domain.Festival.*;
+import static java.util.Objects.*;
 import static java.util.stream.Collectors.*;
 
 import java.time.Clock;
@@ -34,6 +35,7 @@ import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
+import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
@@ -47,6 +49,9 @@ import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
+import com.odiga.fiesta.user.domain.UserType;
+import com.odiga.fiesta.user.repository.UserRepository;
+import com.odiga.fiesta.user.repository.UserTypeRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @Slf4j
 public class FestivalService {
+	private final UserRepository userRepository;
 
 	private final Clock clock;
 
@@ -67,6 +73,8 @@ public class FestivalService {
 	private final FestivalImageRepository festivalImageRepository;
 	private final FestivalCategoryRepository festivalCategoryRepository;
 	private final FestivalMoodRepository festivalMoodRepository;
+
+	private final UserTypeRepository userTypeRepository;
 
 	private final RedisUtils redisUtils;
 
@@ -133,8 +141,6 @@ public class FestivalService {
 
 	@Transactional
 	public void updateSearchRanking(String rankingKey, FestivalBasic searchItem) {
-		log.warn("update search raking, {}", searchItem);
-
 		final Double SCORE_INCREMENT_AMOUNT = 1.0;
 
 		String fetivalIdToString = searchItem.getFestivalId().toString();
@@ -143,8 +149,6 @@ public class FestivalService {
 		Double newScore = (currentScore != null) ? currentScore + SCORE_INCREMENT_AMOUNT : SCORE_INCREMENT_AMOUNT;
 
 		redisUtils.zAdd(rankingKey, fetivalIdToString, newScore);
-
-		log.warn("item = {}, score = {} -> {}", searchItem.getName(), currentScore, newScore);
 	}
 
 	@Transactional
@@ -152,7 +156,6 @@ public class FestivalService {
 		Set<ZSetOperations.TypedTuple<String>> set = redisUtils.zRevrange(rankingKey, page * size,
 			(page * size) + size);
 
-		log.error("set - {}", set);
 		List<FestivalBasic> festivals = festivalRepository.findAllById(
 				set.stream().map(tuple -> Long.parseLong(tuple.getValue())).toList())
 			.stream().map(FestivalBasic::of).toList();
@@ -184,12 +187,21 @@ public class FestivalService {
 
 	public Page<FestivalInfo> getHotFestivals(Pageable pageable) {
 
-		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable);
+		LocalDate date = LocalDate.now(clock);
+		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable, date);
 
-		// TODO: 배치로 변경할 수 있다.
+		// TODO: 배치로 변경할 수 있을듯...
 		List<FestivalInfo> responses = getFestivalAndSidoWithThumbnailImage(festivals);
 
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
+	}
+
+	public Page<FestivalAndLocation> getUpcomingFestival(Long userId, Pageable pageable) {
+		validateUserId(userId);
+		LocalDate date = LocalDate.now(clock);
+		Page<FestivalAndLocation> festivals = festivalRepository.findUpcomingFestivalAndLocation(userId, date,
+			pageable);
+		return new PageImpl<>(festivals.getContent(), pageable, festivals.getTotalElements());
 	}
 
 	private List<FestivalInfo> getFestivalAndSidoWithThumbnailImage(
@@ -217,6 +229,22 @@ public class FestivalService {
 			.stream().map(MoodResponse::of).toList();
 
 		return FestivalDetailResponse.of(festivalDetail, categories, moods, images);
+	}
+
+	public List<FestivalInfo> getRecommendFestivals(Long userId, Long size) {
+		validateUserId(userId);
+
+		Long userTypeId = userRepository.findUserTypeIdById(userId)
+			.orElseThrow(() -> new CustomException(USER_TYPE_NOT_FOUND));
+
+		LocalDate date = LocalDate.now(clock);
+
+		List<FestivalWithSido> festivals = festivalRepository.findRecommendFestivals(userTypeId, size, date);
+
+		return festivals.stream().map(festival -> {
+			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
+			return FestivalInfo.of(festival, thumbnailImage);
+		}).toList();
 	}
 
 	// 필터링을 위해, request list 내부의 중복 제거
@@ -308,4 +336,11 @@ public class FestivalService {
 		}
 	}
 
+	private void validateUserId(Long userId) {
+		if (isNull(userId)) {
+			throw new CustomException(UNAUTHENTICATED_USER);
+		}
+
+		userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+	}
 }
