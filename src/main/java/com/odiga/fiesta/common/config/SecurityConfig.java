@@ -67,8 +67,8 @@ public class SecurityConfig {
 					"https://odiga.shop",
 					"https://fiesta-psi.vercel.app"
 				));
-				configuration.setAllowedMethods(Collections.singletonList("*"));
 				configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+				configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
 				configuration.setExposedHeaders(Arrays.asList("Set-Cookie", "Authorization"));
 				configuration.setAllowCredentials(true);
 				configuration.setMaxAge(3600L);
