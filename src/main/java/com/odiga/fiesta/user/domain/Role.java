@@ -9,6 +9,10 @@ import lombok.NoArgsConstructor;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import com.odiga.fiesta.auth.domain.Authority;
+
 @Entity
 @AllArgsConstructor
 @Getter
@@ -17,10 +21,22 @@ import static lombok.AccessLevel.PROTECTED;
 @Builder
 public class Role {
 
-    @Id
-    @GeneratedValue(strategy = IDENTITY)
-    @Column(name = "role_id")
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "role_id")
+	private Long id;
 
-    private String authority;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "authority", nullable = false, unique = true)
+	private Authority authority;
+
+	public static Role of(Authority authority) {
+		return Role.builder()
+			.authority(authority)
+			.build();
+	}
+
+	public static SimpleGrantedAuthority toGrantedAuthority(Role role) {
+		return new SimpleGrantedAuthority(role.getAuthority().name());
+	}
 }
