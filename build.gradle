@@ -169,7 +169,7 @@ jacocoTestCoverageVerification {
                     '*.S3Service*',
                     '**.controller.**',
                     '**.user.**',
-                    '**/review/**'
+                    '**.review.**'
             ] + Qdomains
         }
     }
