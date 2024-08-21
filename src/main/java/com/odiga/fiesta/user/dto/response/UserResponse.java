@@ -36,7 +36,7 @@ public class UserResponse {
 		@Schema(description = "유저 유형 명칭", example = "로맨티스트")
 		private String userTypeName;
 
-		@Schema(description = "유형에 해당되는 프로필 이미지", example = "https://fiesta-image.s3.ap-northeast-2.amazonaws.com/user_type/user_type_1.png")
+		@Schema(description = "유형에 해당되는 카드 이미지", example = "https://fiesta-image.s3.ap-northeast-2.amazonaws.com/user_type/card/user-explore.png")
 		private String userTypeImage;
 	}
 

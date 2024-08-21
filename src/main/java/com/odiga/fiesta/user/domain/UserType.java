@@ -3,6 +3,7 @@ package com.odiga.fiesta.user.domain;
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
 
+import com.odiga.fiesta.common.domain.BaseEntity;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.FestivalUserType;
 
@@ -20,19 +21,23 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Getter
 @NoArgsConstructor(access = PROTECTED)
-@Table(name = "`user_type`")
+@Table(name = "user_type")
 @Builder
-public class UserType {
+public class UserType extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = IDENTITY)
 	@Column(name = "user_type_id")
 	private Long id;
 
+	@Column(name = "name")
 	private String name;
 
-	@Column(name = "profile_image", length = 1024)
+	@Column(name = "profile_image", length = 2048)
 	private String profileImage;
+
+	@Column(name = "card_image", length = 2048)
+	private String cardImage;
 
 	public FestivalUserType toFestivalUserType(Festival festival) {
 		return FestivalUserType.builder()

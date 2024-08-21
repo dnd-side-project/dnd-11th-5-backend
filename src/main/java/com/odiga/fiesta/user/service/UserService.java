@@ -40,8 +40,6 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final UserTypeService userTypeService;
 
-
-
 	// 프로필 생성
 	@Transactional
 	public UserResponse.createProfileDTO createProfile(User user, UserRequest.createProfileDTO request) {
@@ -75,7 +73,7 @@ public class UserService {
 		return UserResponse.createProfileDTO.builder()
 			.userTypeId(userType.getId())
 			.userTypeName(userType.getName())
-			.userTypeImage(userType.getProfileImage())
+			.userTypeImage(userType.getCardImage())
 			.build();
 	}
 

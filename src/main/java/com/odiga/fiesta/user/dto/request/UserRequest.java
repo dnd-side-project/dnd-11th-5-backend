@@ -29,7 +29,7 @@ public class UserRequest {
 		@Size(min = 1, message = "동행유형은 1개 이상이어야 합니다.")
 		private List<Long> companion;
 
-		@Schema(description = "우선순위 id", nullable = false, example = "[1, 2]")
+		@Schema(description = "우선순위 id", nullable = false, example = "[1, 2, 3]")
 		@NotEmpty(message = "우선순위 리스트는 비어 있을 수 없습니다.")
 		@Size(min = 3, max = 3, message = "우선순위는 3개여야 합니다.")
 		private List<Long> priority;
