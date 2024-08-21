@@ -53,7 +53,10 @@ public enum ErrorCode {
 
     // LOG
     LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다."),
-    LOG_IMAGE_COUNT_EXCEEDED(400, "L002", "이미지는 최대 3개까지 업로드 가능합니다.");
+    LOG_IMAGE_COUNT_EXCEEDED(400, "L002", "이미지는 최대 3개까지 업로드 가능합니다."),
+
+    // Review
+    REVIEW_NOT_FOUND(404, "R001", "존재하지 않는 리뷰입니다.");
 
     private final int status;
     private final String code;
