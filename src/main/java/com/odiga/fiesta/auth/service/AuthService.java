@@ -14,6 +14,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import com.odiga.fiesta.auth.domain.Authority;
 import com.odiga.fiesta.auth.dto.KakaoProfile;
@@ -61,9 +63,13 @@ public class AuthService {
 		//OAuth2 액세스 토큰으로 회원 정보 요청
 		KakaoProfile response = getKakaoProfile(accessTokenByClient);
 
+		log.info("response (in service): {}", response);
 		//oauthId 조회
 		KakaoAccount kakaoAccount = response.getKakaoAccount();
+
 		validateKakoAcccount(kakaoAccount);
+
+		log.warn("kakaoAccount: {}", kakaoAccount);
 
 		String email = kakaoAccount.getEmail();
 
@@ -167,8 +173,8 @@ public class AuthService {
 		headers.setBearerAuth(accessToken);
 		headers.setContentType(APPLICATION_FORM_URLENCODED);
 
-		Map<String, String> body = new HashMap<>();
+		// MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
 
-		return HttpClientUtil.sendRequest(url, HttpMethod.POST, headers, body, KakaoProfile.class);
+		return HttpClientUtil.sendRequest(url, HttpMethod.POST, headers, null, KakaoProfile.class);
 	}
 }
