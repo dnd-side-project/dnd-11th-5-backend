@@ -4,6 +4,7 @@ import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.http.MediaType.*;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -18,6 +19,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,6 +29,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.IntegrationTestSupport;
 import com.odiga.fiesta.category.domain.Category;
@@ -38,6 +43,7 @@ import com.odiga.fiesta.festival.domain.FestivalCategory;
 import com.odiga.fiesta.festival.domain.FestivalImage;
 import com.odiga.fiesta.festival.domain.FestivalMood;
 import com.odiga.fiesta.festival.domain.FestivalUserType;
+import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
@@ -414,6 +420,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.fee(festival.getFee())
 			.ticketLink(festival.getTicketLink())
 			.bookmarkCount(3L)
+			.playtime(festival.getPlaytime())
 			.isBookmarked(true)
 			.categories(categories.stream().map(CategoryResponse::of).toList())
 			.moods(moods.stream().map(MoodResponse::of).toList())
@@ -724,27 +731,6 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.build();
 	}
 
-	private static Festival createFestival() {
-		return Festival.builder()
-			.userId(1L)
-			.name("페스티벌 이름")
-			.startDate(LocalDate.of(2024, 10, 4))
-			.endDate(LocalDate.of(2024, 10, 4))
-			.address("페스티벌 주소")
-			.sidoId(1L)
-			.sigungu("시군구")
-			.latitude(10.1)
-			.longitude(10.1)
-			.tip("페스티벌 팁")
-			.homepageUrl("홈페이지 url")
-			.instagramUrl("인스타그램 url")
-			.fee("비용")
-			.description("페스티벌 상세 설명")
-			.ticketLink("티켓 링크")
-			.playtime("페스티벌 진행 시간")
-			.isPending(false)
-			.build();
-	}
 
 	private static Festival createFestival(LocalDate startDate, LocalDate endDate, Long sidoId) {
 		return Festival.builder()

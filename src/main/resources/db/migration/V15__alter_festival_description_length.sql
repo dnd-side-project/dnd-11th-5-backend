@@ -1,0 +1,2 @@
+ALTER TABLE festival
+    MODIFY COLUMN description VARCHAR(2000) NOT NULL;

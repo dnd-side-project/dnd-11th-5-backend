@@ -21,6 +21,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -122,7 +123,7 @@ class LogControllerTest extends ControllerTestSupport {
 		MockMultipartFile file2 = new MockMultipartFile("files", "image2.jpg", "image/jpeg", "image data".getBytes());
 
 		when(fileUtils.getFileExtension(any())).thenReturn("jpg");
-		doNothing().when(fileUtils).validateImageExtension(any());
+		doNothing().when(fileUtils).validateImageExtension((MultipartFile)any());
 
 		LogIdResponse logIdResponse = LogIdResponse.of(1L);
 		when(logService.createLog(anyLong(), any(LogCreateRequest.class), any(List.class))).thenReturn(logIdResponse);

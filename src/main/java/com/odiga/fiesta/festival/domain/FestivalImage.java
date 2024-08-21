@@ -32,4 +32,11 @@ public class FestivalImage extends BaseEntity {
 
 	@Column(name = "image_url", length = 2083, nullable = false)
 	private String imageUrl;
+
+	public static FestivalImage of(Long festivalId, String imageUrl) {
+		return FestivalImage.builder()
+			.festivalId(festivalId)
+			.imageUrl(imageUrl)
+			.build();
+	}
 }
