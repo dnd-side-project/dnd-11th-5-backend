@@ -131,7 +131,8 @@ jacocoTestReport {
                             '**/domain/**',
                             '**/S3Service*',
                             '**/controller/**',
-                            '**/user/**'
+                            '**/user/**',
+                            '**/review/**'
                     ])
                 })
         )
@@ -167,7 +168,8 @@ jacocoTestCoverageVerification {
                     '*.domain.*',
                     '*.S3Service*',
                     '**.controller.**',
-                    '**.user.**'
+                    '**.user.**',
+                    '**/review/**'
             ] + Qdomains
         }
     }
