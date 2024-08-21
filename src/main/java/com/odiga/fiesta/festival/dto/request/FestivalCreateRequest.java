@@ -2,6 +2,7 @@ package com.odiga.fiesta.festival.dto.request;
 
 import static com.fasterxml.jackson.annotation.JsonFormat.Shape.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -22,11 +23,11 @@ public class FestivalCreateRequest {
 
 	@NotNull
 	@JsonFormat(shape = STRING, pattern = "yyyy-MM-dd")
-	private String startDate;
+	private LocalDate startDate;
 
 	@NotNull
 	@JsonFormat(shape = STRING, pattern = "yyyy-MM-dd")
-	private String endDate;
+	private LocalDate endDate;
 
 	@NotBlank
 	private String address;
@@ -63,19 +64,24 @@ public class FestivalCreateRequest {
 	private String tip;
 
 	@Builder
-	public FestivalCreateRequest(String name, String description, String startDate, String endDate, String address,
-		String sido, String sigungu, String playtime, String homepageUrl, String instagramUrl, String fee,
-		List<Long> categoryIds, List<Long> moodIds, String tip) {
+
+	public FestivalCreateRequest(String name, String description, LocalDate startDate, LocalDate endDate,
+		String address,
+		Double latitude, Double longitude, String sido, String sigungu, String playtime, String homepageUrl,
+		String instagramUrl, String ticketLink, String fee, List<Long> categoryIds, List<Long> moodIds, String tip) {
 		this.name = name;
 		this.description = description;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.address = address;
+		this.latitude = latitude;
+		this.longitude = longitude;
 		this.sido = sido;
 		this.sigungu = sigungu;
 		this.playtime = playtime;
 		this.homepageUrl = homepageUrl;
 		this.instagramUrl = instagramUrl;
+		this.ticketLink = ticketLink;
 		this.fee = fee;
 		this.categoryIds = categoryIds;
 		this.moodIds = moodIds;

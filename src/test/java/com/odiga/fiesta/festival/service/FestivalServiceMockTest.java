@@ -1,28 +1,44 @@
 package com.odiga.fiesta.festival.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.redis.core.ZSetOperations.*;
+import static org.springframework.http.MediaType.*;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.MockTestSupport;
 import com.odiga.fiesta.common.PageResponse;
+import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
+import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
+import com.odiga.fiesta.festival.repository.FestivalImageRepository;
+import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.festival.repository.FestivalUserTypeRepository;
+import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.domain.UserType;
+import com.odiga.fiesta.user.repository.UserRepository;
+import com.odiga.fiesta.user.service.UserTypeService;
 
-@Transactional
 class FestivalServiceMockTest extends MockTestSupport {
 
 	@Mock
@@ -30,6 +46,27 @@ class FestivalServiceMockTest extends MockTestSupport {
 
 	@Mock
 	private FestivalRepository festivalRepository;
+
+	@Mock
+	private UserTypeService userTypeService;
+
+	@Mock
+	private UserRepository userRepository;
+
+	@Mock
+	private FestivalUserTypeRepository festivalUserTypeRepository;
+
+	@Mock
+	private FestivalImageRepository festivalImageRepository;
+
+	@Mock
+	private FestivalCategoryRepository festivalCategoryRepository;
+
+	@Mock
+	private FestivalMoodRepository festivalMoodRepository;
+
+	@Mock
+	private FileUtils fileUtils;
 
 	@InjectMocks
 	private FestivalService festivalService;
@@ -103,4 +140,132 @@ class FestivalServiceMockTest extends MockTestSupport {
 		assertEquals(searchItem.getFestivalId(), festival.getFestivalId());
 		assertEquals(searchItem.getName(), festival.getName());
 	}
+
+	@Nested
+	@DisplayName("페스티벌 생성")
+	class FestivalCreationTest {
+		User user = User.builder()
+			.email("fiesta@odiga.com")
+			.userTypeId(1L)
+			.nickname("피에스타")
+			.profileImage("profileImage")
+			.statusMessage("상태메시지")
+			.build();
+
+		List<MultipartFile> files = List.of(
+			new MockMultipartFile(
+				"test1",
+				"test1.png",
+				MULTIPART_FORM_DATA_VALUE,
+				"test1" .getBytes()),
+			new MockMultipartFile(
+				"test2",
+				"test2.jpeg",
+				MULTIPART_FORM_DATA_VALUE,
+				"test2" .getBytes()),
+			new MockMultipartFile(
+				"test3",
+				"test3.jpg",
+				MULTIPART_FORM_DATA_VALUE,
+				"test3" .getBytes())
+		);
+
+		Festival festival = createFestival();
+
+		UserType userType1 = UserType.builder()
+			.id(1L)
+			.name("유저타입")
+			.build();
+
+		UserType userType2 = UserType.builder()
+			.id(2L)
+			.name("유저타입")
+			.build();
+
+		FestivalCreateRequest request = FestivalCreateRequest.builder()
+			.name("페스티벌 이름")
+			.description("페스티벌 설명")
+			.startDate(LocalDate.of(2024, 10, 4))
+			.endDate(LocalDate.of(2024, 10, 4))
+			.address("주소")
+			.latitude(35.1731)
+			.longitude(129.0714)
+			.sido("부산")
+			.sigungu("해운대구")
+			.playtime("플레이타임")
+			.homepageUrl("홈페이지")
+			.instagramUrl("인스타그램")
+			.ticketLink("티켓링크")
+			.fee("입장료")
+			.categoryIds(List.of(1L, 2L))
+			.moodIds(List.of(1L, 2L))
+			.tip("팁")
+			.build();
+
+		@DisplayName("페스티벌 생성 - 성공")
+		@Test
+		void createFestival_Success() {
+			// given
+			given(userRepository.findById(1L)).willReturn(Optional.of(user));
+			given(userTypeService.getTopNUserTypes(List.of(1L, 2L), List.of(1L, 2L), 2))
+				.willReturn(List.of(userType1, userType2));
+			given(festivalRepository.save(any())).willReturn(festival);
+
+			// when
+			festivalService.createFestival(1L, request, files);
+
+			// then
+			then(festivalRepository).should().save(any());
+		}
+
+		@DisplayName("페스티벌 생성 - 성공 (이미지가 없는 경우)")
+		@Test
+		void createFestival_SuccessWithoutImages() {
+			// given
+			given(userRepository.findById(1L)).willReturn(Optional.of(user));
+			given(userTypeService.getTopNUserTypes(List.of(1L, 2L), List.of(1L, 2L), 2))
+				.willReturn(List.of(userType1, userType2));
+			given(festivalRepository.save(any())).willReturn(festival);
+
+			// when
+			festivalService.createFestival(1L, request, null);
+
+			// then
+			then(festivalRepository).should().save(any());
+		}
+
+		@DisplayName("페스티벌 생성 - 실패, 이미지 갯수 초과")
+		@Test
+		void createFestival_ImageCountExceeded() {
+			// given
+
+			// when
+
+			// then
+		}
+
+	}
+
+	private static Festival createFestival() {
+		return Festival.builder()
+			.userId(1L)
+			.name("페스티벌 이름")
+			.description("페스티벌 설명")
+			.startDate(LocalDate.of(2024, 10, 4))
+			.endDate(LocalDate.of(2024, 10, 4))
+			.address("주소")
+			.latitude(35.1731)
+			.longitude(129.0714)
+			.sidoId(6L)
+			.sigungu("해운대구")
+			.playtime("플레이타임")
+			.homepageUrl("홈페이지")
+			.instagramUrl("인스타그램")
+			.ticketLink("티켓링크")
+			.fee("입장료")
+			.tip("팁")
+			.isPending(false)
+			.build();
+	}
+
 }

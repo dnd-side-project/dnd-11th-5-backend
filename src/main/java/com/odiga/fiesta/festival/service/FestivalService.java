@@ -351,6 +351,10 @@ public class FestivalService {
 	}
 
 	private void createFestivalImages(List<MultipartFile> files, Festival festival) {
+		if (isNull(files)) {
+			return;
+		}
+
 		files.forEach(file -> {
 			try {
 				String imageUrl = fileUtils.uploadImage(file, FESTIVAL_DIR_NAME);
@@ -370,7 +374,7 @@ public class FestivalService {
 			.map(userType -> userType.toFestivalUserType(festival))
 			.toList());
 	}
-	
+
 	private void validateMonth(int month) {
 		if (month < 1 || month > 12) {
 			throw new CustomException(INVALID_FESTIVAL_MONTH);
