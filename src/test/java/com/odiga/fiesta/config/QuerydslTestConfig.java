@@ -1,4 +1,4 @@
-package com.odiga.fiesta;
+package com.odiga.fiesta.config;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
