@@ -63,14 +63,8 @@ public class AuthService {
 		//OAuth2 액세스 토큰으로 회원 정보 요청
 		KakaoProfile response = getKakaoProfile(accessTokenByClient);
 
-		log.info("response (in service): {}", response);
-		//oauthId 조회
 		KakaoAccount kakaoAccount = response.getKakaoAccount();
-
 		validateKakoAcccount(kakaoAccount);
-
-		log.warn("kakaoAccount: {}", kakaoAccount);
-
 		String email = kakaoAccount.getEmail();
 
 		// 유저 검증 -> 서비스에 존재하지 않는 유저라면 새로운 사용자를 생성한다.
@@ -172,8 +166,6 @@ public class AuthService {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setBearerAuth(accessToken);
 		headers.setContentType(APPLICATION_FORM_URLENCODED);
-
-		// MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
 
 		return HttpClientUtil.sendRequest(url, HttpMethod.POST, headers, null, KakaoProfile.class);
 	}

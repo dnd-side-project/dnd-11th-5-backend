@@ -34,18 +34,13 @@ public class HttpClientUtil {
 				requestEntity,
 				String.class
 			);
-
-			log.info("response: {}", response);
-
 			ObjectMapper objectMapper = new ObjectMapper();
 			return objectMapper.readValue(response.getBody(), responseType);
 		} catch (HttpClientErrorException e) {
 			log.error("HTTP error occurred while sending request: {}, {}", e.getMessage(), e);
-			log.error("error: {}, message: {}", e, e.getMessage());
 			throw new CustomException(INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			log.error("An error occurred while processing the request: {}, {}", e.getMessage(), e);
-			log.error("error: {}, message: {}", e, e.getMessage());
 			throw new CustomException(JSON_PARSING_ERROR);
 		}
 	}
