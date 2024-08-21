@@ -3,6 +3,7 @@ package com.odiga.fiesta.auth.service;
 import static com.odiga.fiesta.auth.dto.KakaoProfile.*;
 import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static java.util.Objects.*;
+import static org.springframework.http.MediaType.*;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -163,9 +165,10 @@ public class AuthService {
 		String url = "https://kapi.kakao.com/v2/user/me";
 		HttpHeaders headers = new HttpHeaders();
 		headers.setBearerAuth(accessToken);
+		headers.setContentType(APPLICATION_FORM_URLENCODED);
 
 		Map<String, String> body = new HashMap<>();
 
-		return HttpClientUtil.sendRequest(url, HttpMethod.GET, headers, body, KakaoProfile.class);
+		return HttpClientUtil.sendRequest(url, HttpMethod.POST, headers, body, KakaoProfile.class);
 	}
 }
