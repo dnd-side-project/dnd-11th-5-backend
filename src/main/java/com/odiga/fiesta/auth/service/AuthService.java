@@ -44,7 +44,6 @@ public class AuthService {
 	private final TokenProvider tokenProvider;
 	private final NicknameUtils nicknameUtils;
 	private final RedisUtils redisUtils;
-	private final HttpClientUtil httpClientUtil;
 
 	private static final Duration ACCESS_TOKEN_DURATION = Duration.ofHours(2);
 	private static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
@@ -132,19 +131,25 @@ public class AuthService {
 			.email(email)
 			.build();
 
+		User savedUser = userRepository.save(user);
+
+		saveUserRole(role, savedUser);
+
+		return savedUser;
+	}
+
+	private UserRole saveUserRole(Role role, User savedUser) {
 		UserRole userRole = UserRole.builder()
 			.roleId(role.getId())
-			.userId(user.getId())
+			.userId(savedUser.getId())
 			.build();
 
-		userRoleRepository.save(userRole);
-		return userRepository.save(user);
+		return userRoleRepository.save(userRole);
 	}
 
 	// AccessToken 생성
 	public String issueAccessToken(User user) {
-		String accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION, ACCESS_TOKEN_CATEGORY);
-		return accessToken;
+		return tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION, ACCESS_TOKEN_CATEGORY);
 	}
 
 	// RefreshToken 생성 및 저장
@@ -154,21 +159,6 @@ public class AuthService {
 		return refreshToken;
 	}
 
-	/**
-	 * 액세스 토큰으로 카카오 서버에 회원 정보를 요청하는 메서드이다.
-	 *
-	 * @param accessToken 액세스 토큰
-	 * @return JSON 형식의 회원 정보
-	 */
-	// private JsonNode getKakaoUserInfo(String accessToken) {
-	// 	// HTTP Header 생성
-	// 	HttpHeaders headers = new HttpHeaders();
-	// 	headers.setBearerAuth(accessToken);
-	// 	headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-	//
-	// 	// HTTP 요청 보내기
-	// 	return httpClientUtil.sendRequest("https://kapi.kakao.com/v2/user/me", HttpMethod.GET, headers, null);
-	// }
 	public KakaoProfile getKakaoProfile(String accessToken) {
 		String url = "https://kapi.kakao.com/v2/user/me";
 		HttpHeaders headers = new HttpHeaders();
