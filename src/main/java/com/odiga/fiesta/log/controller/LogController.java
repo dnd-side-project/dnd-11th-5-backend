@@ -6,7 +6,6 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.odiga.fiesta.auth.domain.AuthUser;
 import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
@@ -59,7 +59,7 @@ public class LogController {
 		description = "방문일지를 생성합니다."
 	)
 	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<BasicResponse<LogIdResponse>> createLog(@AuthenticationPrincipal User user,
+	public ResponseEntity<BasicResponse<LogIdResponse>> createLog(@AuthUser User user,
 		@RequestPart(value = "data") @Valid LogCreateRequest request,
 		@RequestPart(required = false) List<MultipartFile> files
 	) {

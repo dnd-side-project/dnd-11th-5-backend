@@ -45,14 +45,14 @@ class LogControllerTest extends ControllerTestSupport {
 	@Autowired
 	private FileUtils fileUtils;
 
-	@BeforeEach
-	void beforeEach() {
-		User mockUser = Mockito.mock(User.class);
-		Mockito.when(mockUser.getId()).thenReturn(1L);
-		SecurityContextHolder.getContext()
-			.setAuthentication(new UsernamePasswordAuthenticationToken(mockUser, null,
-				List.of(new SimpleGrantedAuthority("ROLE_USER"))));
-	}
+	// @BeforeEach
+	// void beforeEach() {
+	// 	User mockUser = Mockito.mock(User.class);
+	// 	Mockito.when(mockUser.getId()).thenReturn(1L);
+	// 	SecurityContextHolder.getContext()
+	// 		.setAuthentication(new UsernamePasswordAuthenticationToken(mockUser, null,
+	// 			List.of(new SimpleGrantedAuthority("ROLE_USER"))));
+	// }
 
 	@DisplayName("방문일지 키워드들을 조회한다.")
 	@Test

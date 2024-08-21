@@ -567,7 +567,6 @@ class FestivalServiceTest extends IntegrationTestSupport {
 
 	private static User createUser() {
 		return User.builder()
-			.roleId(1L)
 			.nickname("테스트 유저")
 			.userTypeId(1L)
 			.statusMessage("상태 메시지")

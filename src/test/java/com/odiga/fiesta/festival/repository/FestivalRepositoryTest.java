@@ -193,7 +193,6 @@ class FestivalRepositoryTest extends RepositoryTestSupport {
 		return User.builder()
 			.userTypeId(1L)
 			.nickname("유저 닉네임")
-			.roleId(1L)
 			.profileImage("프로필 이미지")
 			.statusMessage("상태 메시지")
 			.build();
