@@ -2,6 +2,7 @@ package com.odiga.fiesta.user.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -42,6 +43,13 @@ public class UserController {
 		User.validateEmail(request.getEmail());
 		LoginResponse loginResponse = authService.kakaoLogin(request.getAccessToken());
 		return ResponseEntity.ok(BasicResponse.ok("로그인 성공", loginResponse));
+	}
+
+	@DeleteMapping("/me")
+	@Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 진행합니다.")
+	public ResponseEntity<BasicResponse<String>> deleteUser(@AuthUser User user) {
+		authService.deleteUser(user);
+		return ResponseEntity.ok(BasicResponse.ok("회원 탈퇴 성공", null));
 	}
 
 	@PostMapping("/profile")

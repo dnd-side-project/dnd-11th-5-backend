@@ -83,6 +83,11 @@ public class AuthService {
 			.build();
 	}
 
+	public void deleteUser(User user) {
+		checkLogin(user);
+		userRepository.deleteById(user.getId());
+	}
+
 	private static void validateKakoAcccount(KakaoAccount kakaoAccount) {
 		if (!kakaoAccount.isHasEmail()) {
 			throw new CustomException(CAN_NOT_FIND_KAKAO_USER);
@@ -168,5 +173,14 @@ public class AuthService {
 		headers.setContentType(APPLICATION_FORM_URLENCODED);
 
 		return HttpClientUtil.sendRequest(url, HttpMethod.POST, headers, null, KakaoProfile.class);
+	}
+
+	private void checkLogin(User user) {
+		if (isNull(user)) {
+			throw new CustomException(USER_NOT_FOUND);
+		}
+
+		userRepository.findById(user.getId())
+			.orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 	}
 }
