@@ -1,4 +1,4 @@
-package com.odiga.fiesta;
+package com.odiga.fiesta.config;
 
 import java.io.IOException;
 

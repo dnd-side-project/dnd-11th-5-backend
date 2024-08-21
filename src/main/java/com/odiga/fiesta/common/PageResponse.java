@@ -17,7 +17,7 @@ public class PageResponse<T> {
 	private final long totalElements;
 	private final int totalPages;
 
-	@Builder
+
 	public PageResponse(Page<T> page) {
 		this.content = page.getContent();
 		this.offset = page.getPageable().getOffset();

@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.odiga.fiesta.config.S3MockConfig;
+
 @ActiveProfiles("test")
 @Transactional
 @SpringBootTest

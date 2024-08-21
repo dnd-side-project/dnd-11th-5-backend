@@ -1,19 +1,21 @@
 package com.odiga.fiesta.user.service;
 
-import com.odiga.fiesta.common.error.ErrorCode;
-import com.odiga.fiesta.common.error.exception.CustomException;
-import com.odiga.fiesta.user.domain.UserType;
-import com.odiga.fiesta.user.dto.UserRequest;
-import com.odiga.fiesta.user.repository.UserTypeRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.odiga.fiesta.common.error.ErrorCode;
+import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.user.domain.UserType;
+import com.odiga.fiesta.user.dto.request.UserRequest;
+import com.odiga.fiesta.user.repository.UserTypeRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service

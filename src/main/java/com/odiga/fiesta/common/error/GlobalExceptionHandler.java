@@ -2,6 +2,7 @@ package com.odiga.fiesta.common.error;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -100,6 +101,14 @@ public class GlobalExceptionHandler {
 		MissingServletRequestParameterException e) {
 		log.warn(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.MISSING_REQUEST_PARAMETER);
+		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
+	}
+
+	@ExceptionHandler(UsernameNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(
+		org.springframework.security.core.userdetails.UsernameNotFoundException e) {
+		log.warn(e.getMessage(), e);
+		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.USER_NOT_FOUND);
 		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
 	}
 
