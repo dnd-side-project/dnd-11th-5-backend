@@ -2,7 +2,9 @@ package com.odiga.fiesta.festival.controller;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static java.util.Objects.*;
+import static org.springframework.http.MediaType.*;
 
+import java.net.URI;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -21,11 +23,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.auth.domain.AuthUser;
 import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
@@ -40,7 +44,10 @@ import com.odiga.fiesta.festival.service.FestivalService;
 import com.odiga.fiesta.user.domain.User;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -63,15 +70,20 @@ public class FestivalController {
 		summary = "페스티벌 생성",
 		description = "페스티벌을 생성합니다."
 	)
-	@PostMapping
+	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<BasicResponse<FestivalCreateResponse>> createFestival(
-		@AuthenticationPrincipal User user,
-		@RequestPart
+		@AuthUser User user,
+		@Parameter(name = "data", schema = @Schema(type = "string", format = "binary"), description = "등록할 페스티벌 데이터")
+		@RequestPart(value = "data") @Valid FestivalCreateRequest request,
+		@RequestPart(value = "images", required = false) List<MultipartFile> images
+	) {
 
-		) {
-		return null;
-		// FestivalBasic festival = festivalService.createFestival(festivalBasic);
-		// return ResponseEntity.ok(BasicResponse.ok("페스티벌 생성 성공", festival));
+		checkLogin(user);
+
+		FestivalBasic festival = festivalService.createFestival(user.getId(), request, images);
+		return ResponseEntity.created(
+				URI.create("/api/v1/festivals/" + festival.getFestivalId()))
+			.body(BasicResponse.created("페스티벌 생성 성공", FestivalCreateResponse.of(festival)));
 	}
 
 	@Operation(
@@ -260,7 +272,7 @@ public class FestivalController {
 		for (Sort.Order order : pageable.getSort()) {
 			String property = order.getProperty();
 
-			if ("dist".equals(property) && (isNull(latitude) || isNull(longitude))) {
+			if ("dist" .equals(property) && (isNull(latitude) || isNull(longitude))) {
 				throw new CustomException(INVALID_CURRENT_LOCATION);
 			}
 		}

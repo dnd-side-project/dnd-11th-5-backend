@@ -54,6 +54,8 @@ public enum ErrorCode {
 	QUERY_CANNOT_BE_EMPTY(400, "F007", "검색어는 필수입니다."),
 	QUERY_CANNOT_BE_BLANK(400, "F008", "공백으로는 검색할 수 없습니다."),
 	FESTIVAL_IS_PENDING(400, "F009", "승인되지 않은 페스티벌입니다."),
+	INVALID_SIDO_NAME(400, "F010", "유효하지 않은 시도 이름입니다."),
+	FESTIAL_IMAGE_EXCEEDED(400, "F011", "페스티벌 이미지는 최대 3개까지 업로드 가능합니다."),
 
 	// LOG
 	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다."),
