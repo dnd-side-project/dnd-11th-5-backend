@@ -1,12 +1,12 @@
 package com.odiga.fiesta.user.dto.request;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.List;
 
 public class UserRequest {
 
