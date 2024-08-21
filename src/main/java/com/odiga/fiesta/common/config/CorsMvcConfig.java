@@ -3,7 +3,6 @@ package com.odiga.fiesta.common.config;
 import static org.springframework.http.HttpMethod.*;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -20,7 +19,8 @@ public class CorsMvcConfig implements WebMvcConfigurer {
 				POST.name(),
 				PUT.name(),
 				DELETE.name(),
-				PATCH.name())
+				PATCH.name(),
+				OPTIONS.name())
 			.allowCredentials(true);
 	}
 }
