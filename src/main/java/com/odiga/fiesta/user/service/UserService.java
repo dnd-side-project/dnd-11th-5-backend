@@ -40,6 +40,8 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final UserTypeService userTypeService;
 
+
+
 	// 프로필 생성
 	@Transactional
 	public UserResponse.createProfileDTO createProfile(User user, UserRequest.createProfileDTO request) {
