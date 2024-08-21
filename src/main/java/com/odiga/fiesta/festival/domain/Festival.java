@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.odiga.fiesta.common.domain.BaseEntity;
+import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -73,7 +73,7 @@ public class Festival extends BaseEntity {
 
 	private String fee;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 2000)
 	private String description;
 
 	@Column(name = "ticket_link", length = 1024)
@@ -92,5 +92,27 @@ public class Festival extends BaseEntity {
 			.collect(
 				groupingBy(AbstractMap.SimpleEntry::getKey,
 					mapping(AbstractMap.SimpleEntry::getValue, toList())));
+	}
+
+	public static Festival of(FestivalCreateRequest festival, Long userId, Long sidoId) {
+		return Festival.builder()
+			.userId(userId)
+			.name(festival.getName())
+			.startDate(LocalDate.parse(festival.getStartDate()))
+			.endDate(LocalDate.parse(festival.getEndDate()))
+			.address(festival.getAddress())
+			.sidoId(sidoId)
+			.sigungu(festival.getSigungu())
+			.latitude(festival.getLatitude())
+			.longitude(festival.getLongitude())
+			.tip(festival.getTip())
+			.homepageUrl(festival.getHomepageUrl())
+			.instagramUrl(festival.getInstagramUrl())
+			.fee(festival.getFee())
+			.description(festival.getDescription())
+			.ticketLink(festival.getTicketLink())
+			.playtime(festival.getPlaytime())
+			.isPending(false) // TODO 관리자 api 구현 전 까진 false
+			.build();
 	}
 }
