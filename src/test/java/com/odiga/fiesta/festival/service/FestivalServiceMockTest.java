@@ -1,5 +1,6 @@
 package com.odiga.fiesta.festival.service;
 
+import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.*;
@@ -24,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.MockTestSupport;
 import com.odiga.fiesta.common.PageResponse;
+import com.odiga.fiesta.common.error.ErrorCode;
+import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
@@ -238,12 +241,38 @@ class FestivalServiceMockTest extends MockTestSupport {
 		@Test
 		void createFestival_ImageCountExceeded() {
 			// given
+			List<MultipartFile> files = List.of(
+				new MockMultipartFile(
+					"test1",
+					"test1.png",
+					MULTIPART_FORM_DATA_VALUE,
+					"test1" .getBytes()),
+				new MockMultipartFile(
+					"test2",
+					"test2.jpeg",
+					MULTIPART_FORM_DATA_VALUE,
+					"test2" .getBytes()),
+				new MockMultipartFile(
+					"test3",
+					"test3.jpg",
+					MULTIPART_FORM_DATA_VALUE,
+					"test3" .getBytes()),
+				new MockMultipartFile(
+					"test4",
+					"test4.jpg",
+					MULTIPART_FORM_DATA_VALUE,
+					"test4" .getBytes())
+			);
 
-			// when
+			given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
-			// then
+			// when // then
+			CustomException exception = assertThrows(CustomException.class, () -> {
+				festivalService.createFestival(1L, request, files);
+			});
+
+			assertEquals(FESTIAL_IMAGE_EXCEEDED.getMessage(), exception.getMessage());
 		}
-
 	}
 
 	private static Festival createFestival() {

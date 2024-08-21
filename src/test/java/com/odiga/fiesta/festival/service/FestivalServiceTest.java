@@ -420,6 +420,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.fee(festival.getFee())
 			.ticketLink(festival.getTicketLink())
 			.bookmarkCount(3L)
+			.playtime(festival.getPlaytime())
 			.isBookmarked(true)
 			.categories(categories.stream().map(CategoryResponse::of).toList())
 			.moods(moods.stream().map(MoodResponse::of).toList())
