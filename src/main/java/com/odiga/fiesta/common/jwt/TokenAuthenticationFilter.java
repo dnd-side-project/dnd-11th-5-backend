@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.odiga.fiesta.auth.domain.UserAccount;
 import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
 
@@ -47,7 +48,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             // 유효성 검증
             tokenProvider.validateToken(token);
 
-            // 유효한 토큰인 경우 인증 정보 설정
             Authentication authentication = tokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -59,7 +59,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         // 토큰이 access인지 확인(발급시 페이로드에 명시), 만료시 다음 필터로 넘기지 않음
         String category = tokenProvider.getCategory(token);
         if (!"access".equals(category)) {
-            System.out.println("category: " + category);
             sendErrorResponse(response, ErrorCode.INVALID_TOKEN);
             return;
         }
