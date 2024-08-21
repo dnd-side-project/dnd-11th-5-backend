@@ -6,8 +6,6 @@ import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.keyword.domain.Keyword;
 import com.odiga.fiesta.keyword.repository.KeywordRepository;
 import com.odiga.fiesta.review.domain.Review;
-import com.odiga.fiesta.review.domain.ReviewImage;
-import com.odiga.fiesta.review.domain.ReviewKeyword;
 import com.odiga.fiesta.review.dto.ReviewResponse;
 import com.odiga.fiesta.review.repository.ReviewImageRepository;
 import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
@@ -22,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
@@ -60,11 +57,11 @@ public class ReviewService {
                             .orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
 
                     // 리뷰 이미지 조회
-                    List<String> imageUrls = getReviewImageUrls(reviewId);
-                    String firstImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
+                    List<ReviewResponse.reviewImageDTO> imageUrls = getReviewImageUrls(reviewId);
+                    ReviewResponse.reviewImageDTO firstImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
 
                     // 리뷰 키워드 조회
-                    List<String> reviewKeywords = getReviewKeywords(reviewId);
+                    List<ReviewResponse.reviewKeywordDTO> reviewKeywords = getReviewKeywords(reviewId);
 
                     return ReviewResponse.topReviewInfo.builder()
                             .reviewId(reviewId)
@@ -104,10 +101,10 @@ public class ReviewService {
         List<ReviewResponse.reviewInfo> reviews = reviewPage.getContent().stream()
                 .map(review -> {
                     // 리뷰 이미지 조회
-                    List<String> imageUrls = getReviewImageUrls(review.getId());
+                    List<ReviewResponse.reviewImageDTO> imageUrls = getReviewImageUrls(review.getId());
 
                     // 리뷰 키워드 조회
-                    List<String> reviewKeywords = getReviewKeywords(review.getId());
+                    List<ReviewResponse.reviewKeywordDTO> reviewKeywords = getReviewKeywords(review.getId());
 
                     // 리뷰 좋아요 조회
                     int likes = getReviewLikesCount(review.getId());
@@ -150,21 +147,29 @@ public class ReviewService {
     }
 
     // 리뷰 이미지 조회
-    private List<String> getReviewImageUrls(Long reviewId) {
+    private List<ReviewResponse.reviewImageDTO> getReviewImageUrls(Long reviewId) {
         return reviewImageRepository.findByReviewId(reviewId).stream()
-                .map(ReviewImage::getImageUrl)
+                .map(reviewImage -> ReviewResponse.reviewImageDTO.builder()
+                        .imageId(reviewImage.getId())
+                        .imageUrl(reviewImage.getImageUrl())
+                        .build())
                 .toList();
     }
 
     // 리뷰 키워드 조회
-    private List<String> getReviewKeywords(Long reviewId) {
+    private List<ReviewResponse.reviewKeywordDTO> getReviewKeywords(Long reviewId) {
+
         return reviewKeywordRepository.findByReviewId(reviewId).stream()
-                .map(ReviewKeyword::getKeywordId)
-                .distinct() // 중복된 ID 제거 (필요한 경우)
-                .map(keywordRepository::findById)
-                .flatMap(Optional::stream) // Optional을 stream으로 변환 (존재할 경우)
-                .map(Keyword::getKeyword)
-                .toList();
+                .map(reviewKeyword -> {
+                    Keyword keyword = keywordRepository.findById(reviewKeyword.getKeywordId())
+                            .orElseThrow(() -> new CustomException(KEYWORD_NOT_FOUND));
+
+                    return ReviewResponse.reviewKeywordDTO.builder()
+                            .keywordId(keyword.getId())
+                            .keyword(keyword.getKeyword())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
     // 리뷰 좋아요 수 조회

@@ -1,6 +1,5 @@
 package com.odiga.fiesta.review.dto;
 
-import com.odiga.fiesta.keyword.domain.Keyword;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -68,10 +67,10 @@ public class ReviewResponse {
         private int rating;
 
         @Schema(description = "이미지 URL", nullable = false, example = "...")
-        private List<String> images;
+        private List<reviewImageDTO> images;
 
         @Schema(description = "키워드", nullable = false, example = "✨ 쾌적해요")
-        private List<String> keywords;
+        private List<reviewKeywordDTO> keywords;
 
         @Schema(description = "좋아요 여부", nullable = false, example = "false")
         private boolean liked;
@@ -105,9 +104,35 @@ public class ReviewResponse {
         private int rating;
 
         @Schema(description = "이미지 URL", nullable = false, example = "...")
-        private String images;
+        private reviewImageDTO images;
 
         @Schema(description = "키워드", nullable = false, example = "✨ 쾌적해요")
-        private List<String> keywords;
+        private List<reviewKeywordDTO> keywords;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class reviewImageDTO {
+
+        @Schema(description = "이미지 id", nullable = false, example = "1")
+        private Long imageId;
+
+        @Schema(description = "이미지 URL", nullable = false, example = "...")
+        private String imageUrl;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class reviewKeywordDTO {
+
+        @Schema(description = "키워드 id", nullable = false, example = "1")
+        private Long keywordId;
+
+        @Schema(description = "키워드 URL", nullable = false, example = "✨ 쾌적해요")
+        private String keyword;
     }
 }
