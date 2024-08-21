@@ -116,7 +116,6 @@ class FestivalBookmarkServiceTest extends IntegrationTestSupport {
 	private User createUser() {
 		return User.builder()
 			.userTypeId(1L)
-			.roleId(1L)
 			.nickname("테스트 유저")
 			.statusMessage("상태 메시지")
 			.profileImage("프로필 이미지 링크")
