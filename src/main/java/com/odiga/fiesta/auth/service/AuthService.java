@@ -54,7 +54,7 @@ public class AuthService {
 	private static final String REFRESH_TOKEN_CATEGORY = "refresh";
 	private static final String ACCESS_TOKEN_CATEGORY = "access";
 	private static final String DEFAULT_STATUS_MESSAGE = "페스티벌의 시작 피에스타와 함께!";
-	private static final String DEFAULT_PROFILE_IMAGE = "https://fiesta-image.s3.ap-northeast-2.amazonaws.com/user_type/user_type_1.png";
+	private static final String DEFAULT_PROFILE_IMAGE = "https://fiesta-image.s3.ap-northeast-2.amazonaws.com/user_type/usertype_default.png";
 
 	// 카카오 로그인
 	@Transactional

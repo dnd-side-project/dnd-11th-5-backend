@@ -2,6 +2,7 @@ package com.odiga.fiesta.user.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -15,6 +16,7 @@ import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.dto.request.SocialLoginRequest;
 import com.odiga.fiesta.user.dto.request.UserRequest;
 import com.odiga.fiesta.user.dto.response.LoginResponse;
+import com.odiga.fiesta.user.dto.response.UserInfoResponse;
 import com.odiga.fiesta.user.dto.response.UserResponse;
 import com.odiga.fiesta.user.service.UserService;
 
@@ -44,8 +46,25 @@ public class UserController {
 		return ResponseEntity.ok(BasicResponse.ok("로그인 성공", loginResponse));
 	}
 
+	@GetMapping("/me")
+	@Operation(summary = "내 정보 조회", description = "로그인한 유저의 정보를 조회합니다.")
+	public ResponseEntity<BasicResponse<UserInfoResponse>> getUserInfo(@AuthUser User user) {
+
+		UserInfoResponse response = UserInfoResponse.builder()
+			.userId(user.getId())
+			.email(user.getEmail())
+			.nickname(user.getNickname())
+			.statusMessage(user.getStatusMessage())
+			.profileImage(user.getProfileImage())
+			.isProfileCreated(user.getUserTypeId() != null)
+			.userTypeId(user.getUserTypeId())
+			.build();
+
+		return ResponseEntity.ok(BasicResponse.ok("내 정보 조회 성공", response));
+	}
+
 	@PostMapping("/profile")
-	@Operation(summary = "프로필 생성", description = "oauthId를 통해 프로필을 생성합니다.")
+	@Operation(summary = "프로필 생성", description = "프로필을 생성합니다.")
 	public ResponseEntity<BasicResponse<UserResponse.createProfileDTO>> createProfile(@AuthUser User user,
 		@RequestBody @Valid UserRequest.createProfileDTO request) {
 
