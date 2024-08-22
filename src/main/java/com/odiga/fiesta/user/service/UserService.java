@@ -47,7 +47,10 @@ public class UserService {
 		checkLogin(user);
 
 		// 유저 유형 도출
-		UserType userType = userTypeService.getUserType(request);
+		List<Long> mood = request.getMood();
+		List<Long> category = request.getCategory();
+
+		UserType userType = userTypeService.getTopNUserTypes(category, mood, 1).getFirst();
 
 		User savedUser = User.builder()
 			.id(user.getId())
