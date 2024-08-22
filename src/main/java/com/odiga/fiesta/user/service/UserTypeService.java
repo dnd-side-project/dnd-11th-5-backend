@@ -82,11 +82,9 @@ public class UserTypeService {
 
 		List<UserType> topUserTypes = userTypeRepository.findByNameIn(topUserTypeNames);
 
-		if (topUserTypes.size() < n) {
-			throw new CustomException(USER_TYPE_NOT_FOUND);
-		}
+		log.info("topUserTypes: {}", topUserTypes);
 
-		return topUserTypes;
+		return topUserTypes.stream().limit(n).toList();
 	}
 
 	// 로맨티스트 점수 계산
