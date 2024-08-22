@@ -46,11 +46,6 @@ public class UserService {
 
 		checkLogin(user);
 
-		// 이미 프로필을 등록했는지 확인
-		if (!isNull(user.getUserTypeId())) {
-			throw new CustomException(ALREADY_JOINED);
-		}
-
 		// 유저 유형 도출
 		UserType userType = userTypeService.getUserType(request);
 
