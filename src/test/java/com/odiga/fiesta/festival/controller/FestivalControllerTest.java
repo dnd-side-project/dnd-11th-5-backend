@@ -61,7 +61,7 @@ class FestivalControllerTest extends ControllerTestSupport {
 		PageImpl<FestivalInfoWithBookmark> page =
 			new PageImpl<>(List.of(FestivalInfoWithBookmark.builder().build()), pageable, 1);
 
-		when(festivalService.getFestivalsByDay(null, 2023, 10, 4, pageable)).thenReturn(page);
+		when(festivalService.getFestivalsByDay(1L, 2023, 10, 4, pageable)).thenReturn(page);
 
 		// when // then
 		mockMvc.perform(get("/api/v1/festivals/daily")

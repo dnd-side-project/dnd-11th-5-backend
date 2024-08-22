@@ -1,8 +1,8 @@
-package com.odiga.fiesta.common.util;
-
-import org.springframework.stereotype.Component;
+package com.odiga.fiesta.user.util;
 
 import java.util.Random;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class NicknameUtils {

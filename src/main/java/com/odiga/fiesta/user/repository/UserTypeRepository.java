@@ -1,10 +1,14 @@
 package com.odiga.fiesta.user.repository;
 
-import com.odiga.fiesta.user.domain.UserType;
-import org.springframework.data.jpa.repository.JpaRepository;
-
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.odiga.fiesta.user.domain.UserType;
+
 public interface UserTypeRepository extends JpaRepository<UserType, Long> {
-    Optional<UserType> findByName(String name);
+	Optional<UserType> findByName(String name);
+
+	List<UserType> findByNameIn(List<String> names);
 }

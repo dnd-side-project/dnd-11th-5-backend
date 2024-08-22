@@ -26,6 +26,7 @@ public class FestivalDetailResponse extends FestivalDetailData {
 			.startDate(festival.getStartDate())
 			.endDate(festival.getEndDate())
 			.description(festival.getDescription())
+			.playtime(festival.getPlaytime())
 			.address(festival.getAddress())
 			.latitude(festival.getLatitude())
 			.longitude(festival.getLongitude())

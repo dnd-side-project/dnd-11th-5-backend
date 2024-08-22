@@ -1,13 +1,27 @@
 package com.odiga.fiesta;
 
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.filter.CharacterEncodingFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.odiga.fiesta.auth.domain.UserAccount;
 import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.festival.controller.FestivalController;
 import com.odiga.fiesta.festival.controller.FestivalStaticDataController;
@@ -19,9 +33,10 @@ import com.odiga.fiesta.festival.service.MoodService;
 import com.odiga.fiesta.festival.service.PriorityService;
 import com.odiga.fiesta.log.controller.LogController;
 import com.odiga.fiesta.log.service.LogService;
+import com.odiga.fiesta.user.domain.User;
 
 @ActiveProfiles("test")
-@WithMockUser
+@WithAnonymousUser
 @WebMvcTest(controllers = {
 	// 사용하는 컨트롤러 여기에 추가
 	FestivalController.class,
@@ -29,6 +44,9 @@ import com.odiga.fiesta.log.service.LogService;
 	LogController.class
 })
 public abstract class ControllerTestSupport {
+
+	@Autowired
+	private WebApplicationContext webApplicationContext;
 
 	@Autowired
 	protected MockMvc mockMvc;
@@ -60,4 +78,31 @@ public abstract class ControllerTestSupport {
 
 	@MockBean
 	private FileUtils fileUtils;
+
+	private User user;
+	private UserAccount userAccount;
+
+	@BeforeEach
+	public void beforeEach() {
+		this.mockMvc = MockMvcBuilders
+			.webAppContextSetup(webApplicationContext)
+			.addFilter(new CharacterEncodingFilter("utf-8", true))
+			.build();
+
+		SecurityContext context = SecurityContextHolder.getContext();
+
+		user = mock(User.class);
+		userAccount = mock(UserAccount.class);
+		when(user.getId())
+			.thenReturn(1L);
+		when(user.getEmail())
+			.thenReturn("fiesta@naver.com");
+		when(userAccount.getAccount())
+			.thenReturn(user);
+
+		Authentication authentication = new UsernamePasswordAuthenticationToken(userAccount, null,
+			userAccount.getAuthorities());
+		context.setAuthentication(authentication);
+
+	}
 }

@@ -70,6 +70,14 @@ public class FileUtils {
 		}
 	}
 
+	public void validateImageExtension(final MultipartFile files) {
+		final String extension = getFileExtension(files.getOriginalFilename());
+
+		if (!PERMISSION_IMG_EXTENSIONS.contains(extension)) {
+			throw new InvalidImageException();
+		}
+	}
+
 	public void validateImageExtension(final String extension) {
 		if (!PERMISSION_IMG_EXTENSIONS.contains(extension)) {
 			throw new InvalidImageException();

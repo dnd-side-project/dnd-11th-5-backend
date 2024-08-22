@@ -2,9 +2,11 @@ package com.odiga.fiesta.festival.service;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static com.odiga.fiesta.festival.domain.Festival.*;
+import static com.odiga.fiesta.festival.util.CityMapper.*;
 import static java.util.Objects.*;
 import static java.util.stream.Collectors.*;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -22,15 +24,21 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.domain.FestivalCategory;
+import com.odiga.fiesta.festival.domain.FestivalImage;
+import com.odiga.fiesta.festival.domain.FestivalMood;
 import com.odiga.fiesta.festival.dto.projection.FestivalDetailData;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
+import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
@@ -47,11 +55,12 @@ import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.festival.repository.FestivalUserTypeRepository;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
 import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.repository.UserRepository;
-import com.odiga.fiesta.user.repository.UserTypeRepository;
+import com.odiga.fiesta.user.service.UserTypeService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +70,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @Slf4j
 public class FestivalService {
+	private final FestivalUserTypeRepository festivalUserTypeRepository;
 	private final UserRepository userRepository;
 
 	private final Clock clock;
@@ -74,9 +84,33 @@ public class FestivalService {
 	private final FestivalCategoryRepository festivalCategoryRepository;
 	private final FestivalMoodRepository festivalMoodRepository;
 
-	private final UserTypeRepository userTypeRepository;
+	private final UserTypeService userTypeService;
 
 	private final RedisUtils redisUtils;
+	private final FileUtils fileUtils;
+
+	private static final String FESTIVAL_DIR_NAME = "festival";
+
+	@Transactional
+	public FestivalBasic createFestival(final Long userId, final FestivalCreateRequest request
+		, final List<MultipartFile> files) {
+
+		validateUserId(userId);
+		validateCityName(request.getSido());
+		validateFileExtension(files);
+		validateFileCount(files);
+
+		Long sidoId = getIdFromCityName(request.getSido());
+		Festival festival = festivalRepository.save(of(request, userId, sidoId));
+
+		saveTopUserTypesForFestival(request, festival);
+		createFestivalImages(files, festival);
+
+		saveFestivalCategory(request.getCategoryIds(), festival);
+		saveFestivalMood(request.getMoodIds(), festival);
+
+		return FestivalBasic.of(festival);
+	}
 
 	public FestivalMonthlyResponse getMonthlyFestivals(int year, int month) {
 		validateMonth(month);
@@ -304,6 +338,43 @@ public class FestivalService {
 			.toList();
 	}
 
+	private void saveFestivalMood(List<Long> moodIds, Festival festival) {
+		festivalMoodRepository.saveAll(moodIds.stream()
+			.map(moodId -> FestivalMood.of(festival.getId(), moodId))
+			.toList());
+	}
+
+	private void saveFestivalCategory(List<Long> categoryIds, Festival festival) {
+		festivalCategoryRepository.saveAll(categoryIds.stream()
+			.map(categoryId -> FestivalCategory.of(festival.getId(), categoryId))
+			.toList());
+	}
+
+	private void createFestivalImages(List<MultipartFile> files, Festival festival) {
+		if (isNull(files)) {
+			return;
+		}
+
+		files.forEach(file -> {
+			try {
+				String imageUrl = fileUtils.uploadImage(file, FESTIVAL_DIR_NAME);
+				festivalImageRepository.save(FestivalImage.of(festival.getId(), imageUrl));
+			} catch (IOException e) {
+				log.error("파일 업로드 실패");
+				e.printStackTrace();
+			}
+		});
+	}
+
+	private void saveTopUserTypesForFestival(FestivalCreateRequest request, Festival festival) {
+		List<UserType> userTypes = userTypeService.getTopNUserTypes(request.getCategoryIds(),
+			request.getMoodIds(), 2);
+
+		festivalUserTypeRepository.saveAll(userTypes.stream()
+			.map(userType -> userType.toFestivalUserType(festival))
+			.toList());
+	}
+
 	private void validateMonth(int month) {
 		if (month < 1 || month > 12) {
 			throw new CustomException(INVALID_FESTIVAL_MONTH);
@@ -342,5 +413,19 @@ public class FestivalService {
 		}
 
 		userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+	}
+
+	private void validateFileCount(List<MultipartFile> files) {
+		if (nonNull(files)) {
+			if (files.size() > 3) {
+				throw new CustomException(FESTIAL_IMAGE_EXCEEDED);
+			}
+		}
+	}
+
+	private void validateFileExtension(List<MultipartFile> files) {
+		if (nonNull(files)) {
+			files.forEach(file -> fileUtils.validateImageExtension(file));
+		}
 	}
 }

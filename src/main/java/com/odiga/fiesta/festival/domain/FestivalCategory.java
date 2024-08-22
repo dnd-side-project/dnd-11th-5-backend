@@ -34,4 +34,11 @@ public class FestivalCategory extends BaseEntity {
 
 	@Column(name = "category_id", nullable = false)
 	private Long categoryId;
+
+	public static FestivalCategory of(Long festivalId, Long categoryId) {
+		return FestivalCategory.builder()
+			.festivalId(festivalId)
+			.categoryId(categoryId)
+			.build();
+	}
 }

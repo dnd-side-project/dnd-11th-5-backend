@@ -21,6 +21,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,14 +46,14 @@ class LogControllerTest extends ControllerTestSupport {
 	@Autowired
 	private FileUtils fileUtils;
 
-	@BeforeEach
-	void beforeEach() {
-		User mockUser = Mockito.mock(User.class);
-		Mockito.when(mockUser.getId()).thenReturn(1L);
-		SecurityContextHolder.getContext()
-			.setAuthentication(new UsernamePasswordAuthenticationToken(mockUser, null,
-				List.of(new SimpleGrantedAuthority("ROLE_USER"))));
-	}
+	// @BeforeEach
+	// void beforeEach() {
+	// 	User mockUser = Mockito.mock(User.class);
+	// 	Mockito.when(mockUser.getId()).thenReturn(1L);
+	// 	SecurityContextHolder.getContext()
+	// 		.setAuthentication(new UsernamePasswordAuthenticationToken(mockUser, null,
+	// 			List.of(new SimpleGrantedAuthority("ROLE_USER"))));
+	// }
 
 	@DisplayName("방문일지 키워드들을 조회한다.")
 	@Test
@@ -122,7 +123,7 @@ class LogControllerTest extends ControllerTestSupport {
 		MockMultipartFile file2 = new MockMultipartFile("files", "image2.jpg", "image/jpeg", "image data".getBytes());
 
 		when(fileUtils.getFileExtension(any())).thenReturn("jpg");
-		doNothing().when(fileUtils).validateImageExtension(any());
+		doNothing().when(fileUtils).validateImageExtension((MultipartFile)any());
 
 		LogIdResponse logIdResponse = LogIdResponse.of(1L);
 		when(logService.createLog(anyLong(), any(LogCreateRequest.class), any(List.class))).thenReturn(logIdResponse);

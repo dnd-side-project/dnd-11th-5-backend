@@ -15,6 +15,7 @@ public class FestivalDetailData extends FestivalData {
 	private String address;
 	private String sido;
 	private String tip;
+	private String playtime;
 	private String homepageUrl;
 	private String instagramUrl;
 	private String fee;

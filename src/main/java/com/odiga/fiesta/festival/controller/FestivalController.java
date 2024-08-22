@@ -2,7 +2,9 @@ package com.odiga.fiesta.festival.controller;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static java.util.Objects.*;
+import static org.springframework.http.MediaType.*;
 
+import java.net.URI;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -12,22 +14,27 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.odiga.fiesta.auth.domain.AuthUser;
 import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalBookmarkResponse;
+import com.odiga.fiesta.festival.dto.response.FestivalCreateResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
@@ -37,7 +44,10 @@ import com.odiga.fiesta.festival.service.FestivalService;
 import com.odiga.fiesta.user.domain.User;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -55,6 +65,26 @@ public class FestivalController {
 
 	private final FestivalService festivalService;
 	private final FestivalBookmarkService festivalBookmarkService;
+
+	@Operation(
+		summary = "페스티벌 생성",
+		description = "페스티벌을 생성합니다."
+	)
+	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<BasicResponse<FestivalCreateResponse>> createFestival(
+		@AuthUser User user,
+		@Parameter(name = "data", schema = @Schema(type = "string", format = "binary"), description = "등록할 페스티벌 데이터")
+		@RequestPart(value = "data") @Valid FestivalCreateRequest request,
+		@RequestPart(value = "images", required = false) List<MultipartFile> images
+	) {
+
+		checkLogin(user);
+
+		FestivalBasic festival = festivalService.createFestival(user.getId(), request, images);
+		return ResponseEntity.created(
+				URI.create("/api/v1/festivals/" + festival.getFestivalId()))
+			.body(BasicResponse.created("페스티벌 생성 성공", FestivalCreateResponse.of(festival)));
+	}
 
 	@Operation(
 		summary = "페스티벌 월간 조회",
@@ -76,7 +106,7 @@ public class FestivalController {
 	)
 	@GetMapping("/daily")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfoWithBookmark>>> getFestivalsByDay(
-		@AuthenticationPrincipal User user,
+		@AuthUser User user,
 		@RequestParam(name = "year") @NotNull int year,
 		@RequestParam(name = "month") @Min(1) @Max(12) @NotNull int month,
 		@RequestParam(name = "day") int day,
@@ -96,7 +126,7 @@ public class FestivalController {
 	)
 	@GetMapping("/filter")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfoWithBookmark>>> getFestivalsByFilters(
-		@AuthenticationPrincipal User user,
+		@AuthUser User user,
 		@ModelAttribute FestivalFilterRequest festivalFilterRequest,
 		@RequestParam(value = "lat", required = false) Double latitude,
 		@RequestParam(value = "lng", required = false) Double longitude,
@@ -116,7 +146,7 @@ public class FestivalController {
 	)
 	@GetMapping("/search")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfoWithBookmark>>> getFestivalsByQuery(
-		@AuthenticationPrincipal User user,
+		@AuthUser User user,
 		String query,
 		@PageableDefault(size = 6) Pageable pageable) {
 
@@ -142,7 +172,7 @@ public class FestivalController {
 	)
 	@GetMapping("/upcoming")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalAndLocation>>> getUpcomingFestival(
-		@AuthenticationPrincipal User user,
+		@AuthUser User user,
 		@PageableDefault(size = 3) Pageable pageable) {
 
 		checkLogin(user);
@@ -172,7 +202,7 @@ public class FestivalController {
 	)
 	@GetMapping("/{festivalId}")
 	public ResponseEntity<BasicResponse<FestivalDetailResponse>> getFestival(
-		@AuthenticationPrincipal User user, @PathVariable Long festivalId) {
+		@AuthUser User user, @PathVariable Long festivalId) {
 
 		FestivalDetailResponse festival = festivalService.getFestival(isNull(user) ? null : user.getId(), festivalId);
 		return ResponseEntity.ok(BasicResponse.ok("페스티벌 상세 조회 성공", festival));
@@ -193,7 +223,7 @@ public class FestivalController {
 	@Operation(summary = "페스티벌 북마크 등록/해제", description = "페스티벌 북마크를 등록 또는 해제합니다.")
 	@PatchMapping("/{festivalId}/bookmark")
 	public ResponseEntity<BasicResponse<FestivalBookmarkResponse>> updateFestivalBookmark(
-		@AuthenticationPrincipal User user,
+		@AuthUser User user,
 		@PathVariable Long festivalId
 	) {
 		FestivalBookmarkResponse bookmark = festivalBookmarkService.updateFestivalBookmark(user, festivalId);
@@ -213,7 +243,7 @@ public class FestivalController {
 	@Operation(summary = "유형별 추천 페스티벌 조회", description = "유저 유형 별 추천 페스티벌을 랜덤으로 조회합니다.")
 	@GetMapping("/recommend")
 	public ResponseEntity<BasicResponse<List<FestivalInfo>>> getRecommendFestival(
-		@AuthenticationPrincipal User user,
+		@AuthUser User user,
 		@RequestParam(required = false, defaultValue = "5") Long size
 	) {
 		checkLoginUser(user);
@@ -242,7 +272,7 @@ public class FestivalController {
 		for (Sort.Order order : pageable.getSort()) {
 			String property = order.getProperty();
 
-			if ("dist".equals(property) && (isNull(latitude) || isNull(longitude))) {
+			if ("dist" .equals(property) && (isNull(latitude) || isNull(longitude))) {
 				throw new CustomException(INVALID_CURRENT_LOCATION);
 			}
 		}
