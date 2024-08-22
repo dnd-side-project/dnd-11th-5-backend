@@ -59,7 +59,7 @@ public class UserService {
 			.userTypeId(userType.getId())
 			.nickname(user.getNickname())
 			.statusMessage(user.getStatusMessage())
-			.profileImage(user.getProfileImage())
+			.profileImage(userType.getProfileImage())
 			.email(user.getEmail())
 			.build();
 
