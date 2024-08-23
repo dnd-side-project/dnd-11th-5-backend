@@ -6,7 +6,11 @@ import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.keyword.domain.Keyword;
 import com.odiga.fiesta.keyword.repository.KeywordRepository;
 import com.odiga.fiesta.review.domain.Review;
-import com.odiga.fiesta.review.dto.ReviewResponse;
+import com.odiga.fiesta.review.domain.ReviewKeyword;
+import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
+import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
+import com.odiga.fiesta.review.dto.response.ReviewResponse;
+import com.odiga.fiesta.review.dto.response.TopReviewResponse;
 import com.odiga.fiesta.review.repository.ReviewImageRepository;
 import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
 import com.odiga.fiesta.review.repository.ReviewLikeRepository;
@@ -19,7 +23,10 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
@@ -39,11 +46,12 @@ public class ReviewService {
     private final KeywordRepository keywordRepository;
 
     // 리뷰 TOP3 조회
-    public ReviewResponse.getTop3ReviewsDTO getTop3ReviewsDTO() {
+    public List<TopReviewResponse> getTop3Reviews() {
         List<Object[]> reviewsWithLikes = reviewLikeRepository.findReviewsWithLikeCount();
 
+
         // 좋아요 수에 따라 상위 3개의 리뷰를 필터링하고, 리뷰 정보를 DTO로 변환
-        List<ReviewResponse.topReviewInfo> topReviewInfos = reviewsWithLikes.stream()
+        return reviewsWithLikes.stream()
                 .limit(3)
                 .map(result -> {
                     Long reviewId = ((Number) result[0]).longValue();
@@ -57,13 +65,13 @@ public class ReviewService {
                             .orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
 
                     // 리뷰 이미지 조회
-                    List<ReviewResponse.reviewImageDTO> imageUrls = getReviewImageUrls(reviewId);
-                    ReviewResponse.reviewImageDTO firstImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
+                    List<ReviewImageResponse> imageUrls = getReviewImageUrls(reviewId);
+                    ReviewImageResponse firstImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
 
                     // 리뷰 키워드 조회
-                    List<ReviewResponse.reviewKeywordDTO> reviewKeywords = getReviewKeywords(reviewId);
+                    List<ReviewKeywordResponse> reviewKeywords = getReviewKeywords(reviewId);
 
-                    return ReviewResponse.topReviewInfo.builder()
+                    return TopReviewResponse.builder()
                             .reviewId(reviewId)
                             .festivalId(review.getFestivalId())
                             .festivalName(festival.getName())
@@ -74,16 +82,12 @@ public class ReviewService {
                             .build();
                 })
                 .collect(Collectors.toList());
-
-        return ReviewResponse.getTop3ReviewsDTO.builder()
-                .content(topReviewInfos)
-                .build();
     }
 
     // 리뷰 다건 조회
-    public Page<ReviewResponse.reviewInfo> getReviews(User user, Long festivalId, String sort, int page, int size) {
+    public Page<ReviewResponse> getReviews(User user, Long festivalId, String sort, int page, int size) {
 
-        if(user == null) {
+        if (user == null) {
             throw new CustomException(USER_NOT_FOUND);
         }
 
@@ -96,13 +100,13 @@ public class ReviewService {
         Pageable pageable = PageRequest.of(page, size, sortBy);
         Page<Review> reviewPage = reviewRepository.findAllByFestivalId(festivalId, pageable);
 
-        List<ReviewResponse.reviewInfo> reviews = reviewPage.getContent().stream()
+        List<ReviewResponse> reviews = reviewPage.getContent().stream()
                 .map(review -> {
                     // 리뷰 이미지 조회
-                    List<ReviewResponse.reviewImageDTO> imageUrls = getReviewImageUrls(review.getId());
+                    List<ReviewImageResponse> imageUrls = getReviewImageUrls(review.getId());
 
                     // 리뷰 키워드 조회
-                    List<ReviewResponse.reviewKeywordDTO> reviewKeywords = getReviewKeywords(review.getId());
+                    List<ReviewKeywordResponse> reviewKeywords = getReviewKeywords(review.getId());
 
                     // 리뷰 좋아요 조회
                     int likes = getReviewLikesCount(review.getId());
@@ -112,7 +116,7 @@ public class ReviewService {
                     User reviewer = userRepository.findById(review.getUserId())
                             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-                    return ReviewResponse.reviewInfo.builder()
+                    return ReviewResponse.builder()
                             .reviewId(review.getId())
                             .nickname(reviewer.getNickname())
                             .content(review.getContent())
@@ -137,10 +141,61 @@ public class ReviewService {
         return new PageImpl<>(reviews, pageable, reviewPage.getTotalElements());
     }
 
+    // 가장 많이 선택된 키워드 TOP5 조회
+    public List<ReviewKeywordResponse> getTop5Keywords(Long festivalId) {
+
+        // 페스티벌 조회
+        Festival festival = festivalRepository.findById(festivalId)
+                .orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
+
+        // 리뷰 조회
+        List<Review> reviews = reviewRepository.findAllByFestivalId(festivalId);
+
+        // 리뷰 내 키워드 수집
+        List<ReviewKeyword> reviewKeywords = reviews.stream()
+                .flatMap(review -> reviewKeywordRepository.findByReviewId(review.getId()).stream())
+                .toList();
+
+        // 키워드 빈도수 집계
+        Map<Long, Long> keywordFrequencyMap = reviewKeywords.stream()
+                .collect(Collectors.groupingBy(
+                        ReviewKeyword::getKeywordId,
+                        Collectors.counting()
+                ));
+
+        // 최신 타임스탬프
+        Map<Long, LocalDateTime> keywordLatestTimestampMap = reviewKeywords.stream()
+                .collect(Collectors.toMap(
+                        ReviewKeyword::getKeywordId,
+                        ReviewKeyword::getCreatedAt,
+                        (existing, replacement) -> existing.isAfter(replacement) ? existing : replacement
+                ));
+
+        // 빈도수와 최신 타임스탬프에 따라 정렬하여 상위 5개의 키워드 id 추출
+        List<Long> topKeywordIds = keywordFrequencyMap.entrySet().stream()
+                .sorted(Map.Entry.<Long, Long>comparingByValue(Comparator.reverseOrder())
+                        .thenComparing(entry -> keywordLatestTimestampMap.get(entry.getKey()), Comparator.reverseOrder()))
+                .limit(5)
+                .map(Map.Entry::getKey)
+                .toList();
+
+        return topKeywordIds.stream()
+                .map(keywordId -> {
+                    Keyword keyword = keywordRepository.findById(keywordId)
+                            .orElseThrow(() -> new CustomException(KEYWORD_NOT_FOUND));
+
+                    return ReviewKeywordResponse.builder()
+                            .keywordId(keyword.getId())
+                            .keyword(keyword.getKeyword())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
     // 리뷰 이미지 조회
-    private List<ReviewResponse.reviewImageDTO> getReviewImageUrls(Long reviewId) {
+    private List<ReviewImageResponse> getReviewImageUrls(Long reviewId) {
         return reviewImageRepository.findByReviewId(reviewId).stream()
-                .map(reviewImage -> ReviewResponse.reviewImageDTO.builder()
+                .map(reviewImage -> ReviewImageResponse.builder()
                         .imageId(reviewImage.getId())
                         .imageUrl(reviewImage.getImageUrl())
                         .build())
@@ -148,14 +203,14 @@ public class ReviewService {
     }
 
     // 리뷰 키워드 조회
-    private List<ReviewResponse.reviewKeywordDTO> getReviewKeywords(Long reviewId) {
+    private List<ReviewKeywordResponse> getReviewKeywords(Long reviewId) {
 
         return reviewKeywordRepository.findByReviewId(reviewId).stream()
                 .map(reviewKeyword -> {
                     Keyword keyword = keywordRepository.findById(reviewKeyword.getKeywordId())
                             .orElseThrow(() -> new CustomException(KEYWORD_NOT_FOUND));
 
-                    return ReviewResponse.reviewKeywordDTO.builder()
+                    return ReviewKeywordResponse.builder()
                             .keywordId(keyword.getId())
                             .keyword(keyword.getKeyword())
                             .build();
