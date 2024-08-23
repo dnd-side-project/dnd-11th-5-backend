@@ -69,6 +69,8 @@ public class UserTypeService {
 		userTypeScores.put("몽글몽글 힐링러", getHealingScore(categories, moods));
 		userTypeScores.put("탐험러", getExploreScore(categories, moods));
 
+		log.info("userTypeScores: {}", userTypeScores);
+
 		// 점수를 기준으로 상위 N개의 UserType을 선택
 		List<String> topUserTypeNames = userTypeScores.entrySet().stream()
 			.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
@@ -76,13 +78,13 @@ public class UserTypeService {
 			.map(Map.Entry::getKey)
 			.toList();
 
+		log.info("topUserTypeNames: {}", topUserTypeNames);
+
 		List<UserType> topUserTypes = userTypeRepository.findByNameIn(topUserTypeNames);
 
-		if (topUserTypes.size() < n) {
-			throw new CustomException(USER_TYPE_NOT_FOUND);
-		}
+		log.info("topUserTypes: {}", topUserTypes);
 
-		return topUserTypes;
+		return topUserTypes.stream().limit(n).toList();
 	}
 
 	// 로맨티스트 점수 계산
