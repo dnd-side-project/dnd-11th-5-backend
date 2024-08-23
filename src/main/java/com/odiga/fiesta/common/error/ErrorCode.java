@@ -57,9 +57,15 @@ public enum ErrorCode {
 	INVALID_SIDO_NAME(400, "F010", "유효하지 않은 시도 이름입니다."),
 	FESTIAL_IMAGE_EXCEEDED(400, "F011", "페스티벌 이미지는 최대 3개까지 업로드 가능합니다."),
 
-	// LOG
-	LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다."),
-	LOG_IMAGE_COUNT_EXCEEDED(400, "L002", "이미지는 최대 3개까지 업로드 가능합니다.");
+    // LOG
+    LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다."),
+    LOG_IMAGE_COUNT_EXCEEDED(400, "L002", "이미지는 최대 3개까지 업로드 가능합니다."),
+
+    // Review
+    REVIEW_NOT_FOUND(404, "R001", "존재하지 않는 리뷰입니다."),
+
+    // Keyword
+    KEYWORD_NOT_FOUND(404, "K001", "존재하지 않는 키워드입니다.");
 
 	private final int status;
 	private final String code;
