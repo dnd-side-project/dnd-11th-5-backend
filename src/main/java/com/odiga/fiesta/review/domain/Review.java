@@ -27,7 +27,7 @@ public class Review extends BaseEntity {
     private Long festivalId;
 
     @Column(nullable = false)
-    private int score;
+    private double score;
 
     @Column(nullable = false)
     private String content;

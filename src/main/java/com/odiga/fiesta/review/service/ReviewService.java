@@ -81,15 +81,13 @@ public class ReviewService {
     }
 
     // 리뷰 다건 조회
-    public ReviewResponse.getReviewsDTO getReviews(Long userId, Long festivalId, String sort, int page, int size) {
+    public Page<ReviewResponse.reviewInfo> getReviews(User user, Long festivalId, String sort, int page, int size) {
 
-        // 유저 조회
-        log.info("userId: {}", userId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        if(user == null) {
+            throw new CustomException(USER_NOT_FOUND);
+        }
 
         // 페스티벌 조회
-        log.info("festivalId: {}", festivalId);
         Festival festival = festivalRepository.findById(festivalId)
                 .orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
 
@@ -108,7 +106,7 @@ public class ReviewService {
 
                     // 리뷰 좋아요 조회
                     int likes = getReviewLikesCount(review.getId());
-                    boolean liked = hasUserLikedReview(review.getId(), userId);
+                    boolean isLiked = hasUserLikedReview(review.getId(), user.getId());
 
                     // 리뷰 작성자 조회
                     User reviewer = userRepository.findById(review.getUserId())
@@ -122,9 +120,9 @@ public class ReviewService {
                             .rating(review.getScore())
                             .images(imageUrls)
                             .keywords(reviewKeywords)
-                            .liked(liked)
+                            .isLiked(isLiked)
                             .likes(likes)
-                            .writtenByMe(reviewer.equals(user))
+                            .isMyReview(reviewer.equals(user))
                             .build();
                 })
                 .sorted((r1, r2) -> {
@@ -136,14 +134,7 @@ public class ReviewService {
                 })
                 .toList();
 
-        return ReviewResponse.getReviewsDTO.builder()
-                .content(reviews)
-                .offset(pageable.getPageNumber() * pageable.getPageSize())
-                .pageNumber(pageable.getPageNumber())
-                .pageSize(pageable.getPageSize())
-                .totalElements(reviewPage.getTotalElements())
-                .totalPages(reviewPage.getTotalPages())
-                .build();
+        return new PageImpl<>(reviews, pageable, reviewPage.getTotalElements());
     }
 
     // 리뷰 이미지 조회
