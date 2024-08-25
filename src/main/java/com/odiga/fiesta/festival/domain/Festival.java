@@ -62,27 +62,32 @@ public class Festival extends BaseEntity {
 	@Column(nullable = false)
 	private double longitude;
 
-	@Column(nullable = false)
+	@Column(name = "tip", length = 1000)
 	private String tip;
 
-	@Column(name = "homepage_url", length = 1024)
+	@Column(name = "homepage_url", length = 2083)
 	private String homepageUrl;
 
-	@Column(name = "instagram_url", length = 1024)
+	@Column(name = "instagram_url", length = 2083)
 	private String instagramUrl;
 
+	@Column(name = "fee", length = 1000)
 	private String fee;
 
-	@Column(nullable = false, length = 2000)
+	@Column(length = 2000)
 	private String description;
 
-	@Column(name = "ticket_link", length = 1024)
+	@Column(name = "ticket_link", length = 2083)
 	private String ticketLink;
 
+	@Column(name = "playtime", length = 1000)
 	private String playtime;
 
 	@Column(name = "is_pending", nullable = false)
 	private boolean isPending;
+
+	@Column(name = "content_id")
+	private String contentId;
 
 	public static Map<LocalDate, List<Festival>> getGroupedByDate(List<Festival> festivals) {
 		return festivals.stream()
