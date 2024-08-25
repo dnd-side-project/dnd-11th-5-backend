@@ -1,5 +1,5 @@
 alter table festival
-    add column content_id varchar(255) NULL;
+    modify column content_id varchar(255) NULL;
 
 alter table festival
     modify column fee varchar(1000) NULL;
