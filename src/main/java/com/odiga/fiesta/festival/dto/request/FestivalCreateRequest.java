@@ -47,7 +47,6 @@ public class FestivalCreateRequest {
 	@NotBlank
 	private String playtime;
 
-	@NotBlank
 	private String homepageUrl;
 
 	private String instagramUrl;
@@ -64,7 +63,6 @@ public class FestivalCreateRequest {
 	private String tip;
 
 	@Builder
-
 	public FestivalCreateRequest(String name, String description, LocalDate startDate, LocalDate endDate,
 		String address,
 		Double latitude, Double longitude, String sido, String sigungu, String playtime, String homepageUrl,
