@@ -4,20 +4,23 @@ import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static java.util.Objects.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.companion.repository.CompanionRepository;
+import com.odiga.fiesta.mood.repository.MoodRepository;
+import com.odiga.fiesta.priority.repository.PriorityRepository;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.domain.mapping.UserCategory;
 import com.odiga.fiesta.user.domain.mapping.UserCompanion;
 import com.odiga.fiesta.user.domain.mapping.UserMood;
 import com.odiga.fiesta.user.domain.mapping.UserPriority;
-import com.odiga.fiesta.user.dto.request.UserRequest;
-import com.odiga.fiesta.user.dto.response.UserResponse;
+import com.odiga.fiesta.user.dto.request.ProfileCreateRequest;
+import com.odiga.fiesta.user.dto.response.ProfileCreateResponse;
 import com.odiga.fiesta.user.repository.UserCategoryRepository;
 import com.odiga.fiesta.user.repository.UserCompanionRepository;
 import com.odiga.fiesta.user.repository.UserMoodRepository;
@@ -37,82 +40,121 @@ public class UserService {
 	private final UserCompanionRepository userCompanionRepository;
 	private final UserMoodRepository userMoodRepository;
 	private final UserPriorityRepository userPriorityRepository;
+
+	private final PriorityRepository priorityRepository;
+	private final CompanionRepository companionRepository;
+	private final CategoryRepository categoryRepository;
+	private final MoodRepository moodRepository;
+
 	private final UserRepository userRepository;
 	private final UserTypeService userTypeService;
 
 	// 프로필 생성
 	@Transactional
-	public UserResponse.createProfileDTO createProfile(User user, UserRequest.createProfileDTO request) {
+	public ProfileCreateResponse createProfile(User user, ProfileCreateRequest request) {
 
 		checkLogin(user);
 
-		// 유저 유형 도출
-		List<Long> mood = request.getMood();
-		List<Long> category = request.getCategory();
+		List<Long> priorityIds = request.getPriorityIds();
+		List<Long> moodIds = request.getMoodIds();
+		List<Long> categoryIds = request.getCategoryIds();
+		List<Long> companionIds = request.getCompanionIds();
 
-		UserType userType = userTypeService.getTopNUserTypes(category, mood, 1).getFirst();
+		validatePriorities(priorityIds);
+		validateMoods(moodIds);
+		validateCategories(categoryIds);
+		validateCompanions(companionIds);
 
-		User savedUser = User.builder()
-			.id(user.getId())
+		saveUserPriorities(user.getId(), priorityIds);
+		saveUserMoods(user.getId(), moodIds);
+		saveUserCategories(user.getId(), categoryIds);
+		saveUserCompanions(user.getId(), companionIds);
+
+		UserType userType = userTypeService.getTopNUserTypes(categoryIds, moodIds, 1).getFirst();
+
+		user.updateUserType(userType.getId());
+		userRepository.save(user);
+
+		// response
+		return ProfileCreateResponse.builder()
 			.userTypeId(userType.getId())
-			.nickname(user.getNickname())
-			.statusMessage(user.getStatusMessage())
-			.profileImage(userType.getProfileImage())
-			.email(user.getEmail())
-			.build();
-
-		// 회원 정보 업데이트
-		userRepository.save(savedUser);
-
-		// 온보딩 정보 저장
-		saveOnBoardingInfo(user.getId(), request);
-
-		// DTO 반환
-		return UserResponse.createProfileDTO.builder()
-			.userTypeId(userType.getId())
-			.userTypeName(userType.getName())
-			.userTypeImage(userType.getCardImage())
 			.build();
 	}
 
-	// 온보딩 정보 저장
-	private void saveOnBoardingInfo(Long userId, UserRequest.createProfileDTO request) {
-		List<Long> categories = request.getCategory();
-		List<Long> moods = request.getMood();
-		List<Long> companions = request.getCompanion();
-		List<Long> priorities = request.getPriority();
+	private void saveUserCompanions(final Long userId, List<Long> companionIds) {
+		userCompanionRepository.saveAll(
+			companionIds.stream()
+				.map(companionId -> UserCompanion.builder()
+					.userId(userId)
+					.companionId(companionId)
+					.build())
+				.toList()
+		);
+	}
 
-		// 카테고리 정보 저장
-		List<UserCategory> userCategories = categories.stream()
-			.map(categoryId -> UserCategory.of(userId, categoryId))
-			.collect(Collectors.toList());
+	private void saveUserCategories(final Long userId, List<Long> categoryIds) {
+		userCategoryRepository.saveAll(
+			categoryIds.stream()
+				.map(categoryId -> UserCategory.builder()
+					.userId(userId)
+					.categoryId(categoryId)
+					.build())
+				.toList()
+		);
+	}
 
-		userCategoryRepository.saveAll(userCategories);
+	private void saveUserMoods(final Long userId, List<Long> moodIds) {
+		userMoodRepository.saveAll(
+			moodIds.stream()
+				.map(moodId -> UserMood.builder()
+					.userId(userId)
+					.moodId(moodId)
+					.build())
+				.toList()
+		);
+	}
 
-		// 분위기 정보 저장
-		List<UserMood> userMoods = moods.stream()
-			.map(moodId -> UserMood.of(userId, moodId))
-			.collect(Collectors.toList());
+	private void saveUserPriorities(final Long userId, List<Long> priorityIds) {
+		userPriorityRepository.saveAll(
+			priorityIds.stream()
+				.map(priorityId -> UserPriority.builder()
+					.userId(userId)
+					.priorityId(priorityId)
+					.build())
+				.toList()
+		);
+	}
 
-		userMoodRepository.saveAll(userMoods);
+	private void validateCompanions(List<Long> companionIds) {
+		companionIds.forEach(id ->
+			companionRepository.findById(id)
+				.orElseThrow(() -> new CustomException(COMPANION_NOT_FOUND))
+		);
+	}
 
-		// 동행유형 정보 저장
-		List<UserCompanion> userCompanions = companions.stream()
-			.map(companionId -> UserCompanion.of(userId, companionId))
-			.collect(Collectors.toList());
+	private void validateCategories(List<Long> categoryIds) {
+		categoryIds.forEach(id ->
+			categoryRepository.findById(id)
+				.orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND))
+		);
+	}
 
-		userCompanionRepository.saveAll(userCompanions);
+	private void validateMoods(List<Long> moodIds) {
+		moodIds.forEach(id ->
+			moodRepository.findById(id)
+				.orElseThrow(() -> new CustomException(MOOD_NOT_FOUND))
+		);
+	}
 
-		// 우선순위 정보 저장
-		List<UserPriority> userPriorities = priorities.stream()
-			.map(priorityId -> UserPriority.of(userId, priorityId))
-			.collect(Collectors.toList());
-
-		userPriorityRepository.saveAll(userPriorities);
+	private void validatePriorities(List<Long> priorityIds) {
+		priorityIds.forEach(id ->
+			priorityRepository.findById(id)
+				.orElseThrow(() -> new CustomException(PRIORITY_NOT_FOUND))
+		);
 	}
 
 	private void checkLogin(User user) {
-		if (isNull(user)) {
+		if (isNull(user) || isNull(user.getId())) {
 			throw new CustomException(USER_NOT_FOUND);
 		}
 

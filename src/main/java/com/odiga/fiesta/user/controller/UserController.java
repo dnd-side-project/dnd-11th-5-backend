@@ -14,11 +14,12 @@ import com.odiga.fiesta.auth.domain.AuthUser;
 import com.odiga.fiesta.auth.service.AuthService;
 import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.dto.request.ProfileCreateRequest;
 import com.odiga.fiesta.user.dto.request.SocialLoginRequest;
-import com.odiga.fiesta.user.dto.request.UserRequest;
 import com.odiga.fiesta.user.dto.response.LoginResponse;
+import com.odiga.fiesta.user.dto.response.ProfileCreateResponse;
+import com.odiga.fiesta.user.dto.response.TokenReissueResponse;
 import com.odiga.fiesta.user.dto.response.UserInfoResponse;
-import com.odiga.fiesta.user.dto.response.UserResponse;
 import com.odiga.fiesta.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -73,17 +74,17 @@ public class UserController {
 
 	@PostMapping("/profile")
 	@Operation(summary = "프로필 생성", description = "프로필을 생성합니다.")
-	public ResponseEntity<BasicResponse<UserResponse.createProfileDTO>> createProfile(@AuthUser User user,
-		@RequestBody @Valid UserRequest.createProfileDTO request) {
+	public ResponseEntity<BasicResponse<ProfileCreateResponse>> createProfile(@AuthUser User user,
+		@RequestBody @Valid ProfileCreateRequest request) {
 
-		UserResponse.createProfileDTO response = userService.createProfile(user, request);
+		ProfileCreateResponse response = userService.createProfile(user, request);
 		return ResponseEntity.ok(BasicResponse.ok("프로필 생성 성공", response));
 	}
 
 	@PostMapping("/reissue")
 	@Operation(summary = "JWT 토큰 재발급", description = "기존의 refresh 토큰을 사용하여 새로운 access 토큰과 refresh 토큰을 발급받습니다.")
-	public ResponseEntity<BasicResponse<UserResponse.reissueDTO>> reissue(@RequestHeader String refreshToken) {
-		UserResponse.reissueDTO tokenResponse = authService.reissue(refreshToken);
+	public ResponseEntity<BasicResponse<TokenReissueResponse>> reissue(@RequestHeader String refreshToken) {
+		TokenReissueResponse tokenResponse = authService.reissue(refreshToken);
 
 		String message = "JWT 토큰 재발급 성공";
 		return ResponseEntity.ok(BasicResponse.ok(message, tokenResponse));
