@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -69,9 +70,9 @@ public class GlobalExceptionHandler {
 	}
 
 	// 415 : Unsupported Media Type
-	@ExceptionHandler(value = MethodArgumentTypeMismatchException.class)
+	@ExceptionHandler(value = HttpMediaTypeNotSupportedException.class)
 	public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException(
-		MethodArgumentTypeMismatchException e) {
+		HttpMediaTypeNotSupportedException e) {
 		log.error(e.getMessage(), e);
 		ErrorResponse errorResponse = ErrorResponse.of(HTTP_MEDIA_TYPE_NOT_SUPPORTED);
 		return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
