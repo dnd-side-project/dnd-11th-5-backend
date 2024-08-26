@@ -56,6 +56,10 @@ public enum ErrorCode {
 	FESTIVAL_IS_PENDING(400, "F009", "승인되지 않은 페스티벌입니다."),
 	INVALID_SIDO_NAME(400, "F010", "유효하지 않은 시도 이름입니다."),
 	FESTIAL_IMAGE_EXCEEDED(400, "F011", "페스티벌 이미지는 최대 3개까지 업로드 가능합니다."),
+	PRIORITY_NOT_FOUND(404, "F012", "존재하지 않는 우선순위입니다."),
+	CATEGORY_NOT_FOUND(404, "F013", "존재하지 않는 카테고리입니다."),
+	COMPANION_NOT_FOUND(404, "F014", "존재하지 않는 일행 유형입니다."),
+	MOOD_NOT_FOUND(404, "F015", "존재하지 않는 분위기입니다."),
 
     // LOG
     LOG_NOT_FOUND(404, "L001", "존재하지 않는 방문일지입니다."),

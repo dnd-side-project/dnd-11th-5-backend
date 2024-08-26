@@ -46,7 +46,7 @@ public class User extends BaseEntity {
 
 	@Column(name = "profile_image")
 	private String profileImage;
-	
+
 	@Builder
 	public User(Long id, String email, Long userTypeId, String nickname, String statusMessage, String profileImage) {
 
@@ -69,5 +69,9 @@ public class User extends BaseEntity {
 		if (nickname.isEmpty() || nickname.length() > 10) {
 			throw new CustomException(INVALID_NICKNAME_LENGTH);
 		}
+	}
+
+	public void updateUserType(final Long userTypeId) {
+		this.userTypeId = userTypeId;
 	}
 }

@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.user.domain.UserType;
-import com.odiga.fiesta.user.dto.request.UserRequest;
 import com.odiga.fiesta.user.repository.UserTypeRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -25,39 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 public class UserTypeService {
 
 	private final UserTypeRepository userTypeRepository;
-
-	// 유저 유형 도출
-	public UserType getUserType(UserRequest.createProfileDTO request) {
-
-		List<Long> categories = request.getCategory();
-		List<Long> moods = request.getMood();
-
-		int romanticScore = getRomanticScore(categories, moods);
-		int partyPeopleScore = getPartyPeopleScore(categories, moods);
-		int inspireScore = getInspireScore(categories, moods);
-		int healingScore = getHealingScore(categories, moods);
-		int exploreScore = getExploreScore(categories, moods);
-
-		int maxScore = Math.max(Math.max(romanticScore, partyPeopleScore),
-			Math.max(Math.max(inspireScore, healingScore), exploreScore));
-
-		String userTypeName;
-		if (maxScore == romanticScore) {
-			userTypeName = "로맨티스트";
-		} else if (maxScore == partyPeopleScore) {
-			userTypeName = "파티피플러";
-		} else if (maxScore == inspireScore) {
-			userTypeName = "인스파이어러";
-		} else if (maxScore == healingScore) {
-			userTypeName = "몽글몽글 힐링러";
-		} else {
-			userTypeName = "탐험러";
-		}
-
-		Optional<UserType> userTypeOptional = userTypeRepository.findByName(userTypeName);
-
-		return userTypeOptional.orElseThrow(() -> new CustomException(USER_TYPE_NOT_FOUND));
-	}
 
 	public List<UserType> getTopNUserTypes(List<Long> categories, List<Long> moods, int n) {
 
@@ -81,10 +47,18 @@ public class UserTypeService {
 		log.info("topUserTypeNames: {}", topUserTypeNames);
 
 		List<UserType> topUserTypes = userTypeRepository.findByNameIn(topUserTypeNames);
+		validateUserType(topUserTypes);
 
 		log.info("topUserTypes: {}", topUserTypes);
 
 		return topUserTypes.stream().limit(n).toList();
+	}
+
+	private void validateUserType(List<UserType> userTypes) {
+		userTypes.forEach(userType -> {
+			userTypeRepository.findById(userType.getId())
+				.orElseThrow(() -> new CustomException(USER_TYPE_NOT_FOUND));
+		});
 	}
 
 	// 로맨티스트 점수 계산
