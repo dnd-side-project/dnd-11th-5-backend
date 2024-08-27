@@ -1,10 +1,11 @@
 package com.odiga.fiesta.review.repository;
 
-import com.odiga.fiesta.review.domain.ReviewLike;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
+import com.odiga.fiesta.review.domain.ReviewLike;
 
 public interface ReviewLikeRepository extends JpaRepository<ReviewLike, Long> {
 
