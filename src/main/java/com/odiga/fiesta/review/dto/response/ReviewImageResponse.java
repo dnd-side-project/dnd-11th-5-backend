@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ReviewImageResponse {
 
-    @Schema(description = "이미지 id", nullable = false, example = "1")
-    private Long imageId;
+	@Schema(description = "이미지 id", example = "1")
+	private Long imageId;
 
-    @Schema(description = "이미지 URL", nullable = false, example = "...")
-    private String imageUrl;
+	@Schema(description = "이미지 URL", example = "...")
+	private String imageUrl;
 }
