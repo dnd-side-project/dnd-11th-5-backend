@@ -1,5 +1,6 @@
 package com.odiga.fiesta.review.repository;
 
+import static com.odiga.fiesta.festival.domain.QFestival.*;
 import static com.odiga.fiesta.keyword.domain.QKeyword.*;
 import static com.odiga.fiesta.review.domain.QReview.*;
 import static com.odiga.fiesta.review.domain.QReviewImage.*;
@@ -22,6 +23,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 
 import com.odiga.fiesta.review.domain.QReviewLike;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
+import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
 import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewUserInfo;
@@ -84,6 +86,28 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
 			.where(reviewFestivalEq(festivalId));
 
 		return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+	}
+
+	@Override
+	public List<ReviewSimpleData> findMostLikeReviews(Long size) {
+		return queryFactory.select(
+				Projections.fields(
+					ReviewSimpleData.class,
+					review.id.as("reviewId"),
+					review.festivalId,
+					festival.name.as("festivalName"),
+					review.content,
+					review.rating
+				)
+			).from(review)
+			.leftJoin(reviewLike)
+			.on(reviewLike.reviewId.eq(review.id))
+			.leftJoin(festival)
+			.on(review.festivalId.eq(festival.id))
+			.groupBy(review.id)
+			.orderBy(ReviewSortType.getReviewSortType("likeCount").getOrderSpecifier(DESC))
+			.limit(size)
+			.fetch();
 	}
 
 	@Override

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
+import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
 import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 
@@ -17,4 +18,6 @@ public interface ReviewCustomRepository {
 	Map<Long, List<ReviewKeywordResponse>> findReviewKeywordsMap(List<Long> reviewIds);
 
 	Map<Long, List<ReviewImageResponse>> findReviewImagesMap(List<Long> reviewIds);
+
+	List<ReviewSimpleData> findMostLikeReviews(Long size);
 }

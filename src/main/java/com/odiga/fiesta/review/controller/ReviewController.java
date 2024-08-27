@@ -2,20 +2,7 @@ package com.odiga.fiesta.review.controller;
 
 import static java.util.Objects.*;
 
-import com.odiga.fiesta.auth.domain.AuthUser;
-import com.odiga.fiesta.common.BasicResponse;
-import com.odiga.fiesta.common.PageResponse;
-import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
-import com.odiga.fiesta.review.dto.response.ReviewResponse;
-import com.odiga.fiesta.review.dto.response.TopReviewResponse;
-import com.odiga.fiesta.review.service.ReviewService;
-import com.odiga.fiesta.user.domain.User;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +10,24 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.odiga.fiesta.auth.domain.AuthUser;
+import com.odiga.fiesta.common.BasicResponse;
+import com.odiga.fiesta.common.PageResponse;
+import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
+import com.odiga.fiesta.review.dto.response.ReviewResponse;
+import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
+import com.odiga.fiesta.review.service.ReviewService;
+import com.odiga.fiesta.user.domain.User;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/v1/reviews")
@@ -59,14 +61,12 @@ public class ReviewController {
 	}
 
 	@GetMapping("/mostlike")
-	@Operation(summary = "리뷰 TOP3 조회", description = "리뷰 TOP3를 조회합니다.")
-	public ResponseEntity<BasicResponse<List<TopReviewResponse>>> getReviews() {
-
-		List<TopReviewResponse> reviews = reviewService.getTop3Reviews();
-
-		String message = "리뷰 TOP3 조회 성공";
-
-		return ResponseEntity.ok(BasicResponse.ok(message, reviews));
+	@Operation(summary = "실시간 가장 핫한 리뷰 조회", description = "서비스에서 가장 좋아요를 많이 받은 리뷰 순으로 조회합니다.")
+	public ResponseEntity<BasicResponse<List<ReviewSimpleResponse>>> getReviews(
+		@RequestParam(required = false, defaultValue = "3") Long size
+	) {
+		List<ReviewSimpleResponse> mostLikeReviews = reviewService.getMostLikeReviews(size);
+		return ResponseEntity.ok(BasicResponse.ok("실시간 가장 핫한 리뷰 조회 성공", mostLikeReviews));
 	}
 
 	@GetMapping("/keywords/top")
