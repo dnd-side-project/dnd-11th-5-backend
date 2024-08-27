@@ -41,10 +41,8 @@ public class FestivalCreateRequest {
 	@NotBlank
 	private String sido;
 
-	@NotBlank
 	private String sigungu;
-
-	@NotBlank
+	
 	private String playtime;
 
 	private String homepageUrl;
@@ -53,7 +51,6 @@ public class FestivalCreateRequest {
 
 	private String ticketLink;
 
-	@NotBlank
 	private String fee;
 
 	private List<Long> categoryIds;

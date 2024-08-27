@@ -29,6 +29,7 @@ public enum ErrorCode {
 	MISSING_REQUEST_PARAMETER(400, "C009", "필수 파라미터가 누락되었습니다."),
 	UNAUTHENTICATED_USER(401, "C010", "인증되지 않은 사용자입니다."),
 	NOT_LOGGED_IN(401, "C011", "로그인이 필요합니다."),
+	HTTP_MEDIA_TYPE_NOT_SUPPORTED(415, "C012", "지원하지 않는 미디어 타입입니다."),
 
 	// Domain
 
