@@ -15,12 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.odiga.fiesta.common.error.exception.CustomException;
-import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.keyword.domain.Keyword;
 import com.odiga.fiesta.keyword.repository.KeywordRepository;
-import com.odiga.fiesta.review.domain.Review;
-import com.odiga.fiesta.review.domain.ReviewKeyword;
 import com.odiga.fiesta.review.dto.projection.ReviewData;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
@@ -28,6 +25,7 @@ import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
 import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
+import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
 import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
 
@@ -67,55 +65,9 @@ public class ReviewService {
 		}).toList();
 	}
 
-	// 가장 많이 선택된 키워드 TOP5 조회
-	public List<ReviewKeywordResponse> getTop5Keywords(Long festivalId) {
-
-		// 페스티벌 조회
-		Festival festival = festivalRepository.findById(festivalId)
-			.orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
-
-		// 리뷰 조회
-		List<Review> reviews = reviewRepository.findAllByFestivalId(festivalId);
-
-		// 리뷰 내 키워드 수집
-		List<ReviewKeyword> reviewKeywords = reviews.stream()
-			.flatMap(review -> reviewKeywordRepository.findByReviewId(review.getId()).stream())
-			.toList();
-
-		// 키워드 빈도수 집계
-		Map<Long, Long> keywordFrequencyMap = reviewKeywords.stream()
-			.collect(Collectors.groupingBy(
-				ReviewKeyword::getKeywordId,
-				Collectors.counting()
-			));
-
-		// 최신 타임스탬프
-		Map<Long, LocalDateTime> keywordLatestTimestampMap = reviewKeywords.stream()
-			.collect(Collectors.toMap(
-				ReviewKeyword::getKeywordId,
-				ReviewKeyword::getCreatedAt,
-				(existing, replacement) -> existing.isAfter(replacement) ? existing : replacement
-			));
-
-		// 빈도수와 최신 타임스탬프에 따라 정렬하여 상위 5개의 키워드 id 추출
-		List<Long> topKeywordIds = keywordFrequencyMap.entrySet().stream()
-			.sorted(Map.Entry.<Long, Long>comparingByValue(Comparator.reverseOrder())
-				.thenComparing(entry -> keywordLatestTimestampMap.get(entry.getKey()), Comparator.reverseOrder()))
-			.limit(5)
-			.map(Map.Entry::getKey)
-			.toList();
-
-		return topKeywordIds.stream()
-			.map(keywordId -> {
-				Keyword keyword = keywordRepository.findById(keywordId)
-					.orElseThrow(() -> new CustomException(KEYWORD_NOT_FOUND));
-
-				return ReviewKeywordResponse.builder()
-					.keywordId(keyword.getId())
-					.keyword(keyword.getContent())
-					.build();
-			})
-			.collect(Collectors.toList());
+	public TopReviewKeywordsResponse getTopReviewKeywords(Long festivalId, Long size) {
+		TopReviewKeywordsResponse topReviewKeywords = reviewRepository.findTopReviewKeywords(festivalId, size);
+		return topReviewKeywords;
 	}
 
 	public Page<ReviewResponse> getReviews(Long userId, Long festivalId, Pageable pageable) {
