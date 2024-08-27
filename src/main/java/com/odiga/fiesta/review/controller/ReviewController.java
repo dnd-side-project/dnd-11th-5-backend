@@ -13,6 +13,7 @@ import com.odiga.fiesta.user.domain.User;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +36,14 @@ import java.util.List;
 public class ReviewController {
 
 	private final ReviewService reviewService;
+
+	@GetMapping("/keywords")
+	@Operation(summary = "모든 리뷰 키워드 조회", description = "리뷰 키워드 목록을 조회합니다.")
+	public ResponseEntity<BasicResponse<List<ReviewKeywordResponse>>> getKeywords() {
+
+		List<ReviewKeywordResponse> keywords = reviewService.getKeywords();
+		return ResponseEntity.ok(BasicResponse.ok("리뷰 키워드 조회 성공", keywords));
+	}
 
 	@GetMapping
 	@Operation(summary = "리뷰 다건 조회", description = "페스티벌에 대한 리뷰를 다건 조회합니다.")
