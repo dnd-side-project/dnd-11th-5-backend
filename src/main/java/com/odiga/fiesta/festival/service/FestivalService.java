@@ -418,7 +418,7 @@ public class FestivalService {
 	private void validateFileCount(List<MultipartFile> files) {
 		if (nonNull(files)) {
 			if (files.size() > 3) {
-				throw new CustomException(FESTIAL_IMAGE_EXCEEDED);
+				throw new CustomException(FESTIVAL_IMAGE_EXCEEDED);
 			}
 		}
 	}

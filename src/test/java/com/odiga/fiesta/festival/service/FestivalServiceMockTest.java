@@ -3,7 +3,6 @@ package com.odiga.fiesta.festival.service;
 import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.*;
 import static org.springframework.data.redis.core.ZSetOperations.*;
 import static org.springframework.http.MediaType.*;
 
@@ -20,12 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.MockTestSupport;
 import com.odiga.fiesta.common.PageResponse;
-import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.common.util.RedisUtils;
@@ -271,7 +268,7 @@ class FestivalServiceMockTest extends MockTestSupport {
 				festivalService.createFestival(1L, request, files);
 			});
 
-			assertEquals(FESTIAL_IMAGE_EXCEEDED.getMessage(), exception.getMessage());
+			assertEquals(FESTIVAL_IMAGE_EXCEEDED.getMessage(), exception.getMessage());
 		}
 	}
 
