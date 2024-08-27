@@ -21,6 +21,7 @@ import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
 import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
+import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
 import com.odiga.fiesta.review.service.ReviewService;
 import com.odiga.fiesta.user.domain.User;
 
@@ -70,13 +71,11 @@ public class ReviewController {
 	}
 
 	@GetMapping("/keywords/top")
-	@Operation(summary = "가장 많이 선택된 키워드 TOP5 조회", description = "상위 5개 키워드를 조회합니다. 선택 갯수가 동률일 경우, 최근에 선택된 키워드를 조회합니다.")
-	public ResponseEntity<BasicResponse<List<ReviewKeywordResponse>>> getTop5Keywords(@RequestParam Long festivalId) {
-
-		List<ReviewKeywordResponse> keywords = reviewService.getTop5Keywords(festivalId);
-
-		String message = "가장 많이 선택된 키워드 TOP5 조회 성공";
-
-		return ResponseEntity.ok(BasicResponse.ok(message, keywords));
+	@Operation(summary = "페스티벌에서 가장 많이 선택된 리뷰 키워드 조회", description = "페스티벌 리뷰들의 상위 5개 키워드를 조회합니다. 선택 갯수가 동률일 경우, 최근에 선택된 키워드를 조회합니다.")
+	public ResponseEntity<BasicResponse<TopReviewKeywordsResponse>> getTop5Keywords(
+		@RequestParam Long festivalId,
+		@RequestParam(required = false, defaultValue = "5") Long size) {
+		TopReviewKeywordsResponse keywords = reviewService.getTopReviewKeywords(festivalId, size);
+		return ResponseEntity.ok(BasicResponse.ok("가장 많이 선택된 키워드 조회 성공", keywords));
 	}
 }

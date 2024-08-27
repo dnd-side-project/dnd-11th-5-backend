@@ -27,6 +27,8 @@ import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
 import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewUserInfo;
+import com.odiga.fiesta.review.dto.response.TopReviewKeywordResponse;
+import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -111,10 +113,48 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
 	}
 
 	@Override
+	public TopReviewKeywordsResponse findTopReviewKeywords(Long festivalId, Long size) {
+		List<TopReviewKeywordResponse> keywords = queryFactory
+			.select(
+				Projections.fields(
+					TopReviewKeywordResponse.class,
+					keyword.id.as("keywordId"),
+					keyword.content.as("keyword"),
+					reviewKeyword.id.countDistinct().as("selectionCount")
+				)
+			)
+			.from(review)
+			.where(review.festivalId.eq(festivalId)
+				.and(reviewKeyword.id.isNotNull())
+				.and(keyword.id.isNotNull()))
+			.leftJoin(reviewKeyword)
+			.on(review.id.eq(reviewKeyword.reviewId))
+			.leftJoin(keyword)
+			.on(reviewKeyword.keywordId.eq(keyword.id))
+			.orderBy(reviewKeyword.id.countDistinct().desc(), reviewKeyword.createdAt.max().desc())
+			.groupBy(keyword.id)
+			.limit(size)
+			.fetch();
+
+		Long totalCount = queryFactory
+			.select(reviewKeyword.id.countDistinct())
+			.from(review)
+			.leftJoin(reviewKeyword)
+			.on(review.id.eq(reviewKeyword.reviewId))
+			.where(review.festivalId.eq(festivalId))
+			.fetchOne();
+
+		return TopReviewKeywordsResponse.builder()
+			.keywords(keywords)
+			.totalCount(totalCount)
+			.build();
+	}
+
+	@Override
 	public Map<Long, List<ReviewKeywordResponse>> findReviewKeywordsMap(List<Long> reviewIds) {
 		Map<Long, List<ReviewKeywordResponse>> resultMap = queryFactory
 			.from(reviewKeyword)
-			.join(keyword).on(reviewKeyword.keywordId.eq(keyword.id))
+			.leftJoin(keyword).on(reviewKeyword.keywordId.eq(keyword.id))
 			.where(reviewKeyword.reviewId.in(reviewIds))
 			.transform(
 				groupBy(reviewKeyword.reviewId)
@@ -126,16 +166,14 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
 			);
 
 		reviewIds.forEach(reviewId -> resultMap.putIfAbsent(reviewId, new ArrayList<>()));
-
 		return resultMap;
-
 	}
 
 	@Override
 	public Map<Long, List<ReviewImageResponse>> findReviewImagesMap(List<Long> reviewIds) {
 		Map<Long, List<ReviewImageResponse>> resultMap = queryFactory
 			.from(reviewImage)
-			.join(review).on(review.id.eq(reviewImage.reviewId))
+			.leftJoin(review).on(review.id.eq(reviewImage.reviewId))
 			.where(reviewImage.reviewId.in(reviewIds))
 			.transform(
 				groupBy(reviewImage.reviewId)

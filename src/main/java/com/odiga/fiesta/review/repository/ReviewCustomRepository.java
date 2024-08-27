@@ -10,6 +10,8 @@ import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
 import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
+import com.odiga.fiesta.review.dto.response.TopReviewKeywordResponse;
+import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
 
 public interface ReviewCustomRepository {
 
@@ -20,4 +22,6 @@ public interface ReviewCustomRepository {
 	Map<Long, List<ReviewImageResponse>> findReviewImagesMap(List<Long> reviewIds);
 
 	List<ReviewSimpleData> findMostLikeReviews(Long size);
+
+	TopReviewKeywordsResponse findTopReviewKeywords(Long festivalId, Long size);
 }
