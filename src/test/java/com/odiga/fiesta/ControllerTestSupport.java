@@ -2,7 +2,6 @@ package com.odiga.fiesta;
 
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -12,8 +11,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithAnonymousUser;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -33,6 +30,8 @@ import com.odiga.fiesta.festival.service.MoodService;
 import com.odiga.fiesta.festival.service.PriorityService;
 import com.odiga.fiesta.log.controller.LogController;
 import com.odiga.fiesta.log.service.LogService;
+import com.odiga.fiesta.review.controller.ReviewController;
+import com.odiga.fiesta.review.service.ReviewService;
 import com.odiga.fiesta.user.domain.User;
 
 @ActiveProfiles("test")
@@ -41,7 +40,8 @@ import com.odiga.fiesta.user.domain.User;
 	// 사용하는 컨트롤러 여기에 추가
 	FestivalController.class,
 	FestivalStaticDataController.class,
-	LogController.class
+	LogController.class,
+	ReviewController.class
 })
 public abstract class ControllerTestSupport {
 
@@ -77,7 +77,10 @@ public abstract class ControllerTestSupport {
 	protected FestivalBookmarkService festivalBookmarkService;
 
 	@MockBean
-	private FileUtils fileUtils;
+	protected FileUtils fileUtils;
+
+	@MockBean
+	protected ReviewService reviewService;
 
 	private User user;
 	private UserAccount userAccount;

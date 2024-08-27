@@ -1,16 +1,22 @@
 package com.odiga.fiesta.review.service;
 
+import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
+import static org.springframework.http.MediaType.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -18,15 +24,28 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.MockTestSupport;
+import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.common.util.FileUtils;
+import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.keyword.domain.Keyword;
+import com.odiga.fiesta.keyword.repository.KeywordRepository;
+import com.odiga.fiesta.review.domain.Review;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
+import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
 import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
 import com.odiga.fiesta.review.dto.response.ReviewUserInfo;
+import com.odiga.fiesta.review.repository.ReviewImageRepository;
+import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
+import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.repository.UserRepository;
 
 class ReviewServiceMockTest extends MockTestSupport {
 
@@ -35,6 +54,21 @@ class ReviewServiceMockTest extends MockTestSupport {
 
 	@Mock
 	private FestivalRepository festivalRepository;
+
+	@Mock
+	private UserRepository userRepository;
+
+	@Mock
+	private KeywordRepository keywordRepository;
+
+	@Mock
+	private FileUtils fileUtils;
+
+	@Mock
+	private ReviewImageRepository reviewImageRepository;
+
+	@Mock
+	private ReviewKeywordRepository reviewKeywordRepository;
 
 	@InjectMocks
 	private ReviewService reviewService;
@@ -48,7 +82,7 @@ class ReviewServiceMockTest extends MockTestSupport {
 		Pageable pageable = PageRequest.of(0, 10);
 
 		given(festivalRepository.existsById(festivalId)).willReturn(true);
-		
+
 		ReviewDataWithLike reviewData =
 			ReviewDataWithLike.builder()
 				.reviewId(1L)
@@ -78,5 +112,151 @@ class ReviewServiceMockTest extends MockTestSupport {
 		assertEquals(1, reviews.getTotalElements());
 		ReviewResponse review = reviews.getContent().get(0);
 		assertEquals(5.0, review.getRating());
+	}
+
+	@Nested
+	@DisplayName("리뷰 생성")
+	class ReviewCreationTest {
+
+		User user = User.builder()
+			.id(1L)
+			.email("fiesta@odiga.com")
+			.userTypeId(1L)
+			.nickname("피에스타")
+			.profileImage("profileImage")
+			.statusMessage("상태메시지")
+			.build();
+
+		Festival festival = createFestival();
+
+		Keyword keyword = Keyword.builder()
+			.id(1L)
+			.content("✨ 쾌적해요")
+			.build();
+
+		ReviewCreateRequest validRequest = ReviewCreateRequest.builder()
+			.festivalId(festival.getId())
+			.rating(1.5)
+			.keywordIds(Collections.singletonList(keyword.getId()))
+			.content("content")
+			.build();
+
+		Review review = Review.builder()
+			.id(1L)
+			.userId(user.getId())
+			.festivalId(festival.getId())
+			.rating((int)(validRequest.getRating() * 10))
+			.content(validRequest.getContent())
+			.build();
+
+		List<MultipartFile> validImages = List.of(
+			new MockMultipartFile(
+				"test1",
+				"test1.png",
+				MULTIPART_FORM_DATA_VALUE,
+				"test1".getBytes()),
+			new MockMultipartFile(
+				"test2",
+				"test2.jpeg",
+				MULTIPART_FORM_DATA_VALUE,
+				"test2".getBytes()),
+			new MockMultipartFile(
+				"test3",
+				"test3.jpg",
+				MULTIPART_FORM_DATA_VALUE,
+				"test3".getBytes())
+		);
+
+		@BeforeEach
+		void setUp() {
+			given(userRepository.findById(user.getId())).willReturn(Optional.ofNullable(user));
+		}
+
+		@DisplayName("성공")
+		@Test
+		void createReview_Success() {
+			// given
+			given(keywordRepository.findAllById(Collections.singletonList(keyword.getId()))).willReturn(
+				Collections.singletonList(keyword));
+			given(reviewRepository.save(any())).willReturn(review);
+
+			// when
+			reviewService.createReview(user.getId(), validRequest, validImages);
+
+			// then
+			then(reviewRepository).should().save(any());
+		}
+
+		@DisplayName("성공 - 이미지가 없을 때")
+		@Test
+		void createReview_SuccessWithNoImage() {
+			// given
+			given(keywordRepository.findAllById(Collections.singletonList(keyword.getId()))).willReturn(
+				Collections.singletonList(keyword));
+			given(reviewRepository.save(any())).willReturn(review);
+
+			// when
+			reviewService.createReview(user.getId(), validRequest, null);
+
+			// then
+			then(reviewRepository).should().save(any());
+		}
+
+		@DisplayName("실패 - 이미지 갯수 초과")
+		@Test
+		void createReview_ImageCountExceeded() {
+			// given
+			List<MultipartFile> invalidImages = List.of(
+				new MockMultipartFile(
+					"test1",
+					"test1.png",
+					MULTIPART_FORM_DATA_VALUE,
+					"test1".getBytes()),
+				new MockMultipartFile(
+					"test2",
+					"test2.jpeg",
+					MULTIPART_FORM_DATA_VALUE,
+					"test2".getBytes()),
+				new MockMultipartFile(
+					"test3",
+					"test3.jpg",
+					MULTIPART_FORM_DATA_VALUE,
+					"test3".getBytes()),
+				new MockMultipartFile(
+					"test4",
+					"test4.jpg",
+					MULTIPART_FORM_DATA_VALUE,
+					"test4".getBytes())
+			);
+
+			// when // then
+			CustomException exception = assertThrows(CustomException.class, () -> {
+				reviewService.createReview(1L, validRequest, invalidImages);
+			});
+
+			assertEquals(REVIEW_IMAGE_COUNT_EXCEEDED.getMessage(), exception.getMessage());
+		}
+	}
+
+	private static Festival createFestival() {
+		return Festival.builder()
+			.userId(1L)
+			.name("페스티벌 이름")
+			.description("페스티벌 설명")
+			.startDate(LocalDate.of(2024, 10, 4))
+			.endDate(LocalDate.of(2024, 10, 4))
+			.address("주소")
+			.latitude(35.1731)
+			.longitude(129.0714)
+			.sidoId(6L)
+			.sigungu("해운대구")
+			.playtime("플레이타임")
+			.homepageUrl("홈페이지")
+			.instagramUrl("인스타그램")
+			.ticketLink("티켓링크")
+			.fee("입장료")
+			.tip("팁")
+			.isPending(false)
+			.build();
 	}
 }
