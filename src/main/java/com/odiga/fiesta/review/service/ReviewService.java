@@ -48,6 +48,13 @@ public class ReviewService {
 	private final ReviewKeywordRepository reviewKeywordRepository;
 	private final KeywordRepository keywordRepository;
 
+	public List<ReviewKeywordResponse> getKeywords() {
+		List<Keyword> keywords = keywordRepository.findAll();
+		return keywords.stream()
+			.map(ReviewKeywordResponse::of)
+			.collect(Collectors.toList());
+	}
+
 	// 리뷰 TOP3 조회
 	public List<TopReviewResponse> getTop3Reviews() {
 		List<Object[]> reviewsWithLikes = reviewLikeRepository.findReviewsWithLikeCount();
@@ -187,4 +194,5 @@ public class ReviewService {
 			throw new CustomException(FESTIVAL_NOT_FOUND);
 		}
 	}
+
 }
