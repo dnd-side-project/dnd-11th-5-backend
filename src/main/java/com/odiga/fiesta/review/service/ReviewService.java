@@ -23,13 +23,12 @@ import com.odiga.fiesta.review.domain.Review;
 import com.odiga.fiesta.review.domain.ReviewKeyword;
 import com.odiga.fiesta.review.dto.projection.ReviewData;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
+import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
 import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
-import com.odiga.fiesta.review.dto.response.TopReviewResponse;
-import com.odiga.fiesta.review.repository.ReviewImageRepository;
+import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
 import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
-import com.odiga.fiesta.review.repository.ReviewLikeRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -43,8 +42,6 @@ public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
 	private final FestivalRepository festivalRepository;
-	private final ReviewImageRepository reviewImageRepository;
-	private final ReviewLikeRepository reviewLikeRepository;
 	private final ReviewKeywordRepository reviewKeywordRepository;
 	private final KeywordRepository keywordRepository;
 
@@ -52,45 +49,22 @@ public class ReviewService {
 		List<Keyword> keywords = keywordRepository.findAll();
 		return keywords.stream()
 			.map(ReviewKeywordResponse::of)
-			.collect(Collectors.toList());
+			.toList();
 	}
 
-	// 리뷰 TOP3 조회
-	public List<TopReviewResponse> getTop3Reviews() {
-		List<Object[]> reviewsWithLikes = reviewLikeRepository.findReviewsWithLikeCount();
+	public List<ReviewSimpleResponse> getMostLikeReviews(Long size) {
+		List<ReviewSimpleData> mostLikeReviews = reviewRepository.findMostLikeReviews(size);
 
-		// 좋아요 수에 따라 상위 3개의 리뷰를 필터링하고, 리뷰 정보를 DTO로 변환
-		return reviewsWithLikes.stream()
-			.limit(3)
-			.map(result -> {
-				Long reviewId = ((Number)result[0]).longValue();
+		List<Long> reviewIds = mostLikeReviews.stream().map(ReviewSimpleData::getReviewId).toList();
+		Map<Long, List<ReviewImageResponse>> reviewImagesMap = reviewRepository.findReviewImagesMap(reviewIds);
+		Map<Long, List<ReviewKeywordResponse>> reviewKeywordsMap = reviewRepository.findReviewKeywordsMap(reviewIds);
 
-				// 리뷰 조회
-				Review review = reviewRepository.findById(reviewId)
-					.orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
+		return mostLikeReviews.stream().map(review -> {
+			List<ReviewImageResponse> images = reviewImagesMap.get(review.getReviewId());
+			List<ReviewKeywordResponse> keywords = reviewKeywordsMap.get(review.getReviewId());
 
-				// 페스티벌 조회
-				Festival festival = festivalRepository.findById(review.getFestivalId())
-					.orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
-
-				// 리뷰 이미지 조회
-				List<ReviewImageResponse> imageUrls = getReviewImageUrls(reviewId);
-				ReviewImageResponse firstImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
-
-				// 리뷰 키워드 조회
-				List<ReviewKeywordResponse> reviewKeywords = getReviewKeywords(reviewId);
-
-				return TopReviewResponse.builder()
-					.reviewId(reviewId)
-					.festivalId(review.getFestivalId())
-					.festivalName(festival.getName())
-					.content(review.getContent())
-					.rating(review.getRating())
-					.images(firstImageUrl)  // 첫 번째 이미지 URL
-					.keywords(reviewKeywords)
-					.build();
-			})
-			.collect(Collectors.toList());
+			return ReviewSimpleResponse.of(review, images.isEmpty() ? null : images.getFirst().getImageUrl(), keywords);
+		}).toList();
 	}
 
 	// 가장 많이 선택된 키워드 TOP5 조회
@@ -134,32 +108,6 @@ public class ReviewService {
 		return topKeywordIds.stream()
 			.map(keywordId -> {
 				Keyword keyword = keywordRepository.findById(keywordId)
-					.orElseThrow(() -> new CustomException(KEYWORD_NOT_FOUND));
-
-				return ReviewKeywordResponse.builder()
-					.keywordId(keyword.getId())
-					.keyword(keyword.getContent())
-					.build();
-			})
-			.collect(Collectors.toList());
-	}
-
-	// 리뷰 이미지 조회
-	private List<ReviewImageResponse> getReviewImageUrls(Long reviewId) {
-		return reviewImageRepository.findByReviewId(reviewId).stream()
-			.map(reviewImage -> ReviewImageResponse.builder()
-				.imageId(reviewImage.getId())
-				.imageUrl(reviewImage.getImageUrl())
-				.build())
-			.toList();
-	}
-
-	// 리뷰 키워드 조회
-	private List<ReviewKeywordResponse> getReviewKeywords(Long reviewId) {
-
-		return reviewKeywordRepository.findByReviewId(reviewId).stream()
-			.map(reviewKeyword -> {
-				Keyword keyword = keywordRepository.findById(reviewKeyword.getKeywordId())
 					.orElseThrow(() -> new CustomException(KEYWORD_NOT_FOUND));
 
 				return ReviewKeywordResponse.builder()

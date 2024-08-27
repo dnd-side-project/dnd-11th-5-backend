@@ -13,6 +13,7 @@ import lombok.ToString;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class ReviewKeywordResponse {
 
 	@Schema(description = "키워드 id", example = "1")
