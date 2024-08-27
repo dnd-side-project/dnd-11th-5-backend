@@ -1,83 +1,148 @@
 package com.odiga.fiesta.review.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import com.odiga.fiesta.MockTestSupport;
+import com.odiga.fiesta.IntegrationTestSupport;
+import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
-import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
-import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
-import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
-import com.odiga.fiesta.review.dto.response.ReviewResponse;
-import com.odiga.fiesta.review.dto.response.ReviewUserInfo;
+import com.odiga.fiesta.keyword.domain.Keyword;
+import com.odiga.fiesta.keyword.repository.KeywordRepository;
+import com.odiga.fiesta.review.domain.Review;
+import com.odiga.fiesta.review.domain.ReviewLike;
+import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
+import com.odiga.fiesta.review.repository.ReviewLikeRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
+import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.repository.UserRepository;
 
-class ReviewServiceTest extends MockTestSupport {
+public class ReviewServiceTest extends IntegrationTestSupport {
 
-	@Mock
-	private ReviewRepository reviewRepository;
-
-	@Mock
-	private FestivalRepository festivalRepository;
-
-	@InjectMocks
+	@Autowired
 	private ReviewService reviewService;
 
-	@DisplayName("리뷰 다건 조회 - 별점은 일의 자릿수, 소숫점 단위로 표시한다.")
+	@Autowired
+	private ReviewRepository reviewRepository;
+
+	@Autowired
+	private FestivalRepository festivalRepository;
+
+	@Autowired
+	private KeywordRepository keywordRepository;
+
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private ReviewLikeRepository reviewLikeRepository;
+
+	List<Keyword> keywords;
+	Festival festival;
+
+	User user;
+
+	@BeforeEach
+	void setUp() {
+		// 키워드, 페스티벌, 현재 유저 셋업
+		keywords = keywordRepository.saveAll(Arrays.asList(
+			Keyword.builder().content("키워드1").build(),
+			Keyword.builder().content("키워드2").build()
+		));
+
+		festival = festivalRepository.save(
+			Festival.builder()
+				.userId(1L)
+				.name("페스티벌")
+				.startDate(LocalDate.of(2021, 1, 1))
+				.endDate(LocalDate.of(2021, 1, 2))
+				.address("주소")
+				.sidoId(1L)
+				.sigungu("시군구")
+				.latitude(1.0)
+				.longitude(1.0)
+				.tip("팁")
+				.homepageUrl("홈페이지")
+				.instagramUrl("인스타그램")
+				.fee("요금")
+				.description("설명")
+				.playtime("행사 시간")
+				.isPending(false)
+				.build()
+		);
+
+		user = userRepository.save(User.builder()
+			.id(1L)
+			.email("fiesta@odiga.com")
+			.userTypeId(1L)
+			.nickname("피에스타")
+			.statusMessage("상태 메시지")
+			.profileImage("프로필 이미지")
+			.build());
+	}
+
+	@DisplayName("실시간 가장 핫한 후기 조회 - 좋아요 순 정렬")
 	@Test
-	void getReviews_RatingShouldDouble() {
+	void getMostLikeReviews() {
 		// given
-		Long userId = 1L;
-		Long festivalId = 1L;
-		Pageable pageable = PageRequest.of(0, 10);
+		Review reviewLike5 = createReview();
+		Review reviewLike3 = createReview();
+		Review reviewLike2 = createReview();
+		Review reviewLike1 = createReview();
 
-		given(festivalRepository.existsById(festivalId)).willReturn(true);
-		
-		ReviewDataWithLike reviewData =
-			ReviewDataWithLike.builder()
-				.reviewId(1L)
-				.festivalId(festivalId)
-				.user(new ReviewUserInfo(1L, "profileImage", "nickname"))
-				.content("content")
-				.createdAt(LocalDateTime.of(2021, 1, 1, 0, 0))
-				.updatedAt(LocalDateTime.of(2021, 1, 1, 0, 0))
-				.rating(50)
-				.build();
+		reviewRepository.saveAll(Arrays.asList(reviewLike5, reviewLike3, reviewLike2, reviewLike1));
 
-		Page<ReviewDataWithLike> reviewsPage = new PageImpl<>(Collections.singletonList(reviewData), pageable, 1);
-		given(reviewRepository.findReviews(userId, festivalId, pageable)).willReturn(reviewsPage);
+		for (long i = 1; i <= 5; i++) {
+			reviewLikeRepository.save(createReviewLike(i, reviewLike5.getId()));
+		}
 
-		Map<Long, List<ReviewImageResponse>> reviewImagesMap = new HashMap<>();
-		reviewImagesMap.put(1L, Arrays.asList(new ReviewImageResponse(1L, "imageUrl")));
-		given(reviewRepository.findReviewImagesMap(any())).willReturn(reviewImagesMap);
+		for (long i = 1; i <= 3; i++) {
+			reviewLikeRepository.save(createReviewLike(i, reviewLike3.getId()));
+		}
 
-		Map<Long, List<ReviewKeywordResponse>> reviewKeywordsMap = new HashMap<>();
-		reviewKeywordsMap.put(1L, Arrays.asList(new ReviewKeywordResponse(1L, "keyword")));
-		given(reviewRepository.findReviewKeywordsMap(any())).willReturn(reviewKeywordsMap);
+		for (long i = 1; i <= 2; i++) {
+			reviewLikeRepository.save(createReviewLike(i, reviewLike2.getId()));
+		}
+
+		for (long i = 1; i <= 1; i++) {
+			reviewLikeRepository.save(createReviewLike(i, reviewLike1.getId()));
+		}
 
 		// when
-		Page<ReviewResponse> reviews = reviewService.getReviews(userId, festivalId, pageable);
+		List<ReviewSimpleResponse> mostLikeReviews = reviewService.getMostLikeReviews(3L);
+
+		System.out.println(mostLikeReviews);
 
 		// then
-		assertEquals(1, reviews.getTotalElements());
-		ReviewResponse review = reviews.getContent().get(0);
-		assertEquals(5.0, review.getRating());
+		assertThat(mostLikeReviews).hasSize(3)
+			.extracting("reviewId", "festivalId", "content", "rating")
+			.containsExactly(
+				tuple(reviewLike5.getId(), festival.getId(), "리뷰 내용", 3.5),
+				tuple(reviewLike3.getId(), festival.getId(), "리뷰 내용", 3.5),
+				tuple(reviewLike2.getId(), festival.getId(), "리뷰 내용", 3.5)
+			);
+	}
+
+	private ReviewLike createReviewLike(Long userId, Long reviewId) {
+		return ReviewLike.builder()
+			.userId(userId)
+			.reviewId(reviewId)
+			.build();
+	}
+
+	private Review createReview() {
+		return Review.builder()
+			.userId(1L)
+			.festivalId(festival.getId())
+			.rating(35)
+			.content("리뷰 내용")
+			.build();
 	}
 }
