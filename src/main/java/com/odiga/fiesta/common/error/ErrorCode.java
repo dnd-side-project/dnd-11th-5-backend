@@ -69,10 +69,14 @@ public enum ErrorCode {
     // Review
     REVIEW_NOT_FOUND(404, "R001", "존재하지 않는 리뷰입니다."),
 	INVALID_REVIEW_SORT_TYPE(400, "R002", "유효하지 않은 리뷰 정렬 타입입니다."),
+	REVIEW_IMAGE_COUNT_EXCEEDED(400, "R003", "리뷰 이미지는 최대 3개까지 업로드 가능합니다."),
+	REVIEW_KEYWORD_NOT_FOUND(404, "R004", "존재하지 않는 리뷰 키워드입니다."),
+	REVIEW_KEYWORD_IS_EMPTY(400, "R005", "리뷰 키워드는 필수입니다."),
 
     // Keyword
-    KEYWORD_NOT_FOUND(404, "K001", "존재하지 않는 키워드입니다.");
-
+    KEYWORD_NOT_FOUND(404, "K001", "존재하지 않는 키워드입니다."),
+	KEYWORD_IS_DUPLICATED(400, "K002", "키워드가 중복되었습니다.");
+	
 	private final int status;
 	private final String code;
 	private final String message;
