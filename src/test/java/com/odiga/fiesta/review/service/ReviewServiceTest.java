@@ -1,8 +1,10 @@
 package com.odiga.fiesta.review.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,14 +19,17 @@ import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.keyword.domain.Keyword;
 import com.odiga.fiesta.keyword.repository.KeywordRepository;
 import com.odiga.fiesta.review.domain.Review;
+import com.odiga.fiesta.review.domain.ReviewKeyword;
 import com.odiga.fiesta.review.domain.ReviewLike;
 import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
+import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
+import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
 import com.odiga.fiesta.review.repository.ReviewLikeRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.repository.UserRepository;
 
-public class ReviewServiceTest extends IntegrationTestSupport {
+class ReviewServiceTest extends IntegrationTestSupport {
 
 	@Autowired
 	private ReviewService reviewService;
@@ -43,6 +48,9 @@ public class ReviewServiceTest extends IntegrationTestSupport {
 
 	@Autowired
 	private ReviewLikeRepository reviewLikeRepository;
+
+	@Autowired
+	private ReviewKeywordRepository reviewKeywordRepository;
 
 	List<Keyword> keywords;
 	Festival festival;
@@ -118,8 +126,6 @@ public class ReviewServiceTest extends IntegrationTestSupport {
 		// when
 		List<ReviewSimpleResponse> mostLikeReviews = reviewService.getMostLikeReviews(3L);
 
-		System.out.println(mostLikeReviews);
-
 		// then
 		assertThat(mostLikeReviews).hasSize(3)
 			.extracting("reviewId", "festivalId", "content", "rating")
@@ -127,6 +133,62 @@ public class ReviewServiceTest extends IntegrationTestSupport {
 				tuple(reviewLike5.getId(), festival.getId(), "리뷰 내용", 3.5),
 				tuple(reviewLike3.getId(), festival.getId(), "리뷰 내용", 3.5),
 				tuple(reviewLike2.getId(), festival.getId(), "리뷰 내용", 3.5)
+			);
+	}
+
+	@DisplayName("가장 많이 선택된 리뷰 키워드 조회")
+	@Test
+	void getTopReviewKeywords() {
+		// given
+		Review review = createReview();
+		reviewRepository.save(review);
+
+		ReviewKeyword reviewKeyword1 = createReviewKeyword(review.getId(), keywords.get(0).getId());
+		ReviewKeyword reviewKeyword2 = createReviewKeyword(review.getId(), keywords.get(0).getId());
+		ReviewKeyword reviewKeyword3 = createReviewKeyword(review.getId(), keywords.get(1).getId());
+		reviewKeywordRepository.saveAll(Arrays.asList(reviewKeyword1, reviewKeyword2, reviewKeyword3));
+
+		// when
+		TopReviewKeywordsResponse topReviewKeywords = reviewService.getTopReviewKeywords(festival.getId(), 5L);
+
+		// then
+		assertEquals(3L, topReviewKeywords.getTotalCount());
+
+		assertThat(topReviewKeywords.getKeywords()).hasSize(2)
+			.extracting("keywordId", "keyword", "selectionCount")
+			.containsExactly(
+				tuple(keywords.get(0).getId(), keywords.get(0).getContent(), 2L),
+				tuple(keywords.get(1).getId(), keywords.get(1).getContent(), 1L)
+			);
+	}
+
+	@DisplayName("가장 많이 선택된 리뷰 키워드 조회 - 선택갯수가 동률일 경우")
+	@Test
+	void getTopReviewKeywords_SelectionCountEqual() {
+		// given
+		Review review = createReview();
+		reviewRepository.save(review);
+
+		ReviewKeyword reviewKeyword1 = createReviewKeyword(review.getId(), keywords.get(0).getId(),
+			LocalDateTime.of(2021, 1, 1, 0, 0));
+		ReviewKeyword reviewKeyword2 = createReviewKeyword(review.getId(), keywords.get(0).getId(),
+			LocalDateTime.of(2021, 1, 1, 0, 0));
+		ReviewKeyword reviewKeyword3 = createReviewKeyword(review.getId(), keywords.get(1).getId(),
+			LocalDateTime.of(2021, 1, 1, 0, 0));
+		ReviewKeyword reviewKeyword4 = createReviewKeyword(review.getId(), keywords.get(1).getId(),
+			LocalDateTime.of(2021, 1, 2, 0, 0));
+		reviewKeywordRepository.saveAll(Arrays.asList(reviewKeyword1, reviewKeyword2, reviewKeyword3, reviewKeyword4));
+
+		// when
+		TopReviewKeywordsResponse topReviewKeywords = reviewService.getTopReviewKeywords(festival.getId(), 5L);
+
+		// then
+		assertEquals(4L, topReviewKeywords.getTotalCount());
+		assertThat(topReviewKeywords.getKeywords()).hasSize(2)
+			.extracting("keywordId", "keyword", "selectionCount")
+			.containsExactly(
+				tuple(keywords.get(1).getId(), keywords.get(1).getContent(), 2L),
+				tuple(keywords.get(0).getId(), keywords.get(0).getContent(), 2L)
 			);
 	}
 
@@ -143,6 +205,21 @@ public class ReviewServiceTest extends IntegrationTestSupport {
 			.festivalId(festival.getId())
 			.rating(35)
 			.content("리뷰 내용")
+			.build();
+	}
+
+	private ReviewKeyword createReviewKeyword(Long reviewId, Long keywordId) {
+		return ReviewKeyword.builder()
+			.reviewId(reviewId)
+			.keywordId(keywordId)
+			.build();
+	}
+
+	private ReviewKeyword createReviewKeyword(Long reviewId, Long keywordId, LocalDateTime createdAt) {
+		return ReviewKeyword.builder()
+			.reviewId(reviewId)
+			.keywordId(keywordId)
+			.createdAt(createdAt)
 			.build();
 	}
 }
