@@ -1,6 +1,7 @@
 package com.odiga.fiesta.review.domain;
 
 import com.odiga.fiesta.common.domain.BaseEntity;
+import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,4 +33,14 @@ public class Review extends BaseEntity {
 
 	@Column(name = "content", nullable = false)
 	private String content;
+
+	public static Review createReview(final Long userId, final ReviewCreateRequest request) {
+		return Review.builder()
+			.userId(userId)
+			.festivalId(request.getFestivalId())
+			.rating((int) (request.getRating() * 10))
+			.content(request.getContent())
+			.build();
+	}
+
 }

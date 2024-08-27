@@ -56,7 +56,7 @@ public enum ErrorCode {
 	QUERY_CANNOT_BE_BLANK(400, "F008", "공백으로는 검색할 수 없습니다."),
 	FESTIVAL_IS_PENDING(400, "F009", "승인되지 않은 페스티벌입니다."),
 	INVALID_SIDO_NAME(400, "F010", "유효하지 않은 시도 이름입니다."),
-	FESTIAL_IMAGE_EXCEEDED(400, "F011", "페스티벌 이미지는 최대 3개까지 업로드 가능합니다."),
+	FESTIVAL_IMAGE_EXCEEDED(400, "F011", "페스티벌 이미지는 최대 3개까지 업로드 가능합니다."),
 	PRIORITY_NOT_FOUND(404, "F012", "존재하지 않는 우선순위입니다."),
 	CATEGORY_NOT_FOUND(404, "F013", "존재하지 않는 카테고리입니다."),
 	COMPANION_NOT_FOUND(404, "F014", "존재하지 않는 일행 유형입니다."),
@@ -69,10 +69,14 @@ public enum ErrorCode {
     // Review
     REVIEW_NOT_FOUND(404, "R001", "존재하지 않는 리뷰입니다."),
 	INVALID_REVIEW_SORT_TYPE(400, "R002", "유효하지 않은 리뷰 정렬 타입입니다."),
+	REVIEW_IMAGE_COUNT_EXCEEDED(400, "R003", "리뷰 이미지는 최대 3개까지 업로드 가능합니다."),
+	REVIEW_KEYWORD_NOT_FOUND(404, "R004", "존재하지 않는 리뷰 키워드입니다."),
+	REVIEW_KEYWORD_IS_EMPTY(400, "R005", "리뷰 키워드는 필수입니다."),
 
     // Keyword
-    KEYWORD_NOT_FOUND(404, "K001", "존재하지 않는 키워드입니다.");
-
+    KEYWORD_NOT_FOUND(404, "K001", "존재하지 않는 키워드입니다."),
+	KEYWORD_IS_DUPLICATED(400, "K002", "키워드가 중복되었습니다.");
+	
 	private final int status;
 	private final String code;
 	private final String message;
