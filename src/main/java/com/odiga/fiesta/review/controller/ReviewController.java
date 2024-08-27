@@ -14,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,9 +30,11 @@ import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
 import com.odiga.fiesta.review.dto.response.ReviewIdResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
+import com.odiga.fiesta.review.dto.response.ReviewLikeResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
 import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
 import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
+import com.odiga.fiesta.review.service.ReviewLikeService;
 import com.odiga.fiesta.review.service.ReviewService;
 import com.odiga.fiesta.user.domain.User;
 
@@ -51,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ReviewController {
 
 	private final ReviewService reviewService;
+	private final ReviewLikeService reviewLikeService;
 
 	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "리뷰 생성", description = "리뷰를 생성합니다.")
@@ -68,6 +73,15 @@ public class ReviewController {
 			.body(BasicResponse.created("리뷰 생성 성공", review));
 	}
 
+	@PatchMapping("/{reviewId}/like")
+	@Operation(summary = "리뷰 좋아요 등록 / 해제", description = "리뷰 좋아요를 등록 또는 해제합니다.")
+	public ResponseEntity<BasicResponse<ReviewLikeResponse>> updateReviewLike(
+		@AuthUser User user,
+		@PathVariable Long reviewId) {
+		checkLogin(user);
+		ReviewLikeResponse reviewLike = reviewLikeService.updateReviewLike(user.getId(), reviewId);
+		return ResponseEntity.ok(BasicResponse.ok("리뷰 좋아요 등록 / 해제 성공", reviewLike));
+	}
 
 	@GetMapping("/keywords")
 	@Operation(summary = "모든 리뷰 키워드 조회", description = "리뷰 키워드 목록을 조회합니다.")

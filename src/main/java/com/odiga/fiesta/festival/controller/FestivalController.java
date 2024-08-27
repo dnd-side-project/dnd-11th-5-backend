@@ -224,8 +224,8 @@ public class FestivalController {
 	@PatchMapping("/{festivalId}/bookmark")
 	public ResponseEntity<BasicResponse<FestivalBookmarkResponse>> updateFestivalBookmark(
 		@AuthUser User user,
-		@PathVariable Long festivalId
-	) {
+		@PathVariable Long festivalId) {
+		checkLogin(user);
 		FestivalBookmarkResponse bookmark = festivalBookmarkService.updateFestivalBookmark(user, festivalId);
 		return ResponseEntity.ok(BasicResponse.ok("페스티벌 북마크 등록/해제 성공", bookmark));
 	}
@@ -246,18 +246,12 @@ public class FestivalController {
 		@AuthUser User user,
 		@RequestParam(required = false, defaultValue = "5") Long size
 	) {
-		checkLoginUser(user);
+		checkLogin(user);
 
 		List<FestivalInfo> recommendFestivals = festivalService.getRecommendFestivals(
 			isNull(user) ? null : user.getId(), size);
 
 		return ResponseEntity.ok(BasicResponse.ok("유형별 추천 페스티벌 조회 성공", recommendFestivals));
-	}
-
-	private static void checkLoginUser(User user) {
-		if (isNull(user)) {
-			throw new CustomException(UNAUTHENTICATED_USER);
-		}
 	}
 
 	private void validateFestivalDay(int year, int month, int day) {
