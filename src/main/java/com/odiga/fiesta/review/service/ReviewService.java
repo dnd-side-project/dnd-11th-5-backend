@@ -66,6 +66,8 @@ public class ReviewService {
 	}
 
 	public TopReviewKeywordsResponse getTopReviewKeywords(Long festivalId, Long size) {
+		validateFestival(festivalId);
+		
 		TopReviewKeywordsResponse topReviewKeywords = reviewRepository.findTopReviewKeywords(festivalId, size);
 		return topReviewKeywords;
 	}

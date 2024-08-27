@@ -72,7 +72,7 @@ public class ReviewController {
 
 	@GetMapping("/keywords/top")
 	@Operation(summary = "페스티벌에서 가장 많이 선택된 리뷰 키워드 조회", description = "페스티벌 리뷰들의 상위 5개 키워드를 조회합니다. 선택 갯수가 동률일 경우, 최근에 선택된 키워드를 조회합니다.")
-	public ResponseEntity<BasicResponse<TopReviewKeywordsResponse>> getTop5Keywords(
+	public ResponseEntity<BasicResponse<TopReviewKeywordsResponse>> getTopReviewKeywords(
 		@RequestParam Long festivalId,
 		@RequestParam(required = false, defaultValue = "5") Long size) {
 		TopReviewKeywordsResponse keywords = reviewService.getTopReviewKeywords(festivalId, size);
