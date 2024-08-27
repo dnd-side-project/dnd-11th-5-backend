@@ -41,7 +41,7 @@ public class ReviewController {
 	public ResponseEntity<BasicResponse<PageResponse<ReviewResponse>>> getReviews(
 		@AuthUser User user,
 		@RequestParam Long festivalId,
-		@PageableDefault(size = 6, sort = "date", direction = Sort.Direction.DESC) Pageable pageable
+		@PageableDefault(size = 6, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
 	) {
 
 		Page<ReviewResponse> reviews = reviewService.getReviews(isNull(user) ? null : user.getId(), festivalId,
