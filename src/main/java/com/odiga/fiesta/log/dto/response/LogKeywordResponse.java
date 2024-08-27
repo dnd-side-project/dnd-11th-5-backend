@@ -19,7 +19,7 @@ public class LogKeywordResponse {
 	public static LogKeywordResponse of(final Keyword keyword) {
 		return LogKeywordResponse.builder()
 			.keywordId(keyword.getId())
-			.keyword(keyword.getKeyword())
+			.keyword(keyword.getContent())
 			.build();
 	}
 }

@@ -1,6 +1,7 @@
 package com.odiga.fiesta.review.domain;
 
 import com.odiga.fiesta.common.domain.BaseEntity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -15,20 +16,20 @@ import static lombok.AccessLevel.PROTECTED;
 @NoArgsConstructor(access = PROTECTED)
 public class Review extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = IDENTITY)
-    @Column(name = "review_id")
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "review_id")
+	private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+	@Column(name = "user_id", nullable = false)
+	private Long userId;
 
-    @Column(name = "festival_id", nullable = false)
-    private Long festivalId;
+	@Column(name = "festival_id", nullable = false)
+	private Long festivalId;
 
-    @Column(nullable = false)
-    private double score;
+	@Column(name = "rating", nullable = false)
+	private Integer rating;
 
-    @Column(nullable = false)
-    private String content;
+	@Column(name = "content", nullable = false)
+	private String content;
 }

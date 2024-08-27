@@ -21,17 +21,17 @@ public class Keyword {
 	@Column(name = "keyword_id")
 	private Long id;
 
-	@Column(nullable = false)
-	private String keyword;
+	@Column(name = "keyword", nullable = false)
+	private String content;
 
 	@Builder
-	private Keyword(Long id, String keyword) {
+	private Keyword(Long id, String content) {
 		this.id = id;
-		this.keyword = keyword;
+		this.content = content;
 	}
 
-	public static Keyword of(final Long id, final String keyword) {
-		return new Keyword(id, keyword);
+	public static Keyword of(final Long id, final String content) {
+		return new Keyword(id, content);
 	}
 
 }

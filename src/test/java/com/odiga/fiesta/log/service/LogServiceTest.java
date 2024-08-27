@@ -124,7 +124,7 @@ class LogServiceTest extends IntegrationTestSupport {
 	}
 
 	private static Keyword createKeyword() {
-		return Keyword.builder().keyword("키워드 이름").build();
+		return Keyword.builder().content("키워드 이름").build();
 	}
 
 	private static Log createLog() {
