@@ -68,6 +68,7 @@ public enum ErrorCode {
 
     // Review
     REVIEW_NOT_FOUND(404, "R001", "존재하지 않는 리뷰입니다."),
+	INVALID_REVIEW_SORT_TYPE(400, "R002", "유효하지 않은 리뷰 정렬 타입입니다."),
 
     // Keyword
     KEYWORD_NOT_FOUND(404, "K001", "존재하지 않는 키워드입니다.");

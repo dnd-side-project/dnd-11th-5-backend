@@ -35,13 +35,9 @@ public class ReviewResponse extends ReviewIdResponse {
 			.updatedAt(reviewData.getUpdatedAt())
 			.isLiked(reviewData.getIsLiked())
 			.likeCount(reviewData.getLikeCount())
-			.rating(roundToOneDecimalPlace(reviewData.getRating()))
+			.rating((reviewData.getRating() / 10.0))
 			.images(images)
 			.keywords(keywords)
 			.build();
-	}
-
-	private static double roundToOneDecimalPlace(double value) {
-		return Math.round(value * 10.0) / 10.0;
 	}
 }
