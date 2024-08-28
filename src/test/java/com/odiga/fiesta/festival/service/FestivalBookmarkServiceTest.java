@@ -81,7 +81,7 @@ class FestivalBookmarkServiceTest extends IntegrationTestSupport {
 			.hasMessage(USER_NOT_FOUND.getMessage());
 	}
 
-	@DisplayName("페스티벌 북마크 등록/해제 - 존재하지 않는 페스티벌에 좋아요 등록 시 에러 발생")
+	@DisplayName("페스티벌 북마크 등록/해제 - 존재하지 않는 페스티벌에 북마크 등록 시 에러 발생")
 	@Test
 	void updateFestivalBookmark_FestivalNotFound() {
 		// given

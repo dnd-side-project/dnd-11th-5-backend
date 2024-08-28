@@ -31,6 +31,7 @@ import com.odiga.fiesta.festival.service.PriorityService;
 import com.odiga.fiesta.log.controller.LogController;
 import com.odiga.fiesta.log.service.LogService;
 import com.odiga.fiesta.review.controller.ReviewController;
+import com.odiga.fiesta.review.service.ReviewLikeService;
 import com.odiga.fiesta.review.service.ReviewService;
 import com.odiga.fiesta.user.domain.User;
 
@@ -81,6 +82,9 @@ public abstract class ControllerTestSupport {
 
 	@MockBean
 	protected ReviewService reviewService;
+
+	@MockBean
+	protected ReviewLikeService reviewLikeService;
 
 	private User user;
 	private UserAccount userAccount;

@@ -4,13 +4,10 @@ import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static java.util.Objects.*;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -40,6 +37,7 @@ import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
 import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
 import com.odiga.fiesta.review.repository.ReviewImageRepository;
 import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
+import com.odiga.fiesta.review.repository.ReviewLikeRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
 import com.odiga.fiesta.user.repository.UserRepository;
 
@@ -51,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ReviewService {
+	private final ReviewLikeRepository reviewLikeRepository;
 
 	private static final String REVIEW_DIR_NAME = "review";
 

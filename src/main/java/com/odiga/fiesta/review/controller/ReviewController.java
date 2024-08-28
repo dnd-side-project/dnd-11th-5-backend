@@ -31,9 +31,11 @@ import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
 import com.odiga.fiesta.review.dto.request.ReviewUpdateRequest;
 import com.odiga.fiesta.review.dto.response.ReviewIdResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
+import com.odiga.fiesta.review.dto.response.ReviewLikeResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
 import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
 import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
+import com.odiga.fiesta.review.service.ReviewLikeService;
 import com.odiga.fiesta.review.service.ReviewService;
 import com.odiga.fiesta.user.domain.User;
 
@@ -54,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ReviewController {
 
 	private final ReviewService reviewService;
+	private final ReviewLikeService reviewLikeService;
 
 	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "리뷰 생성", description = "리뷰를 생성합니다.")
@@ -71,6 +74,15 @@ public class ReviewController {
 			.body(BasicResponse.created("리뷰 생성 성공", review));
 	}
 
+	@PatchMapping("/{reviewId}/like")
+	@Operation(summary = "리뷰 좋아요 등록 / 해제", description = "리뷰 좋아요를 등록 또는 해제합니다.")
+	public ResponseEntity<BasicResponse<ReviewLikeResponse>> updateReviewLike(
+		@AuthUser User user,
+		@PathVariable Long reviewId) {
+		checkLogin(user);
+		ReviewLikeResponse reviewLike = reviewLikeService.updateReviewLike(user.getId(), reviewId);
+		return ResponseEntity.ok(BasicResponse.ok("리뷰 좋아요 등록 / 해제 성공", reviewLike));
+	}
 	@PatchMapping(path = "/{reviewId}", consumes = MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "리뷰 수정", description = "리뷰를 수정합니다.")
 	public ResponseEntity<BasicResponse<ReviewIdResponse>> updateReview(
