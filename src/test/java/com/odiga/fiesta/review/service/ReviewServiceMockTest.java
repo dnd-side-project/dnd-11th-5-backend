@@ -1,6 +1,7 @@
 package com.odiga.fiesta.review.service;
 
 import static com.odiga.fiesta.common.error.ErrorCode.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.http.MediaType.*;
@@ -37,6 +38,7 @@ import com.odiga.fiesta.keyword.repository.KeywordRepository;
 import com.odiga.fiesta.review.domain.Review;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
+import com.odiga.fiesta.review.dto.request.ReviewUpdateRequest;
 import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
@@ -235,6 +237,109 @@ class ReviewServiceMockTest extends MockTestSupport {
 			});
 
 			assertEquals(REVIEW_IMAGE_COUNT_EXCEEDED.getMessage(), exception.getMessage());
+		}
+	}
+
+	@Nested
+	@DisplayName("리뷰 수정")
+	class ReviewUpdateTest {
+
+		User user = User.builder()
+			.id(1L)
+			.email("fiesta@odiga.com")
+			.userTypeId(1L)
+			.nickname("피에스타")
+			.profileImage("profileImage")
+			.statusMessage("상태메시지")
+			.build();
+
+		Keyword keyword = Keyword.builder()
+			.id(1L)
+			.content("✨ 쾌적해요")
+			.build();
+
+		ReviewUpdateRequest validRequest = ReviewUpdateRequest.builder()
+			.rating(1.5)
+			.keywordIds(Collections.singletonList(keyword.getId()))
+			.content("수정내용 ")
+			.deletedImages(Collections.singletonList(1L))
+			.build();
+
+		Review originalReview = Review.builder()
+			.id(1L)
+			.userId(user.getId())
+			.festivalId(1L)
+			.rating((int)(validRequest.getRating() * 10))
+			.content(validRequest.getContent())
+			.build();
+
+		List<MultipartFile> validImages = List.of(
+			new MockMultipartFile(
+				"test1",
+				"test1.png",
+				MULTIPART_FORM_DATA_VALUE,
+				"test1".getBytes()),
+			new MockMultipartFile(
+				"test2",
+				"test2.jpeg",
+				MULTIPART_FORM_DATA_VALUE,
+				"test2".getBytes()),
+			new MockMultipartFile(
+				"test3",
+				"test3.jpg",
+				MULTIPART_FORM_DATA_VALUE,
+				"test3".getBytes())
+		);
+
+		@DisplayName("성공 - 삭제할 이미지가 없을 때")
+		@Test
+		void updateReview_SuccessWithNoRemoveImage() {
+			// given
+			given(reviewRepository.findById(originalReview.getId())).willReturn(Optional.ofNullable(originalReview));
+
+			ReviewUpdateRequest request = ReviewUpdateRequest.builder()
+				.rating(1.5)
+				.keywordIds(Collections.singletonList(keyword.getId()))
+				.content("수정내용")
+				.deletedImages(Collections.emptyList())
+				.build();
+
+			// when
+			reviewService.updateReview(user.getId(), originalReview.getId(), request, null);
+
+			// then
+			Optional<Review> optionalReview = reviewRepository.findById(originalReview.getId());
+			assertTrue(optionalReview.isPresent());
+			assertThat(optionalReview.get().getRating()).isEqualTo((int)(request.getRating() * 10));
+			assertThat(optionalReview.get().getContent()).isEqualTo(request.getContent());
+		}
+
+		@DisplayName("실패 - 이미지 갯수 초과")
+		@Test
+		void updateReview_ReviewImageCountExceed() {
+			// given
+			given(reviewRepository.findById(originalReview.getId())).willReturn(Optional.ofNullable(originalReview));
+			given(reviewImageRepository.countByReviewId(originalReview.getId())).willReturn(3L);
+
+			ReviewUpdateRequest request = ReviewUpdateRequest.builder()
+				.rating(1.5)
+				.keywordIds(Collections.singletonList(keyword.getId()))
+				.content("수정내용")
+				.deletedImages(Collections.emptyList())
+				.build();
+
+			List<MultipartFile> images = List.of(
+				new MockMultipartFile(
+					"test1",
+					"test1.png",
+					MULTIPART_FORM_DATA_VALUE,
+					"test1".getBytes())
+			);
+
+			// when // then
+			assertThatThrownBy(() -> reviewService.updateReview(user.getId(), originalReview.getId(), request, images))
+				.isInstanceOf(CustomException.class)
+				.hasMessage(REVIEW_IMAGE_COUNT_EXCEEDED.getMessage());
 		}
 	}
 
