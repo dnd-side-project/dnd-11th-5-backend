@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,8 +75,19 @@ public class ReviewController {
 			.body(BasicResponse.created("리뷰 생성 성공", review));
 	}
 
+	@DeleteMapping("/{reviewId}")
+	@Operation(summary = "리뷰 삭제", description = "리뷰를 삭제합니다.")
+	public ResponseEntity<BasicResponse<ReviewIdResponse>> deleteReview(
+		@AuthUser User user,
+		@PathVariable Long reviewId
+	) {
+		checkLogin(user);
+		ReviewIdResponse review = reviewService.deleteReview(user.getId(), reviewId);
+		return ResponseEntity.ok(BasicResponse.ok("리뷰 삭제 성공", review));
+	}
+
 	@PatchMapping("/{reviewId}/like")
-	@Operation(summary = "리뷰 좋아요 등록 / 해제", description = "리뷰 좋아요를 등록 또는 해제합니다.")
+	@Operation(summary = "리뷰 좋아요 등록/해제", description = "리뷰 좋아요를 등록 또는 해제합니다.")
 	public ResponseEntity<BasicResponse<ReviewLikeResponse>> updateReviewLike(
 		@AuthUser User user,
 		@PathVariable Long reviewId) {
@@ -83,11 +95,12 @@ public class ReviewController {
 		ReviewLikeResponse reviewLike = reviewLikeService.updateReviewLike(user.getId(), reviewId);
 		return ResponseEntity.ok(BasicResponse.ok("리뷰 좋아요 등록 / 해제 성공", reviewLike));
 	}
+
 	@PatchMapping(path = "/{reviewId}", consumes = MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "리뷰 수정", description = "리뷰를 수정합니다.")
 	public ResponseEntity<BasicResponse<ReviewIdResponse>> updateReview(
 		@AuthUser User user,
-		@Parameter(name = "data", schema = @Schema(type = "string", format = "binary"), description = "등록할 리뷰 데이터")
+		@Parameter(name = "data", schema = @Schema(type = "string", format = "binary"), description = "수정할 리뷰 데이터")
 		@RequestPart(value = "data") @Valid ReviewUpdateRequest request,
 		@RequestPart(value = "images", required = false) List<MultipartFile> images,
 		@PathVariable Long reviewId

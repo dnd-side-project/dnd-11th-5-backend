@@ -132,38 +132,99 @@ public class ReviewService {
 		validateMyReview(userId, reviewId);
 		validateDeletedImages(request.getDeletedImages(), reviewId);
 
-		long totalImageCount =
-			reviewImageRepository.countByReviewId(reviewId) + (isNull(images) ? 0L : images.size())
-				- (isNull(request.getDeletedImages()) ? 0L : request.getDeletedImages().size());
+		long existingImageCount = reviewImageRepository.countByReviewId(reviewId);
+		long newImageCount = (images == null) ? 0L : images.size();
+		long deletedImageCount = (request.getDeletedImages() == null) ? 0L : request.getDeletedImages().size();
+
+		long totalImageCount = existingImageCount + newImageCount - deletedImageCount;
 
 		if (totalImageCount > 3) {
 			throw new CustomException(REVIEW_IMAGE_COUNT_EXCEEDED);
 		}
 
-		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
+		Review review = reviewRepository.findById(reviewId)
+			.orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
 
 		// 리뷰 내용 수정
-		review.updateRating((int)(request.getRating() * 10));
-		review.updateContent(request.getContent());
+		updateReviewContent(request, review);
 
 		// 리뷰 키워드 수정
-		reviewKeywordRepository.deleteByReviewId(reviewId);
-		saveReviewKeywords(request.getKeywordIds(), review);
+		updateReviewKeywords(request, review);
 
 		// 리뷰 이미지 수정
-
-		// delete 된 이미지를 s3 에서 제거
-		reviewImageRepository.findImageUrlByReviewId(reviewId).forEach(
-			imageUrl -> fileUtils.removeFile(imageUrl, REVIEW_DIR_NAME)
-		);
-		// delete 된 이미지를 db 에서 제거
-		reviewImageRepository.deleteByIdIn(request.getDeletedImages());
-		// 새로 추가된 이미지를 db 에 저장
-		createReviewImages(images, review);
+		updateReviewImages(request, images, review);
 
 		return ReviewIdResponse.builder()
 			.reviewId(review.getId())
 			.build();
+	}
+
+	private void updateReviewContent(ReviewUpdateRequest request, Review review) {
+		review.updateRating((int)(request.getRating() * 10));
+		review.updateContent(request.getContent());
+	}
+
+	private void updateReviewKeywords(ReviewUpdateRequest request, Review review) {
+		reviewKeywordRepository.deleteByReviewId(review.getId());
+		saveReviewKeywords(request.getKeywordIds(), review);
+	}
+
+	private void updateReviewImages(ReviewUpdateRequest request, List<MultipartFile> images, Review review) {
+		// 삭제된 이미지를 S3에서 제거한 후 DB에서 제거
+		if (request.getDeletedImages() != null && !request.getDeletedImages().isEmpty()) {
+			// 먼저 삭제할 이미지들의 URL을 DB에서 조회
+			List<String> imageUrlsToDelete = reviewImageRepository.findImageUrlByIdIn(request.getDeletedImages());
+
+			// S3에서 이미지 파일 삭제
+			imageUrlsToDelete.forEach(imageUrl -> {
+				try {
+					fileUtils.removeFile(imageUrl, REVIEW_DIR_NAME);
+				} catch (Exception e) {
+					log.error("Failed to delete image from S3: " + imageUrl, e);
+				}
+			});
+
+			// S3에서 성공적으로 삭제된 후, DB에서 해당 이미지 정보 삭제
+			reviewImageRepository.deleteByIdIn(request.getDeletedImages());
+		}
+
+		// 새로 추가된 이미지를 DB에 저장
+		createReviewImages(images, review);
+	}
+
+	@Transactional
+	public ReviewIdResponse deleteReview(Long userId, Long reviewId) {
+
+		validateMyReview(userId, reviewId);
+
+		// 1. 리뷰 및 연관 엔티티 삭제
+		deleteReviewEntities(reviewId);
+
+		// 2. 리뷰 이미지 파일 삭제 (트랜잭션 외부에서 처리)
+		try {
+			deleteReviewImages(reviewId);
+		} catch (RuntimeException e) {
+			log.error("Failed to delete review images for reviewId: " + reviewId, e);
+		}
+
+		return ReviewIdResponse.builder()
+			.reviewId(reviewId)
+			.build();
+	}
+
+	private void deleteReviewEntities(Long reviewId) {
+		reviewRepository.findById(reviewId).orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
+
+		reviewImageRepository.deleteByReviewId(reviewId);
+		reviewKeywordRepository.deleteByReviewId(reviewId);
+		reviewLikeRepository.deleteByReviewId(reviewId);
+		reviewRepository.deleteById(reviewId);
+	}
+
+	private void deleteReviewImages(Long reviewId) {
+		reviewImageRepository.findImageUrlByReviewId(reviewId).forEach(
+			imageUrl -> fileUtils.removeFile(imageUrl, REVIEW_DIR_NAME)
+		);
 	}
 
 	private void validateFestival(Long festivalId) {
@@ -259,4 +320,5 @@ public class ReviewService {
 			throw new CustomException(REVIEW_NOT_MINE);
 		}
 	}
+
 }
