@@ -45,6 +45,7 @@ import com.odiga.fiesta.review.dto.response.ReviewResponse;
 import com.odiga.fiesta.review.dto.response.ReviewUserInfo;
 import com.odiga.fiesta.review.repository.ReviewImageRepository;
 import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
+import com.odiga.fiesta.review.repository.ReviewLikeRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.repository.UserRepository;
@@ -71,6 +72,9 @@ class ReviewServiceMockTest extends MockTestSupport {
 
 	@Mock
 	private ReviewKeywordRepository reviewKeywordRepository;
+
+	@Mock
+	private ReviewLikeRepository reviewLikeRepository;
 
 	@InjectMocks
 	private ReviewService reviewService;
@@ -341,6 +345,72 @@ class ReviewServiceMockTest extends MockTestSupport {
 				.isInstanceOf(CustomException.class)
 				.hasMessage(REVIEW_IMAGE_COUNT_EXCEEDED.getMessage());
 		}
+	}
+
+	@DisplayName("리뷰 삭제 - 리뷰와 관련된 엔티티를 모두 삭제한다.")
+	@Test
+	void deleteReview_ValidReview_ShouldDeleteReviewAndRelatedEntities() {
+		// given
+		Long userId = 1L;
+		Long reviewId = 1L;
+		String REVIEW_DIR_NAME = "review";
+
+		given(reviewRepository.findById(reviewId)).willReturn(
+			Optional.of(Review.builder().id(reviewId).userId(userId).build()));
+		given(reviewImageRepository.findImageUrlByReviewId(reviewId)).willReturn(List.of("image1.jpg", "image2.jpg"));
+
+		// when
+		reviewService.deleteReview(userId, reviewId);
+
+		// then
+		then(reviewRepository).should(times(2)).findById(reviewId);
+		then(reviewRepository).should(times(1)).deleteById(reviewId);
+		then(reviewImageRepository).should(times(1)).deleteByReviewId(reviewId);
+		then(reviewKeywordRepository).should(times(1)).deleteByReviewId(reviewId);
+		then(reviewLikeRepository).should(times(1)).deleteByReviewId(reviewId);
+		then(fileUtils).should(times(1)).removeFile("image1.jpg", REVIEW_DIR_NAME);
+		then(fileUtils).should(times(1)).removeFile("image2.jpg", REVIEW_DIR_NAME);
+	}
+
+	@DisplayName("리뷰 삭제 - 파일 삭제 중 예외 발생 시에도 데이터베이스 엔티티는 삭제한다.")
+	@Test
+	void deleteReview_ExceptionDuringFileDeletion_ShouldStillDeleteDatabaseEntries() {
+		// given
+		Long userId = 1L;
+		Long reviewId = 1L;
+		String REVIEW_DIR_NAME = "review";
+
+		given(reviewRepository.findById(reviewId)).willReturn(
+			Optional.of(Review.builder().id(reviewId).userId(userId).build()));
+		given(reviewImageRepository.findImageUrlByReviewId(reviewId)).willReturn(List.of("image1.jpg", "image2.jpg"));
+		willThrow(new RuntimeException("File deletion failed")).given(fileUtils)
+			.removeFile(anyString(), eq(REVIEW_DIR_NAME));
+
+		// when
+		reviewService.deleteReview(userId, reviewId);
+
+		// then
+		then(reviewRepository).should(times(2)).findById(reviewId);
+		then(reviewRepository).should(times(1)).deleteById(reviewId);
+		then(reviewImageRepository).should(times(1)).deleteByReviewId(reviewId);
+		then(reviewKeywordRepository).should(times(1)).deleteByReviewId(reviewId);
+		then(reviewLikeRepository).should(times(1)).deleteByReviewId(reviewId);
+	}
+
+	@DisplayName("리뷰 삭제 - 자신의 리뷰가 아닌 경우 에러가 발생")
+	@Test
+	void deleteReview_NotMyReview() {
+		// given
+		Long userId = 1L;
+		Long reviewId = 1L;
+		given(reviewRepository.findById(reviewId)).willReturn(Optional.ofNullable(Review.builder().userId(2L).build()));
+
+		// when // then
+		CustomException exception = assertThrows(CustomException.class, () -> {
+			reviewService.deleteReview(userId, reviewId);
+		});
+
+		assertThat(exception.getMessage()).isEqualTo(REVIEW_NOT_MINE.getMessage());
 	}
 
 	private static Festival createFestival() {
