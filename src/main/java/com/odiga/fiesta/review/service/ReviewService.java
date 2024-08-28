@@ -31,6 +31,7 @@ import com.odiga.fiesta.review.dto.projection.ReviewData;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
 import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
+import com.odiga.fiesta.review.dto.request.ReviewUpdateRequest;
 import com.odiga.fiesta.review.dto.response.ReviewIdResponse;
 import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
@@ -125,6 +126,47 @@ public class ReviewService {
 			.build();
 	}
 
+	@Transactional
+	public ReviewIdResponse updateReview(Long userId, Long reviewId, ReviewUpdateRequest request,
+		List<MultipartFile> images) {
+
+		validateMyReview(userId, reviewId);
+		validateDeletedImages(request.getDeletedImages(), reviewId);
+
+		long totalImageCount =
+			reviewImageRepository.countByReviewId(reviewId) + (isNull(images) ? 0L : images.size())
+				- (isNull(request.getDeletedImages()) ? 0L : request.getDeletedImages().size());
+
+		if (totalImageCount > 3) {
+			throw new CustomException(REVIEW_IMAGE_COUNT_EXCEEDED);
+		}
+
+		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
+
+		// 리뷰 내용 수정
+		review.updateRating((int)(request.getRating() * 10));
+		review.updateContent(request.getContent());
+
+		// 리뷰 키워드 수정
+		reviewKeywordRepository.deleteByReviewId(reviewId);
+		saveReviewKeywords(request.getKeywordIds(), review);
+
+		// 리뷰 이미지 수정
+
+		// delete 된 이미지를 s3 에서 제거
+		reviewImageRepository.findImageUrlByReviewId(reviewId).forEach(
+			imageUrl -> fileUtils.removeFile(imageUrl, REVIEW_DIR_NAME)
+		);
+		// delete 된 이미지를 db 에서 제거
+		reviewImageRepository.deleteByIdIn(request.getDeletedImages());
+		// 새로 추가된 이미지를 db 에 저장
+		createReviewImages(images, review);
+
+		return ReviewIdResponse.builder()
+			.reviewId(review.getId())
+			.build();
+	}
+
 	private void validateFestival(Long festivalId) {
 		if (!festivalRepository.existsById(festivalId)) {
 			throw new CustomException(FESTIVAL_NOT_FOUND);
@@ -196,6 +238,26 @@ public class ReviewService {
 		List<Keyword> validKeywords = keywordRepository.findAllById(keywordIds);
 		if (validKeywords.size() != keywordIds.size()) {
 			throw new CustomException(REVIEW_KEYWORD_NOT_FOUND);
+		}
+	}
+
+	private void validateDeletedImages(List<Long> imageIds, Long reviewId) {
+		if (isNull(imageIds) || imageIds.isEmpty()) {
+			return;
+		}
+
+		long count = reviewImageRepository.countByIdInAndReviewId(imageIds, reviewId);
+
+		if (count != imageIds.size()) {
+			throw new CustomException(REVIEW_IMAGE_NOT_FOUND);
+		}
+	}
+
+	private void validateMyReview(Long userId, Long reviewId) {
+		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
+
+		if (!review.getUserId().equals(userId)) {
+			throw new CustomException(REVIEW_NOT_MINE);
 		}
 	}
 }

@@ -14,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,6 +28,7 @@ import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
+import com.odiga.fiesta.review.dto.request.ReviewUpdateRequest;
 import com.odiga.fiesta.review.dto.response.ReviewIdResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
@@ -68,6 +71,19 @@ public class ReviewController {
 			.body(BasicResponse.created("리뷰 생성 성공", review));
 	}
 
+	@PatchMapping(path = "/{reviewId}", consumes = MULTIPART_FORM_DATA_VALUE)
+	@Operation(summary = "리뷰 수정", description = "리뷰를 수정합니다.")
+	public ResponseEntity<BasicResponse<ReviewIdResponse>> updateReview(
+		@AuthUser User user,
+		@Parameter(name = "data", schema = @Schema(type = "string", format = "binary"), description = "등록할 리뷰 데이터")
+		@RequestPart(value = "data") @Valid ReviewUpdateRequest request,
+		@RequestPart(value = "images", required = false) List<MultipartFile> images,
+		@PathVariable Long reviewId
+	) {
+		checkLogin(user);
+		ReviewIdResponse review = reviewService.updateReview(user.getId(), reviewId, request, images);
+		return ResponseEntity.ok(BasicResponse.ok("리뷰 수정 성공", review));
+	}
 
 	@GetMapping("/keywords")
 	@Operation(summary = "모든 리뷰 키워드 조회", description = "리뷰 키워드 목록을 조회합니다.")

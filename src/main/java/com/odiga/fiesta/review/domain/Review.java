@@ -38,9 +38,16 @@ public class Review extends BaseEntity {
 		return Review.builder()
 			.userId(userId)
 			.festivalId(request.getFestivalId())
-			.rating((int) (request.getRating() * 10))
+			.rating((int)(request.getRating() * 10))
 			.content(request.getContent())
 			.build();
 	}
 
+	public void updateRating(final Integer rating) {
+		this.rating = rating;
+	}
+
+	public void updateContent(final String content) {
+		this.content = content;
+	}
 }
