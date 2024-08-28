@@ -166,6 +166,41 @@ public class ReviewService {
 			.build();
 	}
 
+	@Transactional
+	public ReviewIdResponse deleteReview(Long userId, Long reviewId) {
+
+		validateMyReview(userId, reviewId);
+
+		// 1. 리뷰 및 연관 엔티티 삭제
+		deleteReviewEntities(reviewId);
+
+		// 2. 리뷰 이미지 파일 삭제 (트랜잭션 외부에서 처리)
+		try {
+			deleteReviewImages(reviewId);
+		} catch (RuntimeException e) {
+			log.error("Failed to delete review images for reviewId: " + reviewId, e);
+		}
+
+		return ReviewIdResponse.builder()
+			.reviewId(reviewId)
+			.build();
+	}
+
+	private void deleteReviewEntities(Long reviewId) {
+		reviewRepository.findById(reviewId).orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
+
+		reviewImageRepository.deleteByReviewId(reviewId);
+		reviewKeywordRepository.deleteByReviewId(reviewId);
+		reviewLikeRepository.deleteByReviewId(reviewId);
+		reviewRepository.deleteById(reviewId);
+	}
+
+	private void deleteReviewImages(Long reviewId) {
+		reviewImageRepository.findImageUrlByReviewId(reviewId).forEach(
+			imageUrl -> fileUtils.removeFile(imageUrl, REVIEW_DIR_NAME)
+		);
+	}
+
 	private void validateFestival(Long festivalId) {
 		if (!festivalRepository.existsById(festivalId)) {
 			throw new CustomException(FESTIVAL_NOT_FOUND);
@@ -259,4 +294,5 @@ public class ReviewService {
 			throw new CustomException(REVIEW_NOT_MINE);
 		}
 	}
+
 }

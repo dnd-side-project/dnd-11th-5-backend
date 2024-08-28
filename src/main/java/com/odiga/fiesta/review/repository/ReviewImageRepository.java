@@ -20,4 +20,6 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage, Long> 
 	List<String> findImageUrlByReviewId(@Param("reviewId") Long reviewId);
 
 	void deleteByIdIn(List<Long> imageIds);
+
+	void deleteByReviewId(Long reviewId);
 }
