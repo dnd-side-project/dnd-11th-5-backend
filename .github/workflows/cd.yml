@@ -3,6 +3,8 @@ name: Java CI/CD Pipeline with Gradle and Docker
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -48,17 +50,16 @@ jobs:
           docker build -t ${{ secrets.DOCKER_REPO }}/fiesta-web .
           docker push ${{ secrets.DOCKER_REPO }}/fiesta-web
 
-      ## docker compose up
-      - name: executing remote ssh commands using password
+      - name: Deploy to Dev
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST }}
           username: ubuntu
+          host: ${{ secrets.HOST }}
           key: ${{ secrets.KEY }}
           script: |
-            sudo docker rm -f $(docker ps -qa)
             sudo docker pull ${{ secrets.DOCKER_REPO }}/fiesta-web
-            docker-compose up -d
+            chmod 777 ./deploy.sh
+            ./deploy.sh
             docker image prune -f
 
       - name: Remove Github Actions IP From Security Group
