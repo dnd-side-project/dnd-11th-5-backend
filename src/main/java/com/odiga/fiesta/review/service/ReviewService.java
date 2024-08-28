@@ -132,38 +132,64 @@ public class ReviewService {
 		validateMyReview(userId, reviewId);
 		validateDeletedImages(request.getDeletedImages(), reviewId);
 
-		long totalImageCount =
-			reviewImageRepository.countByReviewId(reviewId) + (isNull(images) ? 0L : images.size())
-				- (isNull(request.getDeletedImages()) ? 0L : request.getDeletedImages().size());
+		long existingImageCount = reviewImageRepository.countByReviewId(reviewId);
+		long newImageCount = (images == null) ? 0L : images.size();
+		long deletedImageCount = (request.getDeletedImages() == null) ? 0L : request.getDeletedImages().size();
+
+		long totalImageCount = existingImageCount + newImageCount - deletedImageCount;
 
 		if (totalImageCount > 3) {
 			throw new CustomException(REVIEW_IMAGE_COUNT_EXCEEDED);
 		}
 
-		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
+		Review review = reviewRepository.findById(reviewId)
+			.orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
 
 		// 리뷰 내용 수정
-		review.updateRating((int)(request.getRating() * 10));
-		review.updateContent(request.getContent());
+		updateReviewContent(request, review);
 
 		// 리뷰 키워드 수정
-		reviewKeywordRepository.deleteByReviewId(reviewId);
-		saveReviewKeywords(request.getKeywordIds(), review);
+		updateReviewKeywords(request, review);
 
 		// 리뷰 이미지 수정
-
-		// delete 된 이미지를 s3 에서 제거
-		reviewImageRepository.findImageUrlByReviewId(reviewId).forEach(
-			imageUrl -> fileUtils.removeFile(imageUrl, REVIEW_DIR_NAME)
-		);
-		// delete 된 이미지를 db 에서 제거
-		reviewImageRepository.deleteByIdIn(request.getDeletedImages());
-		// 새로 추가된 이미지를 db 에 저장
-		createReviewImages(images, review);
+		updateReviewImages(request, images, review);
 
 		return ReviewIdResponse.builder()
 			.reviewId(review.getId())
 			.build();
+	}
+
+	private void updateReviewContent(ReviewUpdateRequest request, Review review) {
+		review.updateRating((int)(request.getRating() * 10));
+		review.updateContent(request.getContent());
+	}
+
+	private void updateReviewKeywords(ReviewUpdateRequest request, Review review) {
+		reviewKeywordRepository.deleteByReviewId(review.getId());
+		saveReviewKeywords(request.getKeywordIds(), review);
+	}
+
+	private void updateReviewImages(ReviewUpdateRequest request, List<MultipartFile> images, Review review) {
+		// 삭제된 이미지를 S3에서 제거한 후 DB에서 제거
+		if (request.getDeletedImages() != null && !request.getDeletedImages().isEmpty()) {
+			// 먼저 삭제할 이미지들의 URL을 DB에서 조회
+			List<String> imageUrlsToDelete = reviewImageRepository.findImageUrlByIdIn(request.getDeletedImages());
+
+			// S3에서 이미지 파일 삭제
+			imageUrlsToDelete.forEach(imageUrl -> {
+				try {
+					fileUtils.removeFile(imageUrl, REVIEW_DIR_NAME);
+				} catch (Exception e) {
+					log.error("Failed to delete image from S3: " + imageUrl, e);
+				}
+			});
+
+			// S3에서 성공적으로 삭제된 후, DB에서 해당 이미지 정보 삭제
+			reviewImageRepository.deleteByIdIn(request.getDeletedImages());
+		}
+
+		// 새로 추가된 이미지를 DB에 저장
+		createReviewImages(images, review);
 	}
 
 	@Transactional

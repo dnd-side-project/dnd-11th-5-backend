@@ -100,7 +100,7 @@ public class ReviewController {
 	@Operation(summary = "리뷰 수정", description = "리뷰를 수정합니다.")
 	public ResponseEntity<BasicResponse<ReviewIdResponse>> updateReview(
 		@AuthUser User user,
-		@Parameter(name = "data", schema = @Schema(type = "string", format = "binary"), description = "등록할 리뷰 데이터")
+		@Parameter(name = "data", schema = @Schema(type = "string", format = "binary"), description = "수정할 리뷰 데이터")
 		@RequestPart(value = "data") @Valid ReviewUpdateRequest request,
 		@RequestPart(value = "images", required = false) List<MultipartFile> images,
 		@PathVariable Long reviewId
