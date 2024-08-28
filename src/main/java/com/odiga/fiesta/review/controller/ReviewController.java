@@ -28,6 +28,7 @@ import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
+import com.odiga.fiesta.review.dto.request.ReviewUpdateRequest;
 import com.odiga.fiesta.review.dto.response.ReviewIdResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewLikeResponse;
@@ -81,6 +82,19 @@ public class ReviewController {
 		checkLogin(user);
 		ReviewLikeResponse reviewLike = reviewLikeService.updateReviewLike(user.getId(), reviewId);
 		return ResponseEntity.ok(BasicResponse.ok("리뷰 좋아요 등록 / 해제 성공", reviewLike));
+	}
+	@PatchMapping(path = "/{reviewId}", consumes = MULTIPART_FORM_DATA_VALUE)
+	@Operation(summary = "리뷰 수정", description = "리뷰를 수정합니다.")
+	public ResponseEntity<BasicResponse<ReviewIdResponse>> updateReview(
+		@AuthUser User user,
+		@Parameter(name = "data", schema = @Schema(type = "string", format = "binary"), description = "등록할 리뷰 데이터")
+		@RequestPart(value = "data") @Valid ReviewUpdateRequest request,
+		@RequestPart(value = "images", required = false) List<MultipartFile> images,
+		@PathVariable Long reviewId
+	) {
+		checkLogin(user);
+		ReviewIdResponse review = reviewService.updateReview(user.getId(), reviewId, request, images);
+		return ResponseEntity.ok(BasicResponse.ok("리뷰 수정 성공", review));
 	}
 
 	@GetMapping("/keywords")

@@ -9,4 +9,6 @@ import com.odiga.fiesta.review.domain.ReviewKeyword;
 public interface ReviewKeywordRepository extends JpaRepository<ReviewKeyword, Long> {
 
 	List<ReviewKeyword> findByReviewId(Long reviewId);
+
+	void deleteByReviewId(Long reviewId);
 }
