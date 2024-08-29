@@ -2,6 +2,7 @@ package com.odiga.fiesta.festival.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -36,4 +37,6 @@ public interface FestivalCustomRepository {
 	Page<FestivalAndLocation> findUpcomingFestivalAndLocation(Long userId, LocalDate date, Pageable pageable);
 
 	List<FestivalWithSido> findRecommendFestivals(Long userTypeId, Long size, LocalDate date);
+
+	Map<Long, String> findThumbnailImageByFestivalId(List<Long> festivalIds);
 }
