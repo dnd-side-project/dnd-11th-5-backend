@@ -35,6 +35,7 @@ import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.FestivalCategory;
 import com.odiga.fiesta.festival.domain.FestivalImage;
 import com.odiga.fiesta.festival.domain.FestivalMood;
+import com.odiga.fiesta.festival.dto.projection.FestivalData;
 import com.odiga.fiesta.festival.dto.projection.FestivalDetailData;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
@@ -160,7 +161,6 @@ public class FestivalService {
 			festivalFilterCondition, latitude, longitude, date, pageable);
 
 		List<FestivalInfoWithBookmark> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByFilters);
-
 		return new PageImpl<>(responses, pageable, festivalsByFilters.getTotalElements());
 	}
 
@@ -169,7 +169,6 @@ public class FestivalService {
 			pageable);
 
 		List<FestivalInfoWithBookmark> responses = getFestivalWithBookmarkAndSidoAndThumbnailImage(festivalsByQuery);
-
 		return new PageImpl<>(responses, pageable, festivalsByQuery.getTotalElements());
 	}
 
@@ -201,8 +200,17 @@ public class FestivalService {
 
 	private List<FestivalInfoWithBookmark> getFestivalWithBookmarkAndSidoAndThumbnailImage(
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters) {
+		// 1. 페스티벌 아이디를 가져온다.
+		List<Long> festialIdList = festivalsByFilters.getContent()
+			.stream()
+			.map(FestivalWithBookmarkAndSido::getFestivalId)
+			.toList();
+
+		// 2. 페스티벌 아이디를 이용해 이미지를 가져온다.
+		Map<Long, String> festivalIdToThumbnailImage = festivalRepository.findThumbnailImageByFestivalId(festialIdList);
+
 		return festivalsByFilters.getContent().stream().map(festival -> {
-			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
+			String thumbnailImage = festivalIdToThumbnailImage.get(festival.getFestivalId());
 			return FestivalInfoWithBookmark.of(festival, thumbnailImage);
 		}).toList();
 	}
@@ -224,7 +232,6 @@ public class FestivalService {
 		LocalDate date = LocalDate.now(clock);
 		Page<FestivalWithSido> festivals = festivalRepository.findMostLikeFestival(pageable, date);
 
-		// TODO: 배치로 변경할 수 있을듯...
 		List<FestivalInfo> responses = getFestivalAndSidoWithThumbnailImage(festivals);
 
 		return new PageImpl<>(responses, pageable, festivals.getTotalElements());
@@ -239,9 +246,25 @@ public class FestivalService {
 	}
 
 	private List<FestivalInfo> getFestivalAndSidoWithThumbnailImage(
+		List<FestivalWithSido> festivals) {
+
+		List<Long> festivalIds = festivals.stream().map(FestivalData::getFestivalId).toList();
+		Map<Long, String> festivalIdToThumbnailImage = festivalRepository.findThumbnailImageByFestivalId(festivalIds);
+
+		return festivals.stream().map(festival -> {
+			String thumbnailImage = festivalIdToThumbnailImage.get(festival.getFestivalId());
+			return FestivalInfo.of(festival, thumbnailImage);
+		}).toList();
+	}
+
+	private List<FestivalInfo> getFestivalAndSidoWithThumbnailImage(
 		Page<FestivalWithSido> festivals) {
+
+		List<Long> festivalIds = festivals.stream().map(FestivalData::getFestivalId).toList();
+		Map<Long, String> festivalIdToThumbnailImage = festivalRepository.findThumbnailImageByFestivalId(festivalIds);
+
 		return festivals.getContent().stream().map(festival -> {
-			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
+			String thumbnailImage = festivalIdToThumbnailImage.get(festival.getFestivalId());
 			return FestivalInfo.of(festival, thumbnailImage);
 		}).toList();
 	}
@@ -275,10 +298,7 @@ public class FestivalService {
 
 		List<FestivalWithSido> festivals = festivalRepository.findRecommendFestivals(userTypeId, size, date);
 
-		return festivals.stream().map(festival -> {
-			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
-			return FestivalInfo.of(festival, thumbnailImage);
-		}).toList();
+		return getFestivalAndSidoWithThumbnailImage(festivals);
 	}
 
 	// 필터링을 위해, request list 내부의 중복 제거
@@ -416,16 +436,14 @@ public class FestivalService {
 	}
 
 	private void validateFileCount(List<MultipartFile> files) {
-		if (nonNull(files)) {
-			if (files.size() > 3) {
-				throw new CustomException(FESTIVAL_IMAGE_EXCEEDED);
-			}
+		if (nonNull(files) && files.size() > 3) {
+			throw new CustomException(FESTIVAL_IMAGE_EXCEEDED);
 		}
 	}
 
 	private void validateFileExtension(List<MultipartFile> files) {
 		if (nonNull(files)) {
-			files.forEach(file -> fileUtils.validateImageExtension(file));
+			files.forEach(fileUtils::validateImageExtension);
 		}
 	}
 }
