@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,7 @@ import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.keyword.domain.Keyword;
 import com.odiga.fiesta.keyword.repository.KeywordRepository;
 import com.odiga.fiesta.review.domain.Review;
+import com.odiga.fiesta.review.domain.ReviewKeyword;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
 import com.odiga.fiesta.review.dto.request.ReviewUpdateRequest;
@@ -206,6 +208,35 @@ class ReviewServiceMockTest extends MockTestSupport {
 
 			// then
 			then(reviewRepository).should().save(any());
+		}
+
+		@DisplayName("성공 - 키워드에 중복되는게 있어도 하나만 저장")
+		@Test
+		void createReview_RemoveDuplicatedKeywords() {
+			// given
+			ReviewCreateRequest request = ReviewCreateRequest.builder()
+				.festivalId(festival.getId())
+				.rating(1.5)
+				.keywordIds(List.of(keyword.getId(), keyword.getId(), keyword.getId()))
+				.content("content")
+				.build();
+
+			given(keywordRepository.findAllById(Collections.singletonList(keyword.getId()))).willReturn(
+				Collections.singletonList(keyword));
+			given(reviewRepository.save(any())).willReturn(review);
+
+			// when
+			reviewService.createReview(user.getId(), request, null);
+
+			// then
+			ArgumentCaptor<List<ReviewKeyword>> reviewKeywordsCaptor = ArgumentCaptor.forClass(List.class);
+			verify(reviewKeywordRepository).saveAll(reviewKeywordsCaptor.capture());
+
+			List<ReviewKeyword> savedReviewKeywords = reviewKeywordsCaptor.getValue();
+			assertNotNull(savedReviewKeywords);
+			assertEquals(1, savedReviewKeywords.size());
+			assertTrue(savedReviewKeywords.stream()
+				.anyMatch(rk -> rk.getKeywordId().equals(keyword.getId())));
 		}
 
 		@DisplayName("실패 - 이미지 갯수 초과")
