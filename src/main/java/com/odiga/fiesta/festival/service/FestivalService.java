@@ -51,6 +51,7 @@ import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
+import com.odiga.fiesta.festival.dto.response.RecommendFestivalResponse;
 import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
 import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
@@ -59,7 +60,9 @@ import com.odiga.fiesta.festival.repository.FestivalUserTypeRepository;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
 import com.odiga.fiesta.user.domain.UserType;
+import com.odiga.fiesta.user.dto.response.UserTypeResponse;
 import com.odiga.fiesta.user.repository.UserRepository;
+import com.odiga.fiesta.user.repository.UserTypeRepository;
 import com.odiga.fiesta.user.service.UserTypeService;
 
 import lombok.RequiredArgsConstructor;
@@ -72,6 +75,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FestivalService {
 	private final FestivalUserTypeRepository festivalUserTypeRepository;
 	private final UserRepository userRepository;
+	private final UserTypeRepository userTypeRepository;
 
 	private final Clock clock;
 
@@ -265,20 +269,28 @@ public class FestivalService {
 		return FestivalDetailResponse.of(festivalDetail, categories, moods, images);
 	}
 
-	public List<FestivalInfo> getRecommendFestivals(Long userId, Long size) {
+	public RecommendFestivalResponse getRecommendFestivals(Long userId, Long size) {
 		validateUserId(userId);
 
 		Long userTypeId = userRepository.findUserTypeIdById(userId)
+			.orElseThrow(() -> new CustomException(USER_TYPE_NOT_FOUND));
+
+		UserType userType = userTypeRepository.findById(userTypeId)
 			.orElseThrow(() -> new CustomException(USER_TYPE_NOT_FOUND));
 
 		LocalDate date = LocalDate.now(clock);
 
 		List<FestivalWithSido> festivals = festivalRepository.findRecommendFestivals(userTypeId, size, date);
 
-		return festivals.stream().map(festival -> {
+		List<FestivalInfo> list = festivals.stream().map(festival -> {
 			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());
 			return FestivalInfo.of(festival, thumbnailImage);
 		}).toList();
+
+		return RecommendFestivalResponse.builder()
+			.festivals(list)
+			.userType(UserTypeResponse.of(userType))
+			.build();
 	}
 
 	// 필터링을 위해, request list 내부의 중복 제거

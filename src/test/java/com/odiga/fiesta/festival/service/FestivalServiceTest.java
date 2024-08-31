@@ -54,6 +54,7 @@ import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
+import com.odiga.fiesta.festival.dto.response.RecommendFestivalResponse;
 import com.odiga.fiesta.festival.repository.FestivalBookmarkRepository;
 import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
@@ -65,7 +66,9 @@ import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.domain.Sido;
 import com.odiga.fiesta.sido.repository.SidoRepository;
 import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.repository.UserRepository;
+import com.odiga.fiesta.user.repository.UserTypeRepository;
 
 @ExtendWith(MockitoExtension.class)
 class FestivalServiceTest extends IntegrationTestSupport {
@@ -96,6 +99,9 @@ class FestivalServiceTest extends IntegrationTestSupport {
 
 	@Autowired
 	private CategoryRepository categoryRepository;
+
+	@Autowired
+	private UserTypeRepository userTypeRepository;
 
 	@Autowired
 	private MoodRepository moodRepository;
@@ -358,10 +364,10 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		// then
 		assertThat(responses.getContent())
 			.hasSize(2)
-			.extracting("startDate")
+			.extracting("startDate", "thumbnailImage")
 			.containsExactly(
-				LocalDate.of(2023, 12, 31),
-				LocalDate.of(2024, 1, 7)
+				tuple(LocalDate.of(2023, 12, 31), null),
+				tuple(LocalDate.of(2024, 1, 7), null)
 			);
 	}
 
@@ -524,6 +530,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		// given
 		User user = userRepository.save(createUser());
 		Long userTypeId = user.getUserTypeId();
+		UserType userType = userTypeRepository.save(createUserType());
 
 		Festival festival1 = festivalRepository.save(createFestival("페스티벌1"));
 		Festival festival2 = festivalRepository.save(createFestival("페스티벌2"));
@@ -531,7 +538,7 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		Festival festival4 = festivalRepository.save(createFestival("페스티벌4"));
 		Festival festival5 = festivalRepository.save(createFestival("페스티벌5"));
 
-		// 페스티벌의 타입 설정
+		// 페스티벌 타입 설정
 		festivalUserTypeRepository.save(createFestivalUserType(festival1.getId(), userTypeId));
 		festivalUserTypeRepository.save(createFestivalUserType(festival2.getId(), -1L));
 		festivalUserTypeRepository.save(createFestivalUserType(festival3.getId(), -1L));
@@ -539,10 +546,16 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		festivalUserTypeRepository.save(createFestivalUserType(festival5.getId(), -1L));
 
 		// when
-		List<FestivalInfo> recommendFestivals = festivalService.getRecommendFestivals(user.getId(), 2L);
+		RecommendFestivalResponse recommendFestivals = festivalService.getRecommendFestivals(user.getId(), 2L);
 
 		// then
-		assertThat(recommendFestivals)
+		System.out.println(recommendFestivals);
+
+		assertThat(recommendFestivals.getUserType())
+			.extracting("userTypeId", "name")
+			.contains(userType.getId(), userType.getName());
+
+		assertThat(recommendFestivals.getFestivals())
 			.hasSize(2)
 			.extracting("name")
 			.contains(festival1.getName(), festival4.getName());
@@ -554,21 +567,28 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		// given
 		User user = userRepository.save(createUser());
 		Long userTypeId = user.getUserTypeId();
+		userTypeRepository.save(createUserType());
 
 		Festival closingFestival = festivalRepository.save(createFestival(TODAY.minusDays(1), TODAY.minusDays(1)));
 		festivalUserTypeRepository.save(createFestivalUserType(closingFestival.getId(), userTypeId));
 
 		// when
-		List<FestivalInfo> recommendFestivals = festivalService.getRecommendFestivals(user.getId(), 1L);
+		RecommendFestivalResponse recommendFestivals = festivalService.getRecommendFestivals(user.getId(), 1L);
 
 		// then
-		assertThat(recommendFestivals).isEmpty();
+		assertThat(recommendFestivals.getFestivals()).isEmpty();
 	}
 
 	private static FestivalUserType createFestivalUserType(Long festivalId, Long userTypeId) {
 		return FestivalUserType.builder()
 			.festivalId(festivalId)
 			.userTypeId(userTypeId)
+			.build();
+	}
+
+	private static UserType createUserType() {
+		return UserType.builder()
+			.name("테스트 유저 유형")
 			.build();
 	}
 
@@ -730,7 +750,6 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.userId(userId)
 			.build();
 	}
-
 
 	private static Festival createFestival(LocalDate startDate, LocalDate endDate, Long sidoId) {
 		return Festival.builder()

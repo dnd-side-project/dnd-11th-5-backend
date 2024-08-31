@@ -39,6 +39,7 @@ import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
+import com.odiga.fiesta.festival.dto.response.RecommendFestivalResponse;
 import com.odiga.fiesta.festival.service.FestivalBookmarkService;
 import com.odiga.fiesta.festival.service.FestivalService;
 import com.odiga.fiesta.user.domain.User;
@@ -242,14 +243,15 @@ public class FestivalController {
 
 	@Operation(summary = "유형별 추천 페스티벌 조회", description = "유저 유형 별 추천 페스티벌을 랜덤으로 조회합니다.")
 	@GetMapping("/recommend")
-	public ResponseEntity<BasicResponse<List<FestivalInfo>>> getRecommendFestival(
+	public ResponseEntity<BasicResponse<RecommendFestivalResponse>> getRecommendFestival(
 		@AuthUser User user,
 		@RequestParam(required = false, defaultValue = "5") Long size
 	) {
 		checkLogin(user);
 
-		List<FestivalInfo> recommendFestivals = festivalService.getRecommendFestivals(
+		RecommendFestivalResponse recommendFestivals = festivalService.getRecommendFestivals(
 			isNull(user) ? null : user.getId(), size);
+
 
 		return ResponseEntity.ok(BasicResponse.ok("유형별 추천 페스티벌 조회 성공", recommendFestivals));
 	}
@@ -266,7 +268,7 @@ public class FestivalController {
 		for (Sort.Order order : pageable.getSort()) {
 			String property = order.getProperty();
 
-			if ("dist" .equals(property) && (isNull(latitude) || isNull(longitude))) {
+			if ("dist".equals(property) && (isNull(latitude) || isNull(longitude))) {
 				throw new CustomException(INVALID_CURRENT_LOCATION);
 			}
 		}
