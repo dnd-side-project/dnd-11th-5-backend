@@ -12,7 +12,6 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReviewSimpleResponse extends ReviewIdResponse {
 
 	private Long festivalId;
