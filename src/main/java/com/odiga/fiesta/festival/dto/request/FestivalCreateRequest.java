@@ -3,6 +3,7 @@ package com.odiga.fiesta.festival.dto.request;
 import static com.fasterxml.jackson.annotation.JsonFormat.Shape.*;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -42,7 +43,7 @@ public class FestivalCreateRequest {
 	private String sido;
 
 	private String sigungu;
-	
+
 	private String playtime;
 
 	private String homepageUrl;
@@ -61,9 +62,9 @@ public class FestivalCreateRequest {
 
 	@Builder
 	public FestivalCreateRequest(String name, String description, LocalDate startDate, LocalDate endDate,
-		String address,
-		Double latitude, Double longitude, String sido, String sigungu, String playtime, String homepageUrl,
-		String instagramUrl, String ticketLink, String fee, List<Long> categoryIds, List<Long> moodIds, String tip) {
+		String address, Double latitude, Double longitude, String sido, String sigungu,
+		String playtime, String homepageUrl, String instagramUrl, String ticketLink,
+		String fee, List<Long> categoryIds, List<Long> moodIds, String tip) {
 		this.name = name;
 		this.description = description;
 		this.startDate = startDate;
@@ -78,8 +79,12 @@ public class FestivalCreateRequest {
 		this.instagramUrl = instagramUrl;
 		this.ticketLink = ticketLink;
 		this.fee = fee;
-		this.categoryIds = categoryIds;
-		this.moodIds = moodIds;
+		this.categoryIds = removeDuplicates(categoryIds);
+		this.moodIds = removeDuplicates(moodIds);
 		this.tip = tip;
+	}
+
+	private List<Long> removeDuplicates(List<Long> list) {
+		return list == null ? Collections.emptyList()  : list.stream().distinct().toList();
 	}
 }

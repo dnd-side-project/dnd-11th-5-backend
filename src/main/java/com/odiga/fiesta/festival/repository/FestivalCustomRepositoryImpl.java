@@ -3,15 +3,17 @@ package com.odiga.fiesta.festival.repository;
 import static com.odiga.fiesta.category.domain.QCategory.*;
 import static com.odiga.fiesta.festival.domain.QFestival.*;
 import static com.odiga.fiesta.festival.domain.QFestivalBookmark.*;
+import static com.odiga.fiesta.festival.domain.QFestivalImage.*;
 import static com.odiga.fiesta.festival.domain.QFestivalUserType.*;
 import static com.odiga.fiesta.sido.domain.QSido.*;
-import static com.odiga.fiesta.user.domain.QUserType.*;
+import static com.querydsl.core.group.GroupBy.*;
 import static java.util.Objects.*;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -21,25 +23,20 @@ import org.springframework.data.support.PageableExecutionUtils;
 
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.QFestivalBookmark;
-import com.odiga.fiesta.festival.domain.QFestivalUserType;
 import com.odiga.fiesta.festival.dto.projection.FestivalDetailData;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmark;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkCountAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
-import com.odiga.fiesta.user.domain.QUserType;
 import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.StringPath;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -290,6 +287,23 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 		return festivals;
 	}
 
+	@Override
+	public Map<Long, String> findThumbnailImageByFestivalId(List<Long> festivalIds) {
+		Map<Long, String> resultMap = queryFactory
+			.from(festivalImage)
+			.where(festivalImage.festivalId.in(festivalIds))
+			.groupBy(festivalImage.festivalId)
+			.transform(
+				groupBy(festivalImage.festivalId).as(festivalImage.imageUrl.min())
+			);
+		
+		for (Long festivalId : festivalIds) {
+			resultMap.putIfAbsent(festivalId, null);
+		}
+
+		return resultMap;
+	}
+
 	private List<OrderSpecifier> getAllOrderSpecifiers(Pageable pageable, Double latitude, Double longitude) {
 		List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
 
@@ -301,7 +315,7 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 			String property = order.getProperty();
 
 			// 정렬 조건이 dist 인 경우, 위도/경도 값을 받아서 새로운 specifier 를 만든다.
-			if ("dist" .equals(property)) {
+			if ("dist".equals(property)) {
 				OrderSpecifier distSpecifier = FestivalSortType.getDistanceOrderSpecifier(
 					order.getDirection().isAscending() ?
 						Order.ASC : Order.DESC, latitude, longitude);

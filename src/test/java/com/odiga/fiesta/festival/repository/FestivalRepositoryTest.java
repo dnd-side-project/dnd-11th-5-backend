@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import com.odiga.fiesta.RepositoryTestSupport;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.FestivalBookmark;
+import com.odiga.fiesta.festival.domain.FestivalImage;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.sido.domain.Sido;
@@ -145,6 +147,45 @@ class FestivalRepositoryTest extends RepositoryTestSupport {
 		assertEquals(2, result.getTotalElements());
 	}
 
+	@DisplayName("페스티벌 id 로 grouping 된 이미지 하나를 조회할 수 있다.")
+	@Test
+	void findThumbnailImageByFestivalId() {
+		// given
+		Festival festival1 = createFestival();
+		Festival festival2 = createFestival();
+		Festival festival3 = createFestival();
+
+		em.persist(festival1);
+		em.persist(festival2);
+		em.persist(festival3);
+
+		FestivalImage image11 = createFestivalImage(festival1);
+		FestivalImage image12 = createFestivalImage(festival1);
+		FestivalImage image21 = createFestivalImage(festival2);
+
+		em.persist(image11);
+		em.persist(image12);
+		em.persist(image21);
+
+		// when
+		Map<Long, String> thumbnailImageByFestivalId = festivalRepository.findThumbnailImageByFestivalId(
+			List.of(festival1.getId(), festival2.getId(), festival3.getId()));
+
+		// then
+		assertThat(thumbnailImageByFestivalId).isNotNull();
+		assertThat(thumbnailImageByFestivalId.size()).isEqualTo(3);
+		assertThat(thumbnailImageByFestivalId.get(festival1.getId())).isEqualTo(image11.getImageUrl());
+		assertThat(thumbnailImageByFestivalId.get(festival2.getId())).isEqualTo(image21.getImageUrl());
+		assertThat(thumbnailImageByFestivalId.get(festival3.getId())).isNull();
+	}
+
+	private static FestivalImage createFestivalImage(Festival festival) {
+		return FestivalImage.builder()
+			.festivalId(festival.getId())
+			.imageUrl("이미지1")
+			.build();
+	}
+
 	private static Festival createFestival(LocalDate startDate, LocalDate endDate, Long sidoId) {
 		return Festival.builder()
 			.userId(1L)
@@ -173,6 +214,28 @@ class FestivalRepositoryTest extends RepositoryTestSupport {
 			.name("페스티벌 이름")
 			.startDate(startDate)
 			.endDate(endDate)
+			.address("페스티벌 주소")
+			.sidoId(1L)
+			.sigungu("시군구")
+			.latitude(10.1)
+			.longitude(10.1)
+			.tip("페스티벌 팁")
+			.homepageUrl("홈페이지 url")
+			.instagramUrl("인스타그램 url")
+			.fee("비용")
+			.description("페스티벌 상세 설명")
+			.ticketLink("티켓 링크")
+			.playtime("페스티벌 진행 시간")
+			.isPending(false)
+			.build();
+	}
+
+	private static Festival createFestival() {
+		return Festival.builder()
+			.userId(1L)
+			.name("페스티벌 이름")
+			.startDate(LocalDate.of(2024, 10, 1))
+			.endDate(LocalDate.of(2024, 10, 10))
 			.address("페스티벌 주소")
 			.sidoId(1L)
 			.sigungu("시군구")

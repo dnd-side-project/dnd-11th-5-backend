@@ -12,7 +12,6 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Builder
 public class ReviewCreateRequest {
 
 	@NotNull
@@ -32,5 +31,17 @@ public class ReviewCreateRequest {
 	@AssertTrue(message = "평점은 0.5 단위로 입력해야 합니다.")
 	private boolean isRatingValid() {
 		return rating != null && (rating * 10) % 5 == 0;
+	}
+
+	@Builder
+	public ReviewCreateRequest(Long festivalId, Double rating, List<Long> keywordIds, String content) {
+		this.festivalId = festivalId;
+		this.rating = rating;
+		this.keywordIds = removeDuplicates(keywordIds);
+		this.content = content;
+	}
+
+	private List<Long> removeDuplicates(List<Long> list) {
+		return list == null ? null : list.stream().distinct().toList();
 	}
 }
