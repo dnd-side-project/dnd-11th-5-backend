@@ -59,6 +59,7 @@ import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.festival.repository.FestivalUserTypeRepository;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.sido.repository.SidoRepository;
+import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.dto.response.UserTypeResponse;
 import com.odiga.fiesta.user.repository.UserRepository;
@@ -73,6 +74,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @Slf4j
 public class FestivalService {
+
 	private final FestivalUserTypeRepository festivalUserTypeRepository;
 	private final UserRepository userRepository;
 	private final UserTypeRepository userTypeRepository;
@@ -269,18 +271,19 @@ public class FestivalService {
 		return FestivalDetailResponse.of(festivalDetail, categories, moods, images);
 	}
 
-	public RecommendFestivalResponse getRecommendFestivals(Long userId, Long size) {
-		validateUserId(userId);
+	public RecommendFestivalResponse getRecommendFestivals(User user, Long size) {
+		validateUserId(user.getId());
 
-		Long userTypeId = userRepository.findUserTypeIdById(userId)
-			.orElseThrow(() -> new CustomException(USER_TYPE_NOT_FOUND));
+		if (isNull(user.getUserTypeId())) {
+			throw new CustomException(PROFILE_NOT_REGISTERED);
+		}
 
-		UserType userType = userTypeRepository.findById(userTypeId)
+		UserType userType = userTypeRepository.findById(user.getUserTypeId())
 			.orElseThrow(() -> new CustomException(USER_TYPE_NOT_FOUND));
 
 		LocalDate date = LocalDate.now(clock);
 
-		List<FestivalWithSido> festivals = festivalRepository.findRecommendFestivals(userTypeId, size, date);
+		List<FestivalWithSido> festivals = festivalRepository.findRecommendFestivals(user.getUserTypeId(), size, date);
 
 		List<FestivalInfo> list = festivals.stream().map(festival -> {
 			String thumbnailImage = festivalImageRepository.findFirstImageUrlByFestivalId(festival.getFestivalId());

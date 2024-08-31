@@ -250,8 +250,7 @@ public class FestivalController {
 		checkLogin(user);
 
 		RecommendFestivalResponse recommendFestivals = festivalService.getRecommendFestivals(
-			isNull(user) ? null : user.getId(), size);
-
+			isNull(user) ? null : user, size);
 
 		return ResponseEntity.ok(BasicResponse.ok("유형별 추천 페스티벌 조회 성공", recommendFestivals));
 	}

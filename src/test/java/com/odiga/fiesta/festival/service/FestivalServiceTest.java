@@ -31,6 +31,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.IntegrationTestSupport;
@@ -268,7 +269,6 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		Page<FestivalInfoWithBookmark> responses = festivalService.getFestivalByFiltersAndSort(null,
 			filterRequest, null, null, pageable);
 
-		System.out.println("response: " + responses.getContent());
 		// then
 		assertEquals(3, responses.getTotalElements());
 	}
@@ -528,9 +528,18 @@ class FestivalServiceTest extends IntegrationTestSupport {
 	@Test
 	void getRecommendFestivals_Success() {
 		// given
-		User user = userRepository.save(createUser());
-		Long userTypeId = user.getUserTypeId();
 		UserType userType = userTypeRepository.save(createUserType());
+
+		User user = User.builder()
+			.statusMessage("상태 메시지")
+			.nickname("테스트 유저")
+			.email("fiest@odiga.com")
+			.profileImage("프로필 이미지")
+			.userTypeId(userType.getId())
+			.build();
+
+		userRepository.save(user);
+		Long userTypeId = user.getUserTypeId();
 
 		Festival festival1 = festivalRepository.save(createFestival("페스티벌1"));
 		Festival festival2 = festivalRepository.save(createFestival("페스티벌2"));
@@ -546,11 +555,9 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		festivalUserTypeRepository.save(createFestivalUserType(festival5.getId(), -1L));
 
 		// when
-		RecommendFestivalResponse recommendFestivals = festivalService.getRecommendFestivals(user.getId(), 2L);
+		RecommendFestivalResponse recommendFestivals = festivalService.getRecommendFestivals(user, 2L);
 
 		// then
-		System.out.println(recommendFestivals);
-
 		assertThat(recommendFestivals.getUserType())
 			.extracting("userTypeId", "name")
 			.contains(userType.getId(), userType.getName());
@@ -563,20 +570,52 @@ class FestivalServiceTest extends IntegrationTestSupport {
 
 	@DisplayName("유형별 페스티벌 조회 - 종료된 페스티벌은 조회되지 않는다.")
 	@Test
-	void getRecommendFestivals_ClosingFestivalNotContainn() {
+	void getRecommendFestivals_ClosingFestivalNotContain() {
 		// given
-		User user = userRepository.save(createUser());
+		UserType userType = userTypeRepository.save(createUserType());
+
+		User user = User.builder()
+			.statusMessage("상태 메시지")
+			.nickname("테스트 유저")
+			.email("fiest@odiga.com")
+			.profileImage("프로필 이미지")
+			.userTypeId(userType.getId())
+			.build();
+
+		userRepository.save(user);
 		Long userTypeId = user.getUserTypeId();
-		userTypeRepository.save(createUserType());
 
 		Festival closingFestival = festivalRepository.save(createFestival(TODAY.minusDays(1), TODAY.minusDays(1)));
 		festivalUserTypeRepository.save(createFestivalUserType(closingFestival.getId(), userTypeId));
 
 		// when
-		RecommendFestivalResponse recommendFestivals = festivalService.getRecommendFestivals(user.getId(), 1L);
+		RecommendFestivalResponse recommendFestivals = festivalService.getRecommendFestivals(user, 5L);
 
 		// then
 		assertThat(recommendFestivals.getFestivals()).isEmpty();
+	}
+
+	@DisplayName("유형별 페스티벌 조회 - 실패, 프로필 등록하지 않은 유저")
+	@Test
+	void getRecommendFestivals_ProfileNotRegistered() {
+		// given
+		User user = User.builder()
+			.profileImage("프로필 이미지")
+			.nickname("테스트 유저")
+			.email("fiesta@odiga.com")
+			.statusMessage("상태 메시지")
+			.build();
+
+		userRepository.save(user);
+
+		Festival closingFestival = festivalRepository.save(createFestival(TODAY.minusDays(1), TODAY.minusDays(1)));
+		festivalUserTypeRepository.save(createFestivalUserType(closingFestival.getId(), 1L));
+
+		// when // then
+		CustomException exception = assertThrows(CustomException.class,
+			() -> festivalService.getRecommendFestivals(user, 1L));
+
+		assertEquals(PROFILE_NOT_REGISTERED.getMessage(), exception.getMessage());
 	}
 
 	private static FestivalUserType createFestivalUserType(Long festivalId, Long userTypeId) {
@@ -589,11 +628,14 @@ class FestivalServiceTest extends IntegrationTestSupport {
 	private static UserType createUserType() {
 		return UserType.builder()
 			.name("테스트 유저 유형")
+			.profileImage("프로필 이미지")
+			.cardImage("카드 이미지")
 			.build();
 	}
 
 	private static User createUser() {
 		return User.builder()
+			.email("fiesta@odiga.com")
 			.nickname("테스트 유저")
 			.userTypeId(1L)
 			.statusMessage("상태 메시지")
