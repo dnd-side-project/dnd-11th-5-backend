@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.odiga.fiesta.auth.domain.AuthUser;
 import com.odiga.fiesta.auth.service.AuthService;
 import com.odiga.fiesta.common.BasicResponse;
+import com.odiga.fiesta.common.error.ErrorCode;
+import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.dto.request.ProfileCreateRequest;
 import com.odiga.fiesta.user.dto.request.SocialLoginRequest;
@@ -51,6 +53,9 @@ public class UserController {
 	@GetMapping("/me")
 	@Operation(summary = "내 정보 조회", description = "로그인한 유저의 정보를 조회합니다.")
 	public ResponseEntity<BasicResponse<UserInfoResponse>> getUserInfo(@AuthUser User user) {
+		if (user == null) {
+			throw new CustomException(ErrorCode.NOT_LOGGED_IN);
+		}
 
 		UserInfoResponse response = UserInfoResponse.builder()
 			.userId(user.getId())

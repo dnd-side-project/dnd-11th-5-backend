@@ -15,7 +15,6 @@ public enum ErrorCode {
 	INTERNAL_SERVER_ERROR(500, "S001", "서버에 문제가 생겼습니다."),
 	UPLOAD_FAIL(500, "S002", "파일 업로드에 실패하였습니다."),
 	JSON_PARSING_ERROR(500, "S003", "JSON 파싱 오류가 발생했습니다."),
-	USER_TYPE_NOT_FOUND(500, "S004", "유저 유형 도출에 실패했습니다."),
 
 	// Client Error
 	METHOD_NOT_ALLOWED(405, "C001", "적절하지 않은 HTTP 메소드입니다."),
@@ -44,6 +43,8 @@ public enum ErrorCode {
 	INVALID_NICKNAME_LENGTH(400, "U008", "닉네임은 1자 이상 10자 이하여야 합니다."),
 	CAN_NOT_FIND_KAKAO_USER(400, "U009", "카카오 사용자를 찾을 수 없습니다."),
 	ROLE_NOT_FOUND(404, "U010", "존재하지 않는 권한입니다."),
+	USER_TYPE_NOT_FOUND(500, "U011", "유저 유형을  찾을 수  없습니다."),
+	PROFILE_NOT_REGISTERED(400, "U012", "프로필을 등록해주세요."),
 
 	// Festival
 	INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."),

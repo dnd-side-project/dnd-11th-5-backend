@@ -128,11 +128,11 @@ class ReviewServiceTest extends IntegrationTestSupport {
 
 		// then
 		assertThat(mostLikeReviews).hasSize(3)
-			.extracting("reviewId", "festivalId", "content", "rating")
+			.extracting("reviewId", "festivalId", "content", "rating", "thumbnailImage")
 			.containsExactly(
-				tuple(reviewLike5.getId(), festival.getId(), "리뷰 내용", 3.5),
-				tuple(reviewLike3.getId(), festival.getId(), "리뷰 내용", 3.5),
-				tuple(reviewLike2.getId(), festival.getId(), "리뷰 내용", 3.5)
+				tuple(reviewLike5.getId(), festival.getId(), "리뷰 내용", 3.5, null),
+				tuple(reviewLike3.getId(), festival.getId(), "리뷰 내용", 3.5, null),
+				tuple(reviewLike2.getId(), festival.getId(), "리뷰 내용", 3.5, null)
 			);
 	}
 
