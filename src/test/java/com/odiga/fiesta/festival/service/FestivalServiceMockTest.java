@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.mock.web.MockMultipartFile;
@@ -27,6 +28,8 @@ import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.domain.FestivalCategory;
+import com.odiga.fiesta.festival.domain.FestivalMood;
 import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
@@ -157,17 +160,17 @@ class FestivalServiceMockTest extends MockTestSupport {
 				"test1",
 				"test1.png",
 				MULTIPART_FORM_DATA_VALUE,
-				"test1" .getBytes()),
+				"test1".getBytes()),
 			new MockMultipartFile(
 				"test2",
 				"test2.jpeg",
 				MULTIPART_FORM_DATA_VALUE,
-				"test2" .getBytes()),
+				"test2".getBytes()),
 			new MockMultipartFile(
 				"test3",
 				"test3.jpg",
 				MULTIPART_FORM_DATA_VALUE,
-				"test3" .getBytes())
+				"test3".getBytes())
 		);
 
 		Festival festival = createFestival();
@@ -234,6 +237,62 @@ class FestivalServiceMockTest extends MockTestSupport {
 			then(festivalRepository).should().save(any());
 		}
 
+		@DisplayName("페스티벌 생성 - 성공 (list 항목에 중복있으면 제거하고 저장)")
+		@Test
+		void createFestival_RemoveDuplicatedKeywords() {
+			// given
+			FestivalCreateRequest listDuplicatedRequest = FestivalCreateRequest.builder()
+				.name("페스티벌 이름")
+				.description("페스티벌 설명")
+				.startDate(LocalDate.of(2024, 10, 4))
+				.endDate(LocalDate.of(2024, 10, 4))
+				.address("주소")
+				.latitude(35.1731)
+				.longitude(129.0714)
+				.sido("부산")
+				.sigungu("해운대구")
+				.playtime("플레이타임")
+				.homepageUrl("홈페이지")
+				.instagramUrl("인스타그램")
+				.ticketLink("티켓링크")
+				.fee("입장료")
+				.categoryIds(List.of(1L, 1L, 2L))
+				.moodIds(List.of(1L, 2L, 2L))
+				.tip("팁")
+				.build();
+
+			given(userRepository.findById(1L)).willReturn(Optional.of(user));
+			given(userTypeService.getTopNUserTypes(List.of(1L, 2L), List.of(1L, 2L), 2))
+				.willReturn(List.of(userType1, userType2));
+			given(festivalRepository.save(any())).willReturn(festival);
+
+			// when
+			festivalService.createFestival(1L, listDuplicatedRequest, null);
+
+			// then
+			ArgumentCaptor<List<FestivalCategory>> categoryCaptor = ArgumentCaptor.forClass(List.class);
+			ArgumentCaptor<List<FestivalMood>> moodCaptor = ArgumentCaptor.forClass(List.class);
+
+			verify(festivalCategoryRepository).saveAll(categoryCaptor.capture());
+			verify(festivalMoodRepository).saveAll(moodCaptor.capture());
+
+			List<FestivalCategory> savedCategories = categoryCaptor.getValue();
+			List<FestivalMood> savedMoods = moodCaptor.getValue();
+
+			assertEquals(2, savedCategories.size());
+			assertEquals(2, savedMoods.size());
+
+			List<Long> expectedCategoryIds = List.of(1L, 2L);
+			for (FestivalCategory category : savedCategories) {
+				assertTrue(expectedCategoryIds.contains(category.getCategoryId()));
+			}
+
+			List<Long> expectedMoodIds = List.of(1L, 2L);
+			for (FestivalMood mood : savedMoods) {
+				assertTrue(expectedMoodIds.contains(mood.getMoodId()));
+			}
+		}
+
 		@DisplayName("페스티벌 생성 - 실패, 이미지 갯수 초과")
 		@Test
 		void createFestival_ImageCountExceeded() {
@@ -243,22 +302,22 @@ class FestivalServiceMockTest extends MockTestSupport {
 					"test1",
 					"test1.png",
 					MULTIPART_FORM_DATA_VALUE,
-					"test1" .getBytes()),
+					"test1".getBytes()),
 				new MockMultipartFile(
 					"test2",
 					"test2.jpeg",
 					MULTIPART_FORM_DATA_VALUE,
-					"test2" .getBytes()),
+					"test2".getBytes()),
 				new MockMultipartFile(
 					"test3",
 					"test3.jpg",
 					MULTIPART_FORM_DATA_VALUE,
-					"test3" .getBytes()),
+					"test3".getBytes()),
 				new MockMultipartFile(
 					"test4",
 					"test4.jpg",
 					MULTIPART_FORM_DATA_VALUE,
-					"test4" .getBytes())
+					"test4".getBytes())
 			);
 
 			given(userRepository.findById(1L)).willReturn(Optional.of(user));
