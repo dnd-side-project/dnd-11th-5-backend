@@ -8,10 +8,14 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.odiga.fiesta.category.domain.Category;
 import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.companion.domain.Companion;
 import com.odiga.fiesta.companion.repository.CompanionRepository;
+import com.odiga.fiesta.mood.domain.Mood;
 import com.odiga.fiesta.mood.repository.MoodRepository;
+import com.odiga.fiesta.priority.domain.Priority;
 import com.odiga.fiesta.priority.repository.PriorityRepository;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.domain.UserType;
@@ -78,6 +82,8 @@ public class UserService {
 		// response
 		return ProfileCreateResponse.builder()
 			.userTypeId(userType.getId())
+			.userTypeName(userType.getName())
+			.userTypeImage(userType.getCardImage())
 			.build();
 	}
 
@@ -126,31 +132,31 @@ public class UserService {
 	}
 
 	private void validateCompanions(List<Long> companionIds) {
-		companionIds.forEach(id ->
-			companionRepository.findById(id)
-				.orElseThrow(() -> new CustomException(COMPANION_NOT_FOUND))
-		);
+		List<Companion> companions = companionRepository.findAllById(companionIds);
+		if (companions.size() != companionIds.size()) {
+			throw new CustomException(COMPANION_NOT_FOUND);
+		}
 	}
 
 	private void validateCategories(List<Long> categoryIds) {
-		categoryIds.forEach(id ->
-			categoryRepository.findById(id)
-				.orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND))
-		);
+		List<Category> categories = categoryRepository.findAllById(categoryIds);
+		if (categories.size() != categoryIds.size()) {
+			throw new CustomException(CATEGORY_NOT_FOUND);
+		}
 	}
 
 	private void validateMoods(List<Long> moodIds) {
-		moodIds.forEach(id ->
-			moodRepository.findById(id)
-				.orElseThrow(() -> new CustomException(MOOD_NOT_FOUND))
-		);
+		List<Mood> moods = moodRepository.findAllById(moodIds);
+		if (moods.size() != moodIds.size()) {
+			throw new CustomException(MOOD_NOT_FOUND);
+		}
 	}
 
 	private void validatePriorities(List<Long> priorityIds) {
-		priorityIds.forEach(id ->
-			priorityRepository.findById(id)
-				.orElseThrow(() -> new CustomException(PRIORITY_NOT_FOUND))
-		);
+		List<Priority> priorities = priorityRepository.findAllById(priorityIds);
+		if (priorities.size() != priorityIds.size()) {
+			throw new CustomException(PRIORITY_NOT_FOUND);
+		}
 	}
 
 	private void checkLogin(User user) {
