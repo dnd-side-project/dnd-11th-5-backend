@@ -321,6 +321,7 @@ public class FestivalService {
 
 	}
 
+	@Transactional
 	public FestivalModificationResponse createFestivalRequest(User user, Long festivalId,
 		CreateFestivalModificationRequest request) {
 		validateUserId(user.getId());
@@ -333,7 +334,6 @@ public class FestivalService {
 			.build();
 
 		festivalModificationRequestRepository.save(festivalModificationRequest);
-
 
 		return FestivalModificationResponse.builder()
 			.festivalId(festivalId)
@@ -473,7 +473,7 @@ public class FestivalService {
 			throw new CustomException(UNAUTHENTICATED_USER);
 		}
 
-		if (!userRepository.existsById(userId)){
+		if (!userRepository.existsById(userId)) {
 			throw new CustomException(USER_NOT_FOUND);
 		}
 	}
