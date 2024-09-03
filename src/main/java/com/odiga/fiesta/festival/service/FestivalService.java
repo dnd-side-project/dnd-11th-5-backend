@@ -474,7 +474,9 @@ public class FestivalService {
 			throw new CustomException(UNAUTHENTICATED_USER);
 		}
 
-		userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+		if (!userRepository.existsById(userId)){
+			throw new CustomException(USER_NOT_FOUND);
+		}
 	}
 
 	private void validateFileCount(List<MultipartFile> files) {
