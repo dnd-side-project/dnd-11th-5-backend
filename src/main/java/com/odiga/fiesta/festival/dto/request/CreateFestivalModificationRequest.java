@@ -1,5 +1,6 @@
 package com.odiga.fiesta.festival.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CreateFestivalModificationRequest {
 
+	@NotBlank
 	private String content;
 
 	@Builder

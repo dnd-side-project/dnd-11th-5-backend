@@ -464,7 +464,6 @@ public class FestivalService {
 			.orElseThrow(() -> new CustomException(FESTIVAL_NOT_FOUND));
 
 		if (festival.isPending()) {
-			// TODO 이후에 권한으로 처리
 			throw new CustomException(FESTIVAL_IS_PENDING);
 		}
 	}

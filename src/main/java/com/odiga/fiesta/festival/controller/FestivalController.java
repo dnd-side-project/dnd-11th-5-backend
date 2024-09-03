@@ -263,7 +263,7 @@ public class FestivalController {
 	public ResponseEntity<BasicResponse<FestivalModificationResponse>> createFestivalRequest(
 		@AuthUser User user,
 		@PathVariable Long festivalId,
-		@RequestBody CreateFestivalModificationRequest request
+		@RequestBody @Valid CreateFestivalModificationRequest request
 	) {
 		checkLogin(user);
 

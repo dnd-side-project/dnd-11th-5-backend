@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,9 +17,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.odiga.fiesta.ControllerTestSupport;
+import com.odiga.fiesta.auth.domain.AuthUser;
+import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.dto.request.CreateFestivalModificationRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
+import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.festival.service.FestivalService;
 
 class FestivalControllerTest extends ControllerTestSupport {
@@ -127,7 +133,7 @@ class FestivalControllerTest extends ControllerTestSupport {
 
 	@DisplayName("다가오는 페스티벌 조회 -로그인하지 않는 경우 에러가 발생한다.")
 	@Test
-	void test() throws Exception {
+	void getUpcomingFestival_NotLoggedIn() throws Exception {
 		// given
 		SecurityContextHolder.clearContext();
 
@@ -135,6 +141,39 @@ class FestivalControllerTest extends ControllerTestSupport {
 		mockMvc.perform(get("/api/v1/festivals/upcoming")
 				.param("query", " ")
 			)
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.message").value(NOT_LOGGED_IN.getMessage()));
+	}
+
+	@DisplayName("페스티벌 수정 사항 요청 - 내용이 비어있으면 에러가 발생한다.")
+	@Test
+	void createFestivalRequest_EmptyContent() throws Exception {
+		// given
+		CreateFestivalModificationRequest request = CreateFestivalModificationRequest.builder()
+			.content("")
+			.build();
+
+		// when // then
+		mockMvc.perform(post("/api/v1/festivals/{festivalId}/request", 1L)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest());
+	}
+
+	@DisplayName("페스티벌 수정 사항 요청 - 로그인 하지 않는 경우 에러가 발생한다.")
+	@Test
+	void createFestivalRequest_NotLoggedIn() throws Exception {
+		// given
+		SecurityContextHolder.clearContext();
+
+		CreateFestivalModificationRequest request = CreateFestivalModificationRequest.builder()
+			.content("리뷰 내용")
+			.build();
+
+		// when // then
+		mockMvc.perform(post("/api/v1/festivals/{festivalId}/request", 1L)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isUnauthorized())
 			.andExpect(jsonPath("$.message").value(NOT_LOGGED_IN.getMessage()));
 	}
