@@ -331,6 +331,7 @@ public class FestivalService {
 			.festivalId(festivalId)
 			.userId(user.getId())
 			.content(request.getContent())
+			.isPending(true)
 			.build();
 
 		festivalModificationRequestRepository.save(festivalModificationRequest);

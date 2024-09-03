@@ -33,12 +33,16 @@ public class FestivalModificationRequest extends BaseEntity {
 	@Column(name = "content", length = 500, nullable = false)
 	private String content;
 
+	@Column(name = "is_pending", nullable = false)
+	private boolean isPending;
+
 	@Builder
 	public FestivalModificationRequest(Long id, Long festivalId, Long userId,
-		String content) {
+		String content, boolean isPending) {
 		this.id = id;
 		this.festivalId = festivalId;
 		this.userId = userId;
 		this.content = content;
+		this.isPending = isPending;
 	}
 }

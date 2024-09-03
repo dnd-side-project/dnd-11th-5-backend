@@ -42,6 +42,7 @@ import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.FestivalBookmark;
 import com.odiga.fiesta.festival.domain.FestivalCategory;
 import com.odiga.fiesta.festival.domain.FestivalImage;
+import com.odiga.fiesta.festival.domain.FestivalModificationRequest;
 import com.odiga.fiesta.festival.domain.FestivalMood;
 import com.odiga.fiesta.festival.domain.FestivalUserType;
 import com.odiga.fiesta.festival.dto.request.CreateFestivalModificationRequest;
