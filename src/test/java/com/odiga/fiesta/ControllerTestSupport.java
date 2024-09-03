@@ -28,8 +28,6 @@ import com.odiga.fiesta.festival.service.FestivalBookmarkService;
 import com.odiga.fiesta.festival.service.FestivalService;
 import com.odiga.fiesta.festival.service.MoodService;
 import com.odiga.fiesta.festival.service.PriorityService;
-import com.odiga.fiesta.log.controller.LogController;
-import com.odiga.fiesta.log.service.LogService;
 import com.odiga.fiesta.review.controller.ReviewController;
 import com.odiga.fiesta.review.service.ReviewLikeService;
 import com.odiga.fiesta.review.service.ReviewService;
@@ -41,7 +39,6 @@ import com.odiga.fiesta.user.domain.User;
 	// 사용하는 컨트롤러 여기에 추가
 	FestivalController.class,
 	FestivalStaticDataController.class,
-	LogController.class,
 	ReviewController.class
 })
 public abstract class ControllerTestSupport {
@@ -67,9 +64,6 @@ public abstract class ControllerTestSupport {
 
 	@MockBean
 	protected PriorityService priorityService;
-
-	@MockBean
-	protected LogService logService;
 
 	@MockBean
 	protected FestivalService festivalService;
@@ -103,13 +97,12 @@ public abstract class ControllerTestSupport {
 		when(user.getId())
 			.thenReturn(1L);
 		when(user.getEmail())
-			.thenReturn("fiesta@naver.com");
+			.thenReturn("fiesta@odiga.com");
 		when(userAccount.getAccount())
 			.thenReturn(user);
 
 		Authentication authentication = new UsernamePasswordAuthenticationToken(userAccount, null,
 			userAccount.getAuthorities());
 		context.setAuthentication(authentication);
-
 	}
 }
