@@ -42,8 +42,10 @@ import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.FestivalBookmark;
 import com.odiga.fiesta.festival.domain.FestivalCategory;
 import com.odiga.fiesta.festival.domain.FestivalImage;
+import com.odiga.fiesta.festival.domain.FestivalModificationRequest;
 import com.odiga.fiesta.festival.domain.FestivalMood;
 import com.odiga.fiesta.festival.domain.FestivalUserType;
+import com.odiga.fiesta.festival.dto.request.CreateFestivalModificationRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
@@ -53,12 +55,14 @@ import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
+import com.odiga.fiesta.festival.dto.response.FestivalModificationResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
 import com.odiga.fiesta.festival.dto.response.RecommendFestivalResponse;
 import com.odiga.fiesta.festival.repository.FestivalBookmarkRepository;
 import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
+import com.odiga.fiesta.festival.repository.FestivalModificationRequestRepository;
 import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.festival.repository.FestivalUserTypeRepository;
@@ -112,6 +116,9 @@ class FestivalServiceTest extends IntegrationTestSupport {
 
 	@Autowired
 	private FestivalUserTypeRepository festivalUserTypeRepository;
+
+	@Autowired
+	private FestivalModificationRequestRepository festivalModificationRequestRepository;
 
 	@SpyBean
 	private Clock clock;
@@ -623,6 +630,29 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.festivalId(festivalId)
 			.userTypeId(userTypeId)
 			.build();
+	}
+
+	@DisplayName("페스티벌 수정 사항 요청 - 성공")
+	@Test
+	void createFestivalRequest() {
+
+		// given
+		Festival festival = festivalRepository.save(createFestival("페스티벌"));
+		User user = userRepository.save(createUser());
+
+		CreateFestivalModificationRequest request = CreateFestivalModificationRequest.builder()
+			.content("수정 사항")
+			.build();
+
+		// when
+		FestivalModificationResponse response = festivalService.createFestivalRequest(user, festival.getId(), request);
+
+		// then
+		assertNotNull(festivalModificationRequestRepository.findById(response.getRequestId()));
+
+		assertThat(response)
+			.extracting("requestId", "festivalId", "isPending")
+			.contains(response.getRequestId(), festival.getId(), true);
 	}
 
 	private static UserType createUserType() {

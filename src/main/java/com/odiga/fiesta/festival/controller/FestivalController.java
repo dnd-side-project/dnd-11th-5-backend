@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -31,6 +32,7 @@ import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
+import com.odiga.fiesta.festival.dto.request.CreateFestivalModificationRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalBookmarkResponse;
@@ -38,6 +40,7 @@ import com.odiga.fiesta.festival.dto.response.FestivalCreateResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
+import com.odiga.fiesta.festival.dto.response.FestivalModificationResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.RecommendFestivalResponse;
 import com.odiga.fiesta.festival.service.FestivalBookmarkService;
@@ -253,6 +256,23 @@ public class FestivalController {
 			isNull(user) ? null : user, size);
 
 		return ResponseEntity.ok(BasicResponse.ok("유형별 추천 페스티벌 조회 성공", recommendFestivals));
+	}
+
+	@Operation(summary = "페스티벌 수정 사항 요청", description = "페스티벌 수정 사항을 요청을 생성합니다.")
+	@PostMapping("/{festivalId}/request")
+	public ResponseEntity<BasicResponse<FestivalModificationResponse>> createFestivalRequest(
+		@AuthUser User user,
+		@PathVariable Long festivalId,
+		@RequestBody @Valid CreateFestivalModificationRequest request
+	) {
+		checkLogin(user);
+
+		FestivalModificationResponse response = festivalService.createFestivalRequest(
+			isNull(user) ? null : user, festivalId, request);
+
+		return ResponseEntity.created(
+				URI.create("/api/v1/festivals/" + festivalId))
+			.body(BasicResponse.created("페스티벌 수정 사항 요청 성공", response));
 	}
 
 	private void validateFestivalDay(int year, int month, int day) {
