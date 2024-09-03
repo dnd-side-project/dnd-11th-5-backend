@@ -34,6 +34,7 @@ import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
+import com.odiga.fiesta.festival.repository.FestivalModificationRequestRepository;
 import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.festival.repository.FestivalUserTypeRepository;
@@ -67,6 +68,9 @@ class FestivalServiceMockTest extends MockTestSupport {
 
 	@Mock
 	private FestivalMoodRepository festivalMoodRepository;
+
+	@Mock
+	private FestivalModificationRequestRepository festivalModificationRequestRepository;
 
 	@Mock
 	private FileUtils fileUtils;
@@ -209,7 +213,7 @@ class FestivalServiceMockTest extends MockTestSupport {
 		@Test
 		void createFestival_Success() {
 			// given
-			given(userRepository.findById(1L)).willReturn(Optional.of(user));
+			given(userRepository.existsById(1L)).willReturn(true);
 			given(userTypeService.getTopNUserTypes(List.of(1L, 2L), List.of(1L, 2L), 2))
 				.willReturn(List.of(userType1, userType2));
 			given(festivalRepository.save(any())).willReturn(festival);
@@ -225,7 +229,7 @@ class FestivalServiceMockTest extends MockTestSupport {
 		@Test
 		void createFestival_SuccessWithoutImages() {
 			// given
-			given(userRepository.findById(1L)).willReturn(Optional.of(user));
+			given(userRepository.existsById(1L)).willReturn(true);
 			given(userTypeService.getTopNUserTypes(List.of(1L, 2L), List.of(1L, 2L), 2))
 				.willReturn(List.of(userType1, userType2));
 			given(festivalRepository.save(any())).willReturn(festival);
@@ -261,7 +265,7 @@ class FestivalServiceMockTest extends MockTestSupport {
 				.tip("팁")
 				.build();
 
-			given(userRepository.findById(1L)).willReturn(Optional.of(user));
+			given(userRepository.existsById(1L)).willReturn(true);
 			given(userTypeService.getTopNUserTypes(List.of(1L, 2L), List.of(1L, 2L), 2))
 				.willReturn(List.of(userType1, userType2));
 			given(festivalRepository.save(any())).willReturn(festival);
@@ -320,7 +324,7 @@ class FestivalServiceMockTest extends MockTestSupport {
 					"test4".getBytes())
 			);
 
-			given(userRepository.findById(1L)).willReturn(Optional.of(user));
+			given(userRepository.existsById(1L)).willReturn(true);
 
 			// when // then
 			CustomException exception = assertThrows(CustomException.class, () -> {
