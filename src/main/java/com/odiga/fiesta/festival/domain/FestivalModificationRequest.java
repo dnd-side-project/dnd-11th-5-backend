@@ -9,8 +9,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
+@NoArgsConstructor
 @Table(name = "festival_modification_request")
 public class FestivalModificationRequest extends BaseEntity {
 
@@ -27,4 +32,13 @@ public class FestivalModificationRequest extends BaseEntity {
 
 	@Column(name = "content", length = 500, nullable = false)
 	private String content;
+
+	@Builder
+	public FestivalModificationRequest(Long id, Long festivalId, Long userId,
+		String content) {
+		this.id = id;
+		this.festivalId = festivalId;
+		this.userId = userId;
+		this.content = content;
+	}
 }

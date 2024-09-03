@@ -6,12 +6,12 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class FestivalModificationRequest {
+public class CreateFestivalModificationRequest {
 
 	private String content;
 
 	@Builder
-	public FestivalModificationRequest(String content) {
+	public CreateFestivalModificationRequest(String content) {
 		this.content = content;
 	}
 }

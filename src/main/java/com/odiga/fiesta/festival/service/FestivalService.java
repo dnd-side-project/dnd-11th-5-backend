@@ -34,6 +34,7 @@ import com.odiga.fiesta.common.util.RedisUtils;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.domain.FestivalCategory;
 import com.odiga.fiesta.festival.domain.FestivalImage;
+import com.odiga.fiesta.festival.domain.FestivalModificationRequest;
 import com.odiga.fiesta.festival.domain.FestivalMood;
 import com.odiga.fiesta.festival.dto.projection.FestivalData;
 import com.odiga.fiesta.festival.dto.projection.FestivalDetailData;
@@ -42,6 +43,7 @@ import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
+import com.odiga.fiesta.festival.dto.request.CreateFestivalModificationRequest;
 import com.odiga.fiesta.festival.dto.response.CategoryResponse;
 import com.odiga.fiesta.festival.dto.response.DailyFestivalContents;
 import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
@@ -50,11 +52,13 @@ import com.odiga.fiesta.festival.dto.response.FestivalDetailResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalImageResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalInfo;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
+import com.odiga.fiesta.festival.dto.response.FestivalModificationResponse;
 import com.odiga.fiesta.festival.dto.response.FestivalMonthlyResponse;
 import com.odiga.fiesta.festival.dto.response.MoodResponse;
 import com.odiga.fiesta.festival.dto.response.RecommendFestivalResponse;
 import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
 import com.odiga.fiesta.festival.repository.FestivalImageRepository;
+import com.odiga.fiesta.festival.repository.FestivalModificationRequestRepository;
 import com.odiga.fiesta.festival.repository.FestivalMoodRepository;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.festival.repository.FestivalUserTypeRepository;
@@ -90,6 +94,7 @@ public class FestivalService {
 	private final FestivalImageRepository festivalImageRepository;
 	private final FestivalCategoryRepository festivalCategoryRepository;
 	private final FestivalMoodRepository festivalMoodRepository;
+	private final FestivalModificationRequestRepository festivalModificationRequestRepository;
 
 	private final UserTypeService userTypeService;
 
@@ -316,6 +321,28 @@ public class FestivalService {
 
 	}
 
+	public FestivalModificationResponse createFestivalRequest(User user, Long festivalId,
+		CreateFestivalModificationRequest request) {
+		validateUserId(user.getId());
+		validateFestival(festivalId);
+
+		FestivalModificationRequest festivalModificationRequest = FestivalModificationRequest.builder()
+			.festivalId(festivalId)
+			.userId(user.getId())
+			.content(request.getContent())
+			.build();
+
+		festivalModificationRequestRepository.save(festivalModificationRequest);
+
+
+		return FestivalModificationResponse.builder()
+			.festivalId(festivalId)
+			.requestId(festivalModificationRequest.getId())
+			.isPending(true)
+			.createdAt(festivalModificationRequest.getCreatedAt())
+			.build();
+	}
+
 	// 필터링을 위해, request list 내부의 중복 제거
 	private FestivalFilterCondition getFestivalFilterCondition(FestivalFilterRequest festivalFilterRequest) {
 		Optional.ofNullable(festivalFilterRequest.getMonths())
@@ -461,4 +488,5 @@ public class FestivalService {
 			files.forEach(fileUtils::validateImageExtension);
 		}
 	}
+
 }
