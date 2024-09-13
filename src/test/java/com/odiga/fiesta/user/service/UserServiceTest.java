@@ -100,7 +100,7 @@ class UserServiceTest extends MockTestSupport {
 			.cardImage("힐링러 카드 이미지")
 			.build();
 
-		given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+		given(userRepository.existsById(user.getId())).willReturn(true);
 		given(priorityRepository.findAllById(request.getPriorityIds())).willReturn(
 			List.of(Priority.builder().id(1L).build(), Priority.builder().id(2L).build()));
 		given(moodRepository.findAllById(request.getMoodIds())).willReturn(
