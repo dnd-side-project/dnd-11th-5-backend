@@ -1,5 +1,6 @@
 package com.odiga.fiesta.review.service;
 
+import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.odiga.fiesta.IntegrationTestSupport;
+import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.domain.Festival;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.keyword.domain.Keyword;
@@ -21,10 +23,13 @@ import com.odiga.fiesta.keyword.repository.KeywordRepository;
 import com.odiga.fiesta.review.domain.Review;
 import com.odiga.fiesta.review.domain.ReviewKeyword;
 import com.odiga.fiesta.review.domain.ReviewLike;
+import com.odiga.fiesta.review.dto.request.ReviewReportRequest;
+import com.odiga.fiesta.review.dto.response.ReviewReportResponse;
 import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
 import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
 import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
 import com.odiga.fiesta.review.repository.ReviewLikeRepository;
+import com.odiga.fiesta.review.repository.ReviewReportRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.repository.UserRepository;
@@ -51,6 +56,9 @@ class ReviewServiceTest extends IntegrationTestSupport {
 
 	@Autowired
 	private ReviewKeywordRepository reviewKeywordRepository;
+
+	@Autowired
+	private ReviewReportRepository reviewReportRepository;
 
 	List<Keyword> keywords;
 	Festival festival;
@@ -192,6 +200,42 @@ class ReviewServiceTest extends IntegrationTestSupport {
 			);
 	}
 
+	@DisplayName("리뷰 신고 요청 - 성공")
+	@Test
+	void createFestivalRequest_Success() {
+		// given
+		Review review = reviewRepository.save(createReview());
+
+		ReviewReportRequest request = ReviewReportRequest.builder()
+			.description("신고 사유")
+			.build();
+
+		// when
+		ReviewReportResponse response = reviewService.createReviewReport(user, review.getId(), request);
+
+		// then
+		assertTrue(reviewReportRepository.existsById(response.getReportId()));
+		assertThat(response)
+			.extracting("reportId", "reviewId", "isPending")
+			.contains(response.getReportId(), review.getId(), true);
+	}
+
+	@DisplayName("리뷰 신고 요청 - 존재하지 않는 리뷰일 경우 실패한다.")
+	@Test
+	void createFestivalRequest_NotExistingReview() {
+		// given
+		ReviewReportRequest request = ReviewReportRequest.builder()
+			.description("신고 사유")
+			.build();
+
+		Long INVALID_REVIEW_ID = -1L;
+
+		// when // then
+		assertThatThrownBy(() -> reviewService.createReviewReport(user, INVALID_REVIEW_ID, request))
+			.isInstanceOf(CustomException.class)
+			.hasMessage(REVIEW_NOT_FOUND.getMessage());
+	}
+
 	private ReviewLike createReviewLike(Long userId, Long reviewId) {
 		return ReviewLike.builder()
 			.userId(userId)
@@ -201,7 +245,7 @@ class ReviewServiceTest extends IntegrationTestSupport {
 
 	private Review createReview() {
 		return Review.builder()
-			.userId(1L)
+			.userId(user.getId())
 			.festivalId(festival.getId())
 			.rating(35)
 			.content("리뷰 내용")

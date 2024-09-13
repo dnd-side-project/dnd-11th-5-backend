@@ -24,21 +24,26 @@ import com.odiga.fiesta.keyword.repository.KeywordRepository;
 import com.odiga.fiesta.review.domain.Review;
 import com.odiga.fiesta.review.domain.ReviewImage;
 import com.odiga.fiesta.review.domain.ReviewKeyword;
+import com.odiga.fiesta.review.domain.ReviewReport;
 import com.odiga.fiesta.review.dto.projection.ReviewData;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
 import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
+import com.odiga.fiesta.review.dto.request.ReviewReportRequest;
 import com.odiga.fiesta.review.dto.request.ReviewUpdateRequest;
 import com.odiga.fiesta.review.dto.response.ReviewIdResponse;
 import com.odiga.fiesta.review.dto.response.ReviewImageResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
+import com.odiga.fiesta.review.dto.response.ReviewReportResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
 import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
 import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
 import com.odiga.fiesta.review.repository.ReviewImageRepository;
 import com.odiga.fiesta.review.repository.ReviewKeywordRepository;
 import com.odiga.fiesta.review.repository.ReviewLikeRepository;
+import com.odiga.fiesta.review.repository.ReviewReportRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
+import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -49,7 +54,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ReviewService {
-	private final ReviewLikeRepository reviewLikeRepository;
 
 	private static final String REVIEW_DIR_NAME = "review";
 
@@ -59,6 +63,8 @@ public class ReviewService {
 	private final ReviewKeywordRepository reviewKeywordRepository;
 	private final KeywordRepository keywordRepository;
 	private final UserRepository userRepository;
+	private final ReviewReportRepository reviewReportRepository;
+	private final ReviewLikeRepository reviewLikeRepository;
 
 	private final FileUtils fileUtils;
 
@@ -321,4 +327,31 @@ public class ReviewService {
 		}
 	}
 
+	private void validateReview(Long reviewId) {
+		if (!reviewRepository.existsById(reviewId)) {
+			throw new CustomException(REVIEW_NOT_FOUND);
+		}
+	}
+
+	public ReviewReportResponse createReviewReport(User user, Long reviewId, ReviewReportRequest request) {
+
+		validateUserId(user.getId());
+		validateReview(reviewId);
+
+		ReviewReport reviewReport = ReviewReport.builder()
+			.reviewId(reviewId)
+			.userId(user.getId())
+			.description(request.getDescription())
+			.isPending(true)
+			.build();
+
+		reviewReportRepository.save(reviewReport);
+
+		return ReviewReportResponse.builder()
+			.reportId(reviewReport.getId())
+			.reviewId(reviewId)
+			.isPending(reviewReport.getIsPending())
+			.createdAt(reviewReport.getCreatedAt())
+			.build();
+	}
 }

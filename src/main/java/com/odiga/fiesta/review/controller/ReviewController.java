@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -29,10 +30,12 @@ import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
+import com.odiga.fiesta.review.dto.request.ReviewReportRequest;
 import com.odiga.fiesta.review.dto.request.ReviewUpdateRequest;
 import com.odiga.fiesta.review.dto.response.ReviewIdResponse;
 import com.odiga.fiesta.review.dto.response.ReviewKeywordResponse;
 import com.odiga.fiesta.review.dto.response.ReviewLikeResponse;
+import com.odiga.fiesta.review.dto.response.ReviewReportResponse;
 import com.odiga.fiesta.review.dto.response.ReviewResponse;
 import com.odiga.fiesta.review.dto.response.ReviewSimpleResponse;
 import com.odiga.fiesta.review.dto.response.TopReviewKeywordsResponse;
@@ -147,6 +150,23 @@ public class ReviewController {
 		@RequestParam(required = false, defaultValue = "5") Long size) {
 		TopReviewKeywordsResponse keywords = reviewService.getTopReviewKeywords(festivalId, size);
 		return ResponseEntity.ok(BasicResponse.ok("가장 많이 선택된 키워드 조회 성공", keywords));
+	}
+
+	@Operation(summary = "리뷰 신고 요청", description = "리뷰 신고 요청을 생성합니다.")
+	@PostMapping("/{reviewId}/report")
+	public ResponseEntity<BasicResponse<ReviewReportResponse>> createReviewReport(
+		@AuthUser User user,
+		@PathVariable Long reviewId,
+		@RequestBody @Valid ReviewReportRequest request
+	) {
+		checkLogin(user);
+
+		ReviewReportResponse response = reviewService.createReviewReport(
+			isNull(user) ? null : user, reviewId, request);
+
+		return ResponseEntity.created(
+				URI.create("/api/v1/reviews/" + reviewId))
+			.body(BasicResponse.created("리뷰 신고 요청 성공", response));
 	}
 
 	private void checkLogin(User user) {
