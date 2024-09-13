@@ -30,6 +30,7 @@ import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkCountAndSido
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
@@ -296,12 +297,53 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 			.transform(
 				groupBy(festivalImage.festivalId).as(festivalImage.imageUrl.min())
 			);
-		
+
 		for (Long festivalId : festivalIds) {
 			resultMap.putIfAbsent(festivalId, null);
 		}
 
 		return resultMap;
+	}
+
+	@Override
+	public Page<FestivalInfoWithBookmark> findBookmarkedFestivals(Long userId, Pageable pageable) {
+		List<FestivalInfoWithBookmark> festivals = queryFactory.select(
+				Projections.fields(FestivalInfoWithBookmark.class,
+					festival.id.as("festivalId"),
+					festival.name,
+					sido.name.as("sido"),
+					festival.sigungu,
+					min(festivalImage.imageUrl).as("thumbnailImage"),
+					festival.startDate,
+					festival.endDate,
+
+					new CaseBuilder()
+						.when(festivalBookmarkUserIdEq(userId))
+						.then(true)
+						.otherwise(false).as("isBookmarked")
+				)
+			).from(festival)
+			.where(festivalBookmarkUserIdEq(userId))
+			.leftJoin(festivalBookmarkForIsBookmarked)
+			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id),
+				festivalBookmarkUserIdEq(userId))
+			.leftJoin(sido)
+			.on(sidoIdFestivalSidoIdEq())
+			.leftJoin(festivalImage)
+			.on(festival.id.eq(festivalImage.festivalId))
+			.orderBy(festivalBookmarkForIsBookmarked.createdAt.desc())
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory.select(festival.count())
+			.from(festival)
+			.leftJoin(festivalBookmarkForIsBookmarked)
+			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id),
+				festivalBookmarkUserIdEq(userId))
+			.where(festivalBookmarkUserIdEq(userId));
+
+		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);
 	}
 
 	private List<OrderSpecifier> getAllOrderSpecifiers(Pageable pageable, Double latitude, Double longitude) {
