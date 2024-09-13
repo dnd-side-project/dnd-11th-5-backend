@@ -1,21 +1,33 @@
 package com.odiga.fiesta.user.service;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.odiga.fiesta.MockTestSupport;
 import com.odiga.fiesta.category.domain.Category;
 import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.companion.domain.Companion;
 import com.odiga.fiesta.companion.repository.CompanionRepository;
+import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
+import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.mood.domain.Mood;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.priority.domain.Priority;
@@ -64,6 +76,9 @@ class UserServiceTest extends MockTestSupport {
 
 	@Mock
 	private UserCompanionRepository userCompanionRepository;
+
+	@Mock
+	private FestivalRepository festivalRepository;
 
 	@DisplayName("프로필 생성 - 성공")
 	@Test
@@ -114,6 +129,35 @@ class UserServiceTest extends MockTestSupport {
 		verify(userCompanionRepository).saveAll(anyList());
 	}
 
+	@DisplayName("유저가 북마크한 페스티벌들을 조회")
+	@Test
+	void getBookmarkedFestivals() {
+		// given
+		User currentUser = createNoProfileUser();
+		given(userRepository.existsById(currentUser.getId())).willReturn(true);
+
+		Pageable pageable = PageRequest.of(0, 5);
+		List<FestivalInfoWithBookmark> festivals = Arrays.asList(
+			new FestivalInfoWithBookmark(1L, "Festival 1", "Sido 1", "Sigungu 1", "image1.jpg",
+				LocalDate.of(2024, 10, 1), LocalDate.of(2024, 10, 10), true),
+			new FestivalInfoWithBookmark(2L, "Festival 2", "Sido 2", "Sigungu 2", "image2.jpg",
+				LocalDate.of(2024, 10, 2), LocalDate.of(2024, 10, 11), true)
+		);
+
+		Page<FestivalInfoWithBookmark> festivalPage = new PageImpl<>(festivals, pageable, festivals.size());
+		given(festivalRepository.findBookmarkedFestivals(currentUser.getId(), pageable)).willReturn(festivalPage);
+
+		// when
+		Page<FestivalInfoWithBookmark> result = userService.getBookmarkedFestivals(currentUser, pageable);
+
+		// then
+		assertThat(result).isNotNull();  // 반환된 값이 null이 아닌지 확인
+		assertThat(result.getTotalElements()).isEqualTo(2);  // 총 북마크된 페스티벌 수 확인
+		assertThat(result.getContent())
+			.usingRecursiveComparison()
+			.isEqualTo(festivals);
+	}
+
 	User createNoProfileUser() {
 		return User.builder()
 			.id(1L)
@@ -121,6 +165,28 @@ class UserServiceTest extends MockTestSupport {
 			.nickname("피에스타")
 			.statusMessage("상태 메시지")
 			.profileImage("기본 프로필 이미지")
+			.build();
+	}
+
+	private static Festival createFestival(LocalDate startDate, LocalDate endDate) {
+		return Festival.builder()
+			.userId(1L)
+			.name("페스티벌 이름")
+			.description("페스티벌 설명")
+			.startDate(startDate)
+			.endDate(endDate)
+			.address("주소")
+			.latitude(35.1731)
+			.longitude(129.0714)
+			.sidoId(6L)
+			.sigungu("해운대구")
+			.playtime("플레이타임")
+			.homepageUrl("홈페이지")
+			.instagramUrl("인스타그램")
+			.ticketLink("티켓링크")
+			.fee("입장료")
+			.tip("팁")
+			.isPending(false)
 			.build();
 	}
 }

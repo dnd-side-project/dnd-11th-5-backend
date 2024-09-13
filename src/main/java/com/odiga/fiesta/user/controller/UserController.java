@@ -1,5 +1,10 @@
 package com.odiga.fiesta.user.controller;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,8 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.odiga.fiesta.auth.domain.AuthUser;
 import com.odiga.fiesta.auth.service.AuthService;
 import com.odiga.fiesta.common.BasicResponse;
+import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.dto.request.ProfileCreateRequest;
 import com.odiga.fiesta.user.dto.request.SocialLoginRequest;
@@ -25,6 +32,7 @@ import com.odiga.fiesta.user.dto.response.UserInfoResponse;
 import com.odiga.fiesta.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -93,5 +101,19 @@ public class UserController {
 
 		String message = "JWT 토큰 재발급 성공";
 		return ResponseEntity.ok(BasicResponse.ok(message, tokenResponse));
+	}
+
+	@Operation(
+		summary = "유저가 스크랩한 페스티벌 조회",
+		description = "유저가 스크랩한 페스티벌을 다건 조회합니다."
+	)
+	@GetMapping("/bookmarks")
+	public ResponseEntity<BasicResponse<PageResponse<FestivalInfoWithBookmark>>> getBookmarkedFestivals(
+		@AuthUser User user,
+		@ParameterObject @Parameter(description = "Paging parameters", example = "{\"page\":0,\"size\":6,\"sort\":[\"createdAt,desc\"]}")
+		@PageableDefault(sort = {"createdAt"}, direction = Sort.Direction.DESC, size = 6) Pageable pageable) {
+
+		Page<FestivalInfoWithBookmark> festivals = userService.getBookmarkedFestivals(user, pageable);
+		return ResponseEntity.ok(BasicResponse.ok("스크랩한 페스티벌 조회 성공", PageResponse.of(festivals)));
 	}
 }
