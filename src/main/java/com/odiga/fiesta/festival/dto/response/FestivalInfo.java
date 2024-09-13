@@ -5,10 +5,12 @@ import java.time.LocalDate;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
 @Getter
+@NoArgsConstructor
 public class FestivalInfo extends FestivalBasic {
 
 	private String sido; // 시도 행정 구역 이름

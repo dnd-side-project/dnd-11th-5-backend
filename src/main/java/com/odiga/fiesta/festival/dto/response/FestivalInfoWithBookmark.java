@@ -5,10 +5,12 @@ import java.time.LocalDate;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder
+@NoArgsConstructor
 public class FestivalInfoWithBookmark extends FestivalInfo {
 
 	private Boolean isBookmarked;

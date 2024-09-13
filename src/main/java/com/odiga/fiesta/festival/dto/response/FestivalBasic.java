@@ -3,12 +3,12 @@ package com.odiga.fiesta.festival.dto.response;
 import com.odiga.fiesta.festival.domain.Festival;
 
 import lombok.Getter;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder
-@ToString
+@NoArgsConstructor
 public class FestivalBasic {
 
 	private Long festivalId;
