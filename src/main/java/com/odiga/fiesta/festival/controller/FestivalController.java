@@ -9,6 +9,7 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -114,6 +115,7 @@ public class FestivalController {
 		@RequestParam(name = "year") @NotNull int year,
 		@RequestParam(name = "month") @Min(1) @Max(12) @NotNull int month,
 		@RequestParam(name = "day") int day,
+		@ParameterObject @Parameter(description = "Paging parameters", example = "{\"page\":0,\"size\":6}")
 		@PageableDefault(size = 6) Pageable pageable) {
 		validateFestivalDay(year, month, day);
 
@@ -134,6 +136,7 @@ public class FestivalController {
 		@ModelAttribute FestivalFilterRequest festivalFilterRequest,
 		@RequestParam(value = "lat", required = false) Double latitude,
 		@RequestParam(value = "lng", required = false) Double longitude,
+		@ParameterObject @Parameter(description = "Paging parameters", example = "{\"page\":0,\"size\":6,\"sort\":[\"startDate,asc\"]}")
 		@PageableDefault(sort = {"startDate"}, direction = Sort.Direction.ASC, size = 6) Pageable pageable) {
 
 		validateLatAndLng(latitude, longitude, pageable);
@@ -152,6 +155,7 @@ public class FestivalController {
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfoWithBookmark>>> getFestivalsByQuery(
 		@AuthUser User user,
 		String query,
+		@ParameterObject @Parameter(description = "Paging parameters", example = "{\"page\":0,\"size\":6}")
 		@PageableDefault(size = 6) Pageable pageable) {
 
 		validateQuery(query);
@@ -177,6 +181,7 @@ public class FestivalController {
 	@GetMapping("/upcoming")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalAndLocation>>> getUpcomingFestival(
 		@AuthUser User user,
+		@ParameterObject @Parameter(description = "Paging parameters", example = "{\"page\":0,\"size\":3}")
 		@PageableDefault(size = 3) Pageable pageable) {
 
 		checkLogin(user);
@@ -218,6 +223,7 @@ public class FestivalController {
 	)
 	@GetMapping("/thisweek")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfo>>> getFestivalsInThisWeek(
+		@ParameterObject @Parameter(description = "Paging parameters", example = "{\"page\":0,\"size\":3}")
 		@PageableDefault(size = 3) Pageable pageable) {
 
 		Page<FestivalInfo> festivalsInThisWeek = festivalService.getFestivalsInThisWeek(pageable);
@@ -237,6 +243,7 @@ public class FestivalController {
 	@Operation(summary = "HOT 페스티벌 조회", description = "스크랩 수 순서대로 페스티벌을 조회합니다.")
 	@GetMapping("/mostlike")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfo>>> getHotFestival(
+		@ParameterObject @Parameter(description = "Paging parameters", example = "{\"page\":0,\"size\":6}")
 		@PageableDefault(size = 6) Pageable pageable
 	) {
 
