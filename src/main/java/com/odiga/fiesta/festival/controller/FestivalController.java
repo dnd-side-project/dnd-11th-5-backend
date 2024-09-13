@@ -31,9 +31,9 @@ import com.odiga.fiesta.auth.domain.AuthUser;
 import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
+import com.odiga.fiesta.festival.dto.request.CreateFestivalModificationRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalCreateRequest;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterRequest;
-import com.odiga.fiesta.festival.dto.request.CreateFestivalModificationRequest;
 import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
 import com.odiga.fiesta.festival.dto.response.FestivalBasic;
 import com.odiga.fiesta.festival.dto.response.FestivalBookmarkResponse;
@@ -265,7 +265,7 @@ public class FestivalController {
 		return ResponseEntity.ok(BasicResponse.ok("유형별 추천 페스티벌 조회 성공", recommendFestivals));
 	}
 
-	@Operation(summary = "페스티벌 수정 사항 요청", description = "페스티벌 수정 사항을 요청을 생성합니다.")
+	@Operation(summary = "페스티벌 수정 사항 요청", description = "페스티벌 수정 사항 요청을 생성합니다.")
 	@PostMapping("/{festivalId}/request")
 	public ResponseEntity<BasicResponse<FestivalModificationResponse>> createFestivalRequest(
 		@AuthUser User user,
