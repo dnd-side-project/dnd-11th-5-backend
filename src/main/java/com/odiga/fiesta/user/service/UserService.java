@@ -5,6 +5,8 @@ import static java.util.Objects.*;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +15,8 @@ import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.companion.domain.Companion;
 import com.odiga.fiesta.companion.repository.CompanionRepository;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
+import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.mood.domain.Mood;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.priority.domain.Priority;
@@ -39,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class UserService {
+	private final FestivalRepository festivalRepository;
 
 	private final UserCategoryRepository userCategoryRepository;
 	private final UserCompanionRepository userCompanionRepository;
@@ -85,6 +90,15 @@ public class UserService {
 			.userTypeName(userType.getName())
 			.userTypeImage(userType.getCardImage())
 			.build();
+	}
+
+	public Page<FestivalInfoWithBookmark> getBookmarkedFestivals(User user, Pageable pageable) {
+		checkLogin(user);
+
+		Page<FestivalInfoWithBookmark> festivals = festivalRepository.findBookmarkedFestivals(user.getId(),
+			pageable);
+
+		return festivals;
 	}
 
 	private void saveUserCompanions(final Long userId, List<Long> companionIds) {
@@ -164,7 +178,8 @@ public class UserService {
 			throw new CustomException(USER_NOT_FOUND);
 		}
 
-		userRepository.findById(user.getId())
-			.orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+		if (!userRepository.existsById(user.getId())) {
+			throw new CustomException(USER_NOT_FOUND);
+		}
 	}
 }

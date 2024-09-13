@@ -14,6 +14,7 @@ import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.projection.FestivalWithSido;
 import com.odiga.fiesta.festival.dto.request.FestivalFilterCondition;
 import com.odiga.fiesta.festival.dto.response.FestivalAndLocation;
+import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 
 public interface FestivalCustomRepository {
 
@@ -39,4 +40,6 @@ public interface FestivalCustomRepository {
 	List<FestivalWithSido> findRecommendFestivals(Long userTypeId, Long size, LocalDate date);
 
 	Map<Long, String> findThumbnailImageByFestivalId(List<Long> festivalIds);
+
+	Page<FestivalInfoWithBookmark> findBookmarkedFestivals(Long userId, Pageable pageable);
 }
