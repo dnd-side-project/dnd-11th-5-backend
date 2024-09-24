@@ -25,37 +25,35 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class BadgeService {
 
-	// 뱃지를 수여해보자.
 	private final BadgeRepository badgeRepository;
 	private final UserBadgeRepository userBadgeRepository;
 	private final UserRepository userRepository;
 
 	private static final Long USER_JOIN_BADGE_ID = 1L;
 
-	// 유저 뱃지 수여
-	@Transactional
 	@Async
+	@Transactional
 	public CompletableFuture<List<Long>> giveUserBadge(Long userId) {
+		return CompletableFuture.completedFuture(giveBadge(userId, BadgeType.USER));
+	}
 
-		// 현재 유저가 어떤 뱃지를 가지고 있는지 확인해야 한다.
+	private List<Long> giveBadge(Long userId, BadgeType badgeType) {
 		List<Long> givenBadgeIds = new ArrayList<>();
 		Map<Long, Boolean> userBadgeMap = new HashMap<>();
 
-		// 타입이 user인 뱃지 id가 뭔지 조회한다.
-		List<Long> badgeIds = badgeRepository.findIdsByType(BadgeType.USER);
-		log.info("badgeIds: {}", badgeIds);
-
+		// 특정 뱃지 타입에 대한 id를 조회
+		List<Long> badgeIds = badgeRepository.findIdsByType(badgeType);
 		for (Long badgeId : badgeIds) {
 			userBadgeMap.put(badgeId, false);
 		}
 
-		// 현재 유저가 해당 뱃지들을 가지고 있는지 확인한다.
+		// 현재 유저가 해당 뱃지를 가지고 있는지 확인
 		List<Long> currentUserBadgeIds = userBadgeRepository.findBadgeIdByUserIdAndBadgeIdIn(userId, badgeIds);
 		for (Long badgeId : currentUserBadgeIds) {
 			userBadgeMap.put(badgeId, true);
 		}
 
-		// 조건을 확인하고 뱃지를 수여한다.
+		// 조건을 확인하고 뱃지를 수여
 		for (Long badgeId : badgeIds) {
 			if (isUserNotOwnedBadge(badgeId, userBadgeMap) && isBadgeCondition(userId, badgeId)) {
 				userBadgeRepository.save(UserBadge.builder().badgeId(badgeId).userId(userId).build());
@@ -63,7 +61,7 @@ public class BadgeService {
 			}
 		}
 
-		return CompletableFuture.completedFuture(givenBadgeIds);
+		return givenBadgeIds;
 	}
 
 	private boolean isBadgeCondition(long userId, long badgeId) {
