@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -104,6 +105,14 @@ class ReviewServiceTest extends IntegrationTestSupport {
 			.build());
 	}
 
+	@AfterEach
+	void tearDown() {
+		reviewRepository.deleteAll();
+		festivalRepository.deleteAll();
+		keywordRepository.deleteAll();
+		userRepository.deleteAll();
+	}
+	
 	@DisplayName("실시간 가장 핫한 후기 조회 - 좋아요 순 정렬")
 	@Test
 	void getMostLikeReviews() {

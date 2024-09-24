@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -128,6 +129,22 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		doReturn(Instant.now(CURRENT_CLOCK))
 			.when(clock)
 			.instant();
+	}
+
+	@AfterEach
+	void tearDown() {
+		festivalRepository.deleteAll();
+		festivalImageRepository.deleteAll();
+		festivalCategoryRepository.deleteAll();
+		festivalMoodRepository.deleteAll();
+		sidoRepository.deleteAll();
+		festivalBookmarkRepository.deleteAll();
+		categoryRepository.deleteAll();
+		userTypeRepository.deleteAll();
+		moodRepository.deleteAll();
+		userRepository.deleteAll();
+		festivalUserTypeRepository.deleteAll();
+		festivalModificationRequestRepository.deleteAll();
 	}
 
 	@DisplayName("페스티벌 월간 조회 - startDate 와 endDate 사이에 해당 월이 끼어있어도 페스티벌이 포함되어야 한다.")
