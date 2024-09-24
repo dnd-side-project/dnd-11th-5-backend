@@ -16,6 +16,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +29,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder
 @NoArgsConstructor(access = PROTECTED)
-@ToString
+@Table(name = "festival", indexes = {
+	@Index(name = "idx_festival_user_id", columnList = "user_id")
+})
 public class Festival extends BaseEntity {
 
 	@Id

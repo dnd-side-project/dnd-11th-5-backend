@@ -15,6 +15,9 @@ import static lombok.AccessLevel.PROTECTED;
 @Getter
 @SuperBuilder
 @NoArgsConstructor(access = PROTECTED)
+@Table(name = "review", indexes = {
+	@Index(name = "idx_review_user_id", columnList = "user_id"),
+})
 public class Review extends BaseEntity {
 
 	@Id
