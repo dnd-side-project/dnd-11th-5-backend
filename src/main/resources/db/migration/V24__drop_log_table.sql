@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS log;
+DROP TABLE IF EXISTS log_image;
+DROP TABLE IF EXISTS log_keyword;
