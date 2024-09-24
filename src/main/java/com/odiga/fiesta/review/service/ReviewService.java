@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.odiga.fiesta.badge.service.BadgeService;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
@@ -65,6 +66,7 @@ public class ReviewService {
 	private final UserRepository userRepository;
 	private final ReviewReportRepository reviewReportRepository;
 	private final ReviewLikeRepository reviewLikeRepository;
+	private final BadgeService badgeService;
 
 	private final FileUtils fileUtils;
 
@@ -125,6 +127,8 @@ public class ReviewService {
 		Review review = reviewRepository.save(Review.createReview(userId, request));
 		createReviewImages(images, review);
 		saveReviewKeywords(request.getKeywordIds(), review);
+
+		badgeService.giveReviewBadge(userId);
 
 		return ReviewIdResponse.builder()
 			.reviewId(review.getId())

@@ -24,4 +24,6 @@ public interface ReviewCustomRepository {
 	List<ReviewSimpleData> findMostLikeReviews(Long size);
 
 	TopReviewKeywordsResponse findTopReviewKeywords(Long festivalId, Long size);
+
+	Long countByUserIdAndCategoryId(Long userId, Long festivalCategoryId);
 }

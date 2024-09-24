@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.odiga.fiesta.badge.repository.BadgeRepository;
+import com.odiga.fiesta.badge.repository.UserBadgeRepository;
 import com.odiga.fiesta.category.domain.Category;
 import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.error.exception.CustomException;
@@ -62,7 +64,7 @@ public class UserService {
 	@Transactional
 	public ProfileCreateResponse createProfile(User user, ProfileCreateRequest request) {
 
-		checkLogin(user);
+		validateUser(user);
 
 		List<Long> priorityIds = request.getPriorityIds();
 		List<Long> moodIds = request.getMoodIds();
@@ -93,13 +95,15 @@ public class UserService {
 	}
 
 	public Page<FestivalInfoWithBookmark> getBookmarkedFestivals(User user, Pageable pageable) {
-		checkLogin(user);
+		validateUser(user);
 
 		Page<FestivalInfoWithBookmark> festivals = festivalRepository.findBookmarkedFestivals(user.getId(),
 			pageable);
 
 		return festivals;
 	}
+
+
 
 	private void saveUserCompanions(final Long userId, List<Long> companionIds) {
 		userCompanionRepository.saveAll(
@@ -173,7 +177,7 @@ public class UserService {
 		}
 	}
 
-	private void checkLogin(User user) {
+	private void validateUser(User user) {
 		if (isNull(user) || isNull(user.getId())) {
 			throw new CustomException(USER_NOT_FOUND);
 		}
@@ -182,4 +186,5 @@ public class UserService {
 			throw new CustomException(USER_NOT_FOUND);
 		}
 	}
+
 }

@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.odiga.fiesta.config.S3MockConfig;
 
 @ActiveProfiles("test")
-@Transactional
 @SpringBootTest
 @Import(S3MockConfig.class)
 public abstract class IntegrationTestSupport {
