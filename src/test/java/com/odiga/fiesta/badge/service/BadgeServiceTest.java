@@ -8,13 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.odiga.fiesta.IntegrationTestSupport;
 import com.odiga.fiesta.badge.domain.Badge;
@@ -34,6 +38,12 @@ import com.odiga.fiesta.review.repository.ReviewRepository;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.dto.response.UserBadgeResponse;
 import com.odiga.fiesta.user.repository.UserRepository;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceContext;
+
 
 class BadgeServiceTest extends IntegrationTestSupport {
 
@@ -61,8 +71,12 @@ class BadgeServiceTest extends IntegrationTestSupport {
 	@Autowired
 	private FestivalCategoryRepository festivalCategoryRepository;
 
+	@PersistenceContext
+	private EntityManager entityManager;
+
 	@BeforeEach
 	void setUp() {
+		// entityManager.createNativeQuery("ALTER TABLE badge AUTO_INCREMENT = 1").executeUpdate();
 		// 기본 뱃지 데이터 셋업
 		badgeRepository.save(createBadge(1L, BadgeType.USER));
 		badgeRepository.save(createBadge(2L, BadgeType.REVIEW));
@@ -72,6 +86,8 @@ class BadgeServiceTest extends IntegrationTestSupport {
 			badgeRepository.save(createBadge(badgeId, BadgeType.REVIEW));
 		}
 
+		System.out.println("badges: " + badgeRepository.findAll());
+
 		// 카테고리 셋업
 		for (long categoryId = 1L; categoryId <= 12L; categoryId++) {
 			categoryRepository.save(createCategory(categoryId));
@@ -80,6 +96,7 @@ class BadgeServiceTest extends IntegrationTestSupport {
 
 	@AfterEach
 	void tearDown() {
+		System.out.println("tearDown");
 		userBadgeRepository.deleteAll();
 		badgeRepository.deleteAll();
 		userRepository.deleteAll();
@@ -92,6 +109,7 @@ class BadgeServiceTest extends IntegrationTestSupport {
 	@DisplayName("뱃지 수여 - 이미 뱃지를 가지고 있는 경우, 뱃지 수여하지 않음")
 	@Test
 	void giveUserBadge_ExistingUser() throws ExecutionException, InterruptedException {
+		System.out.println("giveUserBadge_ExistingUser");
 		// given
 		User user = createUser();
 		userRepository.save(user);
@@ -107,9 +125,11 @@ class BadgeServiceTest extends IntegrationTestSupport {
 	}
 
 	// 유저 뱃지 수여 테스트
+	@DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
 	@DisplayName("유저 뱃지 수여 - 회원가입 시 뱃지 수여")
 	@Test
 	void giveUserBadge_FirstJoin() throws ExecutionException, InterruptedException {
+
 		// given
 		User newUser = createUser();
 		userRepository.save(newUser);
@@ -123,9 +143,11 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		assertTrue(badgeIds.contains(USER_JOIN_BADGE_ID));
 	}
 
+	@DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
 	@DisplayName("리뷰 뱃지 수여 - 첫  리뷰  작성")
 	@Test
 	void giveReviewBadge_FirstReview() throws ExecutionException, InterruptedException {
+
 		// given
 		User user = createUser();
 		userRepository.save(user);
@@ -143,6 +165,7 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		assertTrue(badgeIds.contains(FIRST_REVIEW_BADGE_ID));
 	}
 
+	@DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
 	@DisplayName("리뷰 뱃지 수여 - 열정적인 리뷰어")
 	@Test
 	void giveReviewBadge_PassionateReviewer() throws ExecutionException, InterruptedException {
@@ -151,6 +174,7 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		userRepository.save(user);
 		Festival festival = createFestival(user);
 		festivalRepository.save(festival);
+
 		for (int reviewCount = 0; reviewCount < 5; reviewCount++) {
 			Review review = createReview(user, festival);
 			reviewRepository.save(review);
@@ -168,6 +192,7 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		assertTrue(badgeIds.contains(PASSIONATE_REVIEWER_BADGE_ID));
 	}
 
+	@DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
 	@DisplayName("리뷰 뱃지 수여 - 역사 애호가")
 	@Test
 	void giveReviewBadge_HistoryLover() throws ExecutionException, InterruptedException {
@@ -198,6 +223,7 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		assertTrue(badgeIds.contains(HISTORY_LOVER_BADGE_ID));
 	}
 
+	@DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
 	@DisplayName("뱃지 수여 - 페스티벌 첫 등록")
 	@Test
 	void giveFestivalBadge_FirstFestival() throws ExecutionException, InterruptedException {
@@ -234,7 +260,8 @@ class BadgeServiceTest extends IntegrationTestSupport {
 
 		// then
 
-		Set<Long> acquiredBadgeIds = Set.of(USER_JOIN_BADGE_ID, FIRST_REVIEW_BADGE_ID, PASSIONATE_REVIEWER_BADGE_ID, MOVIE_LOVER_BADGE_ID);
+		Set<Long> acquiredBadgeIds = Set.of(USER_JOIN_BADGE_ID, FIRST_REVIEW_BADGE_ID, PASSIONATE_REVIEWER_BADGE_ID,
+			MOVIE_LOVER_BADGE_ID);
 
 		assertEquals(15, userBadges.size());
 

@@ -30,6 +30,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.MockTestSupport;
+import com.odiga.fiesta.badge.service.BadgeService;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.festival.domain.Festival;
@@ -78,6 +79,9 @@ class ReviewServiceMockTest extends MockTestSupport {
 	@Mock
 	private ReviewLikeRepository reviewLikeRepository;
 
+	@Mock
+	private BadgeService badgeService;
+	
 	@InjectMocks
 	private ReviewService reviewService;
 
