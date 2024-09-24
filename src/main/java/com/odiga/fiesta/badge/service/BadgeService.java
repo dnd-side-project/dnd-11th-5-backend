@@ -2,6 +2,8 @@ package com.odiga.fiesta.badge.service;
 
 import static com.odiga.fiesta.badge.domain.BadgeConstants.*;
 import static com.odiga.fiesta.category.domain.CategoryConstants.*;
+import static com.odiga.fiesta.common.error.ErrorCode.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,8 +19,11 @@ import com.odiga.fiesta.badge.domain.BadgeType;
 import com.odiga.fiesta.badge.domain.UserBadge;
 import com.odiga.fiesta.badge.repository.BadgeRepository;
 import com.odiga.fiesta.badge.repository.UserBadgeRepository;
+import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
+import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.dto.response.UserBadgeResponse;
 import com.odiga.fiesta.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -39,6 +44,11 @@ public class BadgeService {
 	private final ReviewRepository reviewRepository;
 	private final FestivalRepository festivalRepository;
 
+	// 현재 유저의 뱃지 조회
+	public List<UserBadgeResponse> getUserBadges(User user) {
+		validateUser(user);
+		return badgeRepository.findUserBadges(user.getId());
+	}
 
 	@Async
 	@Transactional
@@ -161,5 +171,15 @@ public class BadgeService {
 
 	private static boolean isUserNotOwnedBadge(Long badgeId, Map<Long, Boolean> userBadgeMap) {
 		return !userBadgeMap.get(badgeId);
+	}
+
+	private void validateUser(User user) {
+		if (isNull(user) || isNull(user.getId())) {
+			throw new CustomException(USER_NOT_FOUND);
+		}
+
+		if (!userRepository.existsById(user.getId())) {
+			throw new CustomException(USER_NOT_FOUND);
+		}
 	}
 }

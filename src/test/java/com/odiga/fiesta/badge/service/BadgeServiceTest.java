@@ -4,7 +4,9 @@ import static com.odiga.fiesta.badge.domain.BadgeConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -30,6 +32,7 @@ import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.review.domain.Review;
 import com.odiga.fiesta.review.repository.ReviewRepository;
 import com.odiga.fiesta.user.domain.User;
+import com.odiga.fiesta.user.dto.response.UserBadgeResponse;
 import com.odiga.fiesta.user.repository.UserRepository;
 
 class BadgeServiceTest extends IntegrationTestSupport {
@@ -92,11 +95,8 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		// given
 		User user = createUser();
 		userRepository.save(user);
-
-		userBadgeRepository.save(UserBadge.builder()
-			.userId(user.getId())
-			.badgeId(1L)
-			.build());
+		UserBadge userBadge = createUserBadge(user, USER_JOIN_BADGE_ID);
+		userBadgeRepository.save(userBadge);
 
 		// when
 		CompletableFuture<List<Long>> badgeIdsFuture = badgeService.giveUserBadge(user.getId());
@@ -200,7 +200,7 @@ class BadgeServiceTest extends IntegrationTestSupport {
 
 	@DisplayName("뱃지 수여 - 페스티벌 첫 등록")
 	@Test
-	void test() throws ExecutionException, InterruptedException {
+	void giveFestivalBadge_FirstFestival() throws ExecutionException, InterruptedException {
 		// given
 		User user = createUser();
 		userRepository.save(user);
@@ -215,6 +215,37 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		// then
 		assertEquals(1, badgeIds.size());
 		assertTrue(badgeIds.contains(FIRST_FESTIVAL_BADGE_ID));
+	}
+
+	@DisplayName("현재 유저의 뱃지 조회")
+	@Test
+	void getUserBadges() {
+		// given
+		User user = createUser();
+		userRepository.save(user);
+
+		userBadgeRepository.save(createUserBadge(user, USER_JOIN_BADGE_ID));
+		userBadgeRepository.save(createUserBadge(user, FIRST_REVIEW_BADGE_ID));
+		userBadgeRepository.save(createUserBadge(user, PASSIONATE_REVIEWER_BADGE_ID));
+		userBadgeRepository.save(createUserBadge(user, MOVIE_LOVER_BADGE_ID));
+
+		// when
+		List<UserBadgeResponse> userBadges = badgeService.getUserBadges(user);
+
+		// then
+
+		Set<Long> acquiredBadgeIds = Set.of(USER_JOIN_BADGE_ID, FIRST_REVIEW_BADGE_ID, PASSIONATE_REVIEWER_BADGE_ID, MOVIE_LOVER_BADGE_ID);
+
+		assertEquals(15, userBadges.size());
+
+		for (UserBadgeResponse response : userBadges) {
+			if (acquiredBadgeIds.contains(response.getBadgeId())) {
+				assertTrue(response.getIsAcquired(), "Badge " + response.getBadgeId() + " should be acquired");
+			} else {
+				assertFalse(response.getIsAcquired(), "Badge " + response.getBadgeId() + " should not be acquired");
+			}
+		}
+
 	}
 
 	private UserBadge createUserBadge(User user, Long badgeId) {

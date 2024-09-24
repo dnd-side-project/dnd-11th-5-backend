@@ -1,5 +1,7 @@
 package com.odiga.fiesta.user.controller;
 
+import java.util.List;
+
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.odiga.fiesta.auth.domain.AuthUser;
 import com.odiga.fiesta.auth.service.AuthService;
+import com.odiga.fiesta.badge.service.BadgeService;
 import com.odiga.fiesta.common.BasicResponse;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.ErrorCode;
@@ -28,6 +31,7 @@ import com.odiga.fiesta.user.dto.request.SocialLoginRequest;
 import com.odiga.fiesta.user.dto.response.LoginResponse;
 import com.odiga.fiesta.user.dto.response.ProfileCreateResponse;
 import com.odiga.fiesta.user.dto.response.TokenReissueResponse;
+import com.odiga.fiesta.user.dto.response.UserBadgeResponse;
 import com.odiga.fiesta.user.dto.response.UserInfoResponse;
 import com.odiga.fiesta.user.service.UserService;
 
@@ -48,6 +52,7 @@ public class UserController {
 
 	private final UserService userService;
 	private final AuthService authService;
+	private final BadgeService badgeService;
 
 	@PostMapping("/oauth/login")
 	@Operation(summary = "소셜 로그인", description = "소셜 로그인을 진행합니다.")
@@ -116,4 +121,13 @@ public class UserController {
 		Page<FestivalInfoWithBookmark> festivals = userService.getBookmarkedFestivals(user, pageable);
 		return ResponseEntity.ok(BasicResponse.ok("스크랩한 페스티벌 조회 성공", PageResponse.of(festivals)));
 	}
+
+	@GetMapping("/badges")
+	@Operation(summary = "유저의 활동 뱃지 조회", description = "현재 유저가 획득한 뱃지를 조회합니다.")
+	public ResponseEntity<BasicResponse<List<UserBadgeResponse>>> getUserBadges(@AuthUser User user) {
+
+		List<UserBadgeResponse> response = badgeService.getUserBadges(user);
+		return ResponseEntity.ok(BasicResponse.ok("유저의 활동 뱃지 조회 성공", response));
+	}
+
 }
