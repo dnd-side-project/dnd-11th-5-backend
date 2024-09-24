@@ -13,8 +13,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.odiga.fiesta.auth.domain.Authority;
 import com.odiga.fiesta.auth.dto.KakaoProfile;
+import com.odiga.fiesta.badge.service.BadgeService;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.jwt.TokenProvider;
 import com.odiga.fiesta.common.util.HttpClientUtil;
@@ -40,6 +40,7 @@ public class AuthService {
 
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
+	private final BadgeService badgeService;
 
 	private final TokenProvider tokenProvider;
 	private final NicknameUtils nicknameUtils;
@@ -71,6 +72,9 @@ public class AuthService {
 		String accessToken = issueAccessToken(user);
 		String refreshToken = issueRefreshToken(user);
 		boolean isProfileRegistered = !isNull(user.getUserTypeId());
+
+		// 뱃지 수여
+		badgeService.giveUserBadge(user.getId());
 
 		return LoginResponse.builder()
 			.accessToken(accessToken)
