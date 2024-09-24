@@ -30,7 +30,10 @@ import com.odiga.fiesta.user.domain.mapping.UserCompanion;
 import com.odiga.fiesta.user.domain.mapping.UserMood;
 import com.odiga.fiesta.user.domain.mapping.UserPriority;
 import com.odiga.fiesta.user.dto.request.ProfileCreateRequest;
+import com.odiga.fiesta.user.dto.request.UserInfoUpdateRequest;
 import com.odiga.fiesta.user.dto.response.ProfileCreateResponse;
+import com.odiga.fiesta.user.dto.response.UserIdResponse;
+import com.odiga.fiesta.user.dto.response.UserInfoResponse;
 import com.odiga.fiesta.user.repository.UserCategoryRepository;
 import com.odiga.fiesta.user.repository.UserCompanionRepository;
 import com.odiga.fiesta.user.repository.UserMoodRepository;
@@ -103,7 +106,16 @@ public class UserService {
 		return festivals;
 	}
 
+	public UserIdResponse updateUserInfo(User user, UserInfoUpdateRequest request) {
+		validateUser(user);
 
+		user.updateUserInfo(request.getNickname(), request.getStatusMessage());
+		userRepository.save(user);
+
+		return UserIdResponse.builder()
+			.userId(user.getId())
+			.build();
+	}
 
 	private void saveUserCompanions(final Long userId, List<Long> companionIds) {
 		userCompanionRepository.saveAll(
@@ -186,5 +198,4 @@ public class UserService {
 			throw new CustomException(USER_NOT_FOUND);
 		}
 	}
-
 }

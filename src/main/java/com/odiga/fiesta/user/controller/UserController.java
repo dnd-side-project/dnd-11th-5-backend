@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -28,10 +29,12 @@ import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.dto.request.ProfileCreateRequest;
 import com.odiga.fiesta.user.dto.request.SocialLoginRequest;
+import com.odiga.fiesta.user.dto.request.UserInfoUpdateRequest;
 import com.odiga.fiesta.user.dto.response.LoginResponse;
 import com.odiga.fiesta.user.dto.response.ProfileCreateResponse;
 import com.odiga.fiesta.user.dto.response.TokenReissueResponse;
 import com.odiga.fiesta.user.dto.response.UserBadgeResponse;
+import com.odiga.fiesta.user.dto.response.UserIdResponse;
 import com.odiga.fiesta.user.dto.response.UserInfoResponse;
 import com.odiga.fiesta.user.service.UserService;
 
@@ -130,4 +133,12 @@ public class UserController {
 		return ResponseEntity.ok(BasicResponse.ok("유저의 활동 뱃지 조회 성공", response));
 	}
 
+	@PatchMapping("/me")
+	@Operation(summary = "내 정보 수정", description = "로그인한 유저의 정보를 수정합니다.")
+	public ResponseEntity<BasicResponse<UserIdResponse>> updateUserInfo(@AuthUser User user,
+		@RequestBody UserInfoUpdateRequest request) {
+
+		UserIdResponse response = userService.updateUserInfo(user, request);
+		return ResponseEntity.ok(BasicResponse.ok("내 정보 수정 성공", response));
+	}
 }
