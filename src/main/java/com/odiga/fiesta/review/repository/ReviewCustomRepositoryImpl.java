@@ -1,6 +1,7 @@
 package com.odiga.fiesta.review.repository;
 
 import static com.odiga.fiesta.festival.domain.QFestival.*;
+import static com.odiga.fiesta.festival.domain.QFestivalCategory.*;
 import static com.odiga.fiesta.keyword.domain.QKeyword.*;
 import static com.odiga.fiesta.review.domain.QReview.*;
 import static com.odiga.fiesta.review.domain.QReviewImage.*;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 
+import com.odiga.fiesta.festival.domain.QFestivalCategory;
 import com.odiga.fiesta.review.domain.QReviewLike;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
@@ -148,6 +150,20 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
 			.keywords(keywords)
 			.totalCount(totalCount)
 			.build();
+	}
+
+	@Override
+	public Long countByUserIdAndCategoryId(Long userId, Long festivalCategoryId) {
+		return queryFactory
+			.select(review.id.countDistinct())
+			.from(review)
+			.leftJoin(festival)
+			.on(review.festivalId.eq(festival.id))
+			.leftJoin(festivalCategory)
+			.on(festivalCategory.festivalId.eq(festival.id))
+			.where(review.userId.eq(userId)
+				.and(festivalCategory.categoryId.eq(festivalCategoryId)))
+			.fetchOne();
 	}
 
 	@Override

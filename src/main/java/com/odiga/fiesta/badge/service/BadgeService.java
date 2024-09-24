@@ -1,5 +1,8 @@
 package com.odiga.fiesta.badge.service;
 
+import static com.odiga.fiesta.badge.domain.BadgeConstants.*;
+import static com.odiga.fiesta.category.domain.CategoryConstants.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +17,7 @@ import com.odiga.fiesta.badge.domain.BadgeType;
 import com.odiga.fiesta.badge.domain.UserBadge;
 import com.odiga.fiesta.badge.repository.BadgeRepository;
 import com.odiga.fiesta.badge.repository.UserBadgeRepository;
+import com.odiga.fiesta.review.repository.ReviewRepository;
 import com.odiga.fiesta.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -25,11 +29,19 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class BadgeService {
 
+	public static final int PASSIONATE_REVIEWER_THRESHOLD = 5;
+	public static final int REVIEW_BADGE_COUNT_THRESHOLD = 2;
+
 	private final BadgeRepository badgeRepository;
 	private final UserBadgeRepository userBadgeRepository;
 	private final UserRepository userRepository;
+	private final ReviewRepository reviewRepository;
 
-	private static final Long USER_JOIN_BADGE_ID = 1L;
+	@Async
+	@Transactional
+	public CompletableFuture<List<Long>> giveReviewBadge(Long userId) {
+		return CompletableFuture.completedFuture(giveBadge(userId, BadgeType.REVIEW));
+	}
 
 	@Async
 	@Transactional
@@ -67,9 +79,68 @@ public class BadgeService {
 	private boolean isBadgeCondition(long userId, long badgeId) {
 
 		if (badgeId == USER_JOIN_BADGE_ID) {
-			// 회원가입 여부 확인하기
+			// TODO: soft delete 전환 시, 탈퇴한 회원인지 검증 필요
 			userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("해당 유저가 존재하지 않습니다."));
 			return true;
+		}
+
+		if (badgeId == FIRST_REVIEW_BADGE_ID) {
+			return reviewRepository.existsByUserId(userId);
+		}
+
+		if (badgeId == PASSIONATE_REVIEWER_BADGE_ID) {
+			return reviewRepository.countByUserId(userId) >= PASSIONATE_REVIEWER_THRESHOLD;
+		}
+
+		if (badgeId == HISTORY_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_HISTORY)
+				>= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == MUSIC_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_MUSIC_AND_DANCE)
+				>= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == ACTIVITY_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_ACTIVITY)
+				>= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == FOODIE_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_FOOD_AND_DRINK)
+				>= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == MOVIE_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_MOVIE) >= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == FIREWORKS_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_FIREWORKS)
+				>= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == NATURE_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_NATURE) >= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == NIGHT_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_NIGHT) >= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == ART_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_ART) >= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == CULTURE_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_CULTURE)
+				>= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == UNIQUE_LOVER_BADGE_ID) {
+			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_UNIQUE_FESTIVAL)
+				>= REVIEW_BADGE_COUNT_THRESHOLD;
 		}
 
 		return false;

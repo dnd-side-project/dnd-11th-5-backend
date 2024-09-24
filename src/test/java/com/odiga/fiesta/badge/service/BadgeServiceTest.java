@@ -1,22 +1,18 @@
 package com.odiga.fiesta.badge.service;
 
+import static com.odiga.fiesta.badge.domain.BadgeConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.stereotype.Repository;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.odiga.fiesta.IntegrationTestSupport;
 import com.odiga.fiesta.badge.domain.Badge;
@@ -24,10 +20,17 @@ import com.odiga.fiesta.badge.domain.BadgeType;
 import com.odiga.fiesta.badge.domain.UserBadge;
 import com.odiga.fiesta.badge.repository.BadgeRepository;
 import com.odiga.fiesta.badge.repository.UserBadgeRepository;
-import com.odiga.fiesta.config.S3MockConfig;
+import com.odiga.fiesta.category.domain.Category;
+import com.odiga.fiesta.category.domain.CategoryConstants;
+import com.odiga.fiesta.category.repository.CategoryRepository;
+import com.odiga.fiesta.festival.domain.Festival;
+import com.odiga.fiesta.festival.domain.FestivalCategory;
+import com.odiga.fiesta.festival.repository.FestivalCategoryRepository;
+import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.review.domain.Review;
+import com.odiga.fiesta.review.repository.ReviewRepository;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.repository.UserRepository;
-import com.odiga.fiesta.user.service.UserService;
 
 class BadgeServiceTest extends IntegrationTestSupport {
 
@@ -43,6 +46,18 @@ class BadgeServiceTest extends IntegrationTestSupport {
 	@Autowired
 	private UserBadgeRepository userBadgeRepository;
 
+	@Autowired
+	private ReviewRepository reviewRepository;
+
+	@Autowired
+	private FestivalRepository festivalRepository;
+
+	@Autowired
+	private CategoryRepository categoryRepository;
+
+	@Autowired
+	private FestivalCategoryRepository festivalCategoryRepository;
+
 	@BeforeEach
 	void setUp() {
 		// 기본 뱃지 데이터 셋업
@@ -53,6 +68,11 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		for (long badgeId = 4L; badgeId <= 15L; badgeId++) {
 			badgeRepository.save(createBadge(badgeId, BadgeType.REVIEW));
 		}
+
+		// 카테고리 셋업
+		for (long categoryId = 1L; categoryId <= 12L; categoryId++) {
+			categoryRepository.save(createCategory(categoryId));
+		}
 	}
 
 	@AfterEach
@@ -60,6 +80,10 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		userBadgeRepository.deleteAll();
 		badgeRepository.deleteAll();
 		userRepository.deleteAll();
+		reviewRepository.deleteAll();
+		festivalRepository.deleteAll();
+		categoryRepository.deleteAll();
+		festivalCategoryRepository.deleteAll();
 	}
 
 	@DisplayName("뱃지 수여 - 이미 뱃지를 가지고 있는 경우, 뱃지 수여하지 않음")
@@ -96,7 +120,138 @@ class BadgeServiceTest extends IntegrationTestSupport {
 
 		// then
 		assertEquals(1, badgeIds.size());
-		assertTrue(badgeIds.contains(1L));
+		assertTrue(badgeIds.contains(USER_JOIN_BADGE_ID));
+	}
+
+	@DisplayName("리뷰 뱃지 수여 - 첫  리뷰  작성")
+	@Test
+	void giveReviewBadge_FirstReview() throws ExecutionException, InterruptedException {
+		// given
+		User user = createUser();
+		userRepository.save(user);
+		Festival festival = createFestival(user);
+		festivalRepository.save(festival);
+		Review review = createReview(user, festival);
+		reviewRepository.save(review);
+
+		// when
+		CompletableFuture<List<Long>> badgeIdsFuture = badgeService.giveReviewBadge(user.getId());
+		List<Long> badgeIds = badgeIdsFuture.get();
+
+		// then
+		assertEquals(1, badgeIds.size());
+		assertTrue(badgeIds.contains(FIRST_REVIEW_BADGE_ID));
+	}
+
+	@DisplayName("리뷰 뱃지 수여 - 열정적인 리뷰어")
+	@Test
+	void giveReviewBadge_PassionateReviewer() throws ExecutionException, InterruptedException {
+		// given
+		User user = createUser();
+		userRepository.save(user);
+		Festival festival = createFestival(user);
+		festivalRepository.save(festival);
+		for (int reviewCount = 0; reviewCount < 5; reviewCount++) {
+			Review review = createReview(user, festival);
+			reviewRepository.save(review);
+		}
+
+		UserBadge userBadge = createUserBadge(user, FIRST_REVIEW_BADGE_ID);
+		userBadgeRepository.save(userBadge);
+
+		// when
+		CompletableFuture<List<Long>> badgeIdsFuture = badgeService.giveReviewBadge(user.getId());
+		List<Long> badgeIds = badgeIdsFuture.get();
+
+		// then
+		assertEquals(1, badgeIds.size());
+		assertTrue(badgeIds.contains(PASSIONATE_REVIEWER_BADGE_ID));
+	}
+
+	@DisplayName("리뷰 뱃지 수여 - 역사 애호가")
+	@Test
+	void giveReviewBadge_HistoryLover() throws ExecutionException, InterruptedException {
+		// given
+		User user = createUser();
+		userRepository.save(user);
+
+		Festival festival = createFestival(user);
+		festivalRepository.save(festival);
+
+		FestivalCategory festivalCategory = createFestivalCategory(festival, CategoryConstants.CATEGORY_HISTORY);
+		festivalCategoryRepository.save(festivalCategory);
+
+		festivalRepository.save(festival);
+		for (int reviewCount = 0; reviewCount < 2; reviewCount++) {
+			Review review = createReview(user, festival);
+			reviewRepository.save(review);
+		}
+
+		UserBadge userBadge = createUserBadge(user, FIRST_REVIEW_BADGE_ID);
+		userBadgeRepository.save(userBadge);
+
+		// when
+		CompletableFuture<List<Long>> badgeIdsFuture = badgeService.giveReviewBadge(user.getId());
+		List<Long> badgeIds = badgeIdsFuture.get();
+
+		// then
+		assertEquals(1, badgeIds.size());
+		assertTrue(badgeIds.contains(HISTORY_LOVER_BADGE_ID));
+	}
+
+	private UserBadge createUserBadge(User user, Long badgeId) {
+		return UserBadge.builder()
+			.userId(user.getId())
+			.badgeId(badgeId)
+			.build();
+	}
+
+	private Review createReview(User user, Festival festival) {
+		return Review.builder()
+			.userId(user.getId())
+			.festivalId(festival.getId())
+			.rating(35)
+			.content("리뷰 내용")
+			.build();
+	}
+
+	// 카테고리 별 페스티벌
+	private Festival createFestival(User user) {
+		return Festival.builder()
+			.userId(user.getId())
+			.name("페스티벌 이름")
+			.startDate(LocalDate.of(2021, 8, 1))
+			.endDate(LocalDate.of(2021, 8, 1))
+			.address("주소")
+			.sidoId(1L)
+			.sigungu("시군구")
+			.latitude(1.0)
+			.longitude(1.0)
+			.tip("팁")
+			.homepageUrl("홈페이지")
+			.instagramUrl("인스타그램")
+			.fee("요금")
+			.description("페스티벌 설명")
+			.ticketLink("티켓 링크")
+			.playtime("행사 시간")
+			.isPending(false)
+			.contentId("콘텐츠 ID")
+			.build();
+	}
+
+	private Category createCategory(Long categoryId) {
+		return Category.builder()
+			.id(categoryId)
+			.name("카테고리 이름")
+			.emoji("\uD83D\uDC30")
+			.build();
+	}
+
+	private FestivalCategory createFestivalCategory(Festival festival, Long categoryId) {
+		return FestivalCategory.builder()
+			.festivalId(festival.getId())
+			.categoryId(categoryId)
+			.build();
 	}
 
 	private Badge createBadge(Long id, BadgeType type) {

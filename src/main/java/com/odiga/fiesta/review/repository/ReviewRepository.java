@@ -9,4 +9,8 @@ import com.odiga.fiesta.review.domain.Review;
 public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewCustomRepository {
 
 	List<Review> findAllByFestivalId(Long festivalId);
+
+	Boolean existsByUserId(Long userId);
+
+	Long countByUserId(Long userId);
 }
