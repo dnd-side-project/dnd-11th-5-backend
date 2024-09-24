@@ -6,4 +6,5 @@ import com.odiga.fiesta.festival.domain.Festival;
 
 public interface FestivalRepository extends JpaRepository<Festival, Long>
 	, FestivalCustomRepository {
+	boolean existsByUserId(long userId);
 }

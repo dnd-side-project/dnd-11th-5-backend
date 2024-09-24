@@ -181,7 +181,6 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		FestivalCategory festivalCategory = createFestivalCategory(festival, CategoryConstants.CATEGORY_HISTORY);
 		festivalCategoryRepository.save(festivalCategory);
 
-		festivalRepository.save(festival);
 		for (int reviewCount = 0; reviewCount < 2; reviewCount++) {
 			Review review = createReview(user, festival);
 			reviewRepository.save(review);
@@ -197,6 +196,25 @@ class BadgeServiceTest extends IntegrationTestSupport {
 		// then
 		assertEquals(1, badgeIds.size());
 		assertTrue(badgeIds.contains(HISTORY_LOVER_BADGE_ID));
+	}
+
+	@DisplayName("뱃지 수여 - 페스티벌 첫 등록")
+	@Test
+	void test() throws ExecutionException, InterruptedException {
+		// given
+		User user = createUser();
+		userRepository.save(user);
+
+		Festival festival = createFestival(user);
+		festivalRepository.save(festival);
+
+		// when
+		CompletableFuture<List<Long>> badgeIdsFuture = badgeService.giveFestivalBadge(user.getId());
+		List<Long> badgeIds = badgeIdsFuture.get();
+
+		// then
+		assertEquals(1, badgeIds.size());
+		assertTrue(badgeIds.contains(FIRST_FESTIVAL_BADGE_ID));
 	}
 
 	private UserBadge createUserBadge(User user, Long badgeId) {

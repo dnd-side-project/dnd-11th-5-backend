@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.odiga.fiesta.badge.service.BadgeService;
 import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.exception.CustomException;
@@ -97,6 +98,7 @@ public class FestivalService {
 	private final FestivalModificationRequestRepository festivalModificationRequestRepository;
 
 	private final UserTypeService userTypeService;
+	private final BadgeService badgeService;
 
 	private final RedisUtils redisUtils;
 	private final FileUtils fileUtils;
@@ -121,6 +123,7 @@ public class FestivalService {
 		saveFestivalCategory(request.getCategoryIds(), festival);
 		saveFestivalMood(request.getMoodIds(), festival);
 
+		badgeService.giveFestivalBadge(userId);
 		return FestivalBasic.of(festival);
 	}
 

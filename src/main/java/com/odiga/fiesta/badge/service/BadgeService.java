@@ -17,6 +17,7 @@ import com.odiga.fiesta.badge.domain.BadgeType;
 import com.odiga.fiesta.badge.domain.UserBadge;
 import com.odiga.fiesta.badge.repository.BadgeRepository;
 import com.odiga.fiesta.badge.repository.UserBadgeRepository;
+import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.review.repository.ReviewRepository;
 import com.odiga.fiesta.user.repository.UserRepository;
 
@@ -36,6 +37,14 @@ public class BadgeService {
 	private final UserBadgeRepository userBadgeRepository;
 	private final UserRepository userRepository;
 	private final ReviewRepository reviewRepository;
+	private final FestivalRepository festivalRepository;
+
+
+	@Async
+	@Transactional
+	public CompletableFuture<List<Long>> giveFestivalBadge(Long userId) {
+		return CompletableFuture.completedFuture(giveBadge(userId, BadgeType.FESTIVAL));
+	}
 
 	@Async
 	@Transactional
@@ -141,6 +150,10 @@ public class BadgeService {
 		if (badgeId == UNIQUE_LOVER_BADGE_ID) {
 			return reviewRepository.countByUserIdAndCategoryId(userId, CATEGORY_UNIQUE_FESTIVAL)
 				>= REVIEW_BADGE_COUNT_THRESHOLD;
+		}
+
+		if (badgeId == FIRST_FESTIVAL_BADGE_ID) {
+			return festivalRepository.existsByUserId(userId);
 		}
 
 		return false;
