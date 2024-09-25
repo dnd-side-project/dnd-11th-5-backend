@@ -1,17 +1,15 @@
 package com.odiga.fiesta.user.service;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
+import static com.odiga.fiesta.common.error.ErrorCode.*;
+import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -23,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import com.odiga.fiesta.MockTestSupport;
 import com.odiga.fiesta.category.domain.Category;
 import com.odiga.fiesta.category.repository.CategoryRepository;
+import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.companion.domain.Companion;
 import com.odiga.fiesta.companion.repository.CompanionRepository;
 import com.odiga.fiesta.festival.domain.Festival;
@@ -35,7 +34,9 @@ import com.odiga.fiesta.priority.repository.PriorityRepository;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.domain.UserType;
 import com.odiga.fiesta.user.dto.request.ProfileCreateRequest;
+import com.odiga.fiesta.user.dto.request.UserInfoUpdateRequest;
 import com.odiga.fiesta.user.dto.response.ProfileCreateResponse;
+import com.odiga.fiesta.user.dto.response.UserIdResponse;
 import com.odiga.fiesta.user.repository.UserCategoryRepository;
 import com.odiga.fiesta.user.repository.UserCompanionRepository;
 import com.odiga.fiesta.user.repository.UserMoodRepository;
@@ -156,6 +157,69 @@ class UserServiceTest extends MockTestSupport {
 		assertThat(result.getContent())
 			.usingRecursiveComparison()
 			.isEqualTo(festivals);
+	}
+
+	@DisplayName("유저 정보 수정 - 성공")
+	@Test
+	void updateUserInfo_Success() {
+		// given
+		User user = createNoProfileUser();
+		given(userRepository.existsById(user.getId())).willReturn(true);
+
+		UserInfoUpdateRequest request = UserInfoUpdateRequest
+			.builder()
+			.nickname("수정된 닉네임")
+			.statusMessage("수정된 상태 메시지")
+			.build();
+
+		// when
+		UserIdResponse response = userService.updateUserInfo(user, request);
+
+		// then
+		assertThat(response.getUserId()).isEqualTo(user.getId());
+		assertThat(user.getNickname()).isEqualTo(request.getNickname());
+		assertThat(user.getStatusMessage()).isEqualTo(request.getStatusMessage());
+	}
+
+	@DisplayName("유저 정보 수정 - 실패: 닉네임 길이 제한 초과")
+	@Test
+	void updateUserInfo_ExceedNickNameLength() {
+		// given
+		User user = createNoProfileUser();
+		given(userRepository.existsById(user.getId())).willReturn(true);
+
+		UserInfoUpdateRequest request = UserInfoUpdateRequest
+			.builder()
+			.nickname("12345678901") // 11자
+			.statusMessage("수정된 상태 메시지")
+			.build();
+		// when
+		CustomException exception = assertThrows(CustomException.class,
+			() -> userService.updateUserInfo(user, request));
+
+		// then
+		assertThat(exception.getErrorCode()).isEqualTo(INVALID_NICKNAME_LENGTH);
+	}
+
+	@DisplayName("유저 정보 수정 - 실패: 상테 메시지 길이 제한 초과")
+	@Test
+	void updateUserInfo_ExceedStatusMessageLength() {
+		// given
+		User user = createNoProfileUser();
+		given(userRepository.existsById(user.getId())).willReturn(true);
+
+		UserInfoUpdateRequest request = UserInfoUpdateRequest
+			.builder()
+			.nickname("수정된 닉네임")
+			.statusMessage("1234567890123456789012345678901") // 31자
+			.build();
+
+		// when
+		CustomException exception = assertThrows(CustomException.class,
+			() -> userService.updateUserInfo(user, request));
+
+		// then
+		assertThat(exception.getErrorCode()).isEqualTo(INVALID_STATUS_MESSAGE_LENGTH);
 	}
 
 	User createNoProfileUser() {
