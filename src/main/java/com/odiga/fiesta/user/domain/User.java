@@ -83,7 +83,7 @@ public class User extends BaseEntity {
 		this.userTypeId = userTypeId;
 	}
 
-	public void updateUserInfo(String nickname, String statusMessage) {
+	public void updateUserInfo(final String nickname, final String statusMessage) {
 		validateNickname(nickname);
 		validateStatusMessage(statusMessage);
 		this.nickname = nickname;
