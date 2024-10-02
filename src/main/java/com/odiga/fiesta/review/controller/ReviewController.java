@@ -49,6 +49,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -169,6 +170,17 @@ public class ReviewController {
 		return ResponseEntity.created(
 				URI.create("/api/v1/reviews/" + reviewId))
 			.body(BasicResponse.created("리뷰 신고 요청 성공", response));
+	}
+
+	@Operation(summary = "리뷰 단건 조회", description = "리뷰를 단건 조회합니다.")
+	@GetMapping("/{reviewId}")
+	public ResponseEntity<BasicResponse<ReviewResponse>> getReview(
+		@AuthUser User user,
+		@PathVariable Long reviewId
+	) {
+
+		ReviewResponse response = reviewService.getReview(user, reviewId);
+		return ResponseEntity.ok(BasicResponse.ok("리뷰 단건 조회 성공", response));
 	}
 
 	private void checkLogin(User user) {
