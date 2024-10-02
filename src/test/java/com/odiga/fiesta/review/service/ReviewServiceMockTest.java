@@ -38,6 +38,7 @@ import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.keyword.domain.Keyword;
 import com.odiga.fiesta.keyword.repository.KeywordRepository;
 import com.odiga.fiesta.review.domain.Review;
+import com.odiga.fiesta.review.domain.ReviewImage;
 import com.odiga.fiesta.review.domain.ReviewKeyword;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 import com.odiga.fiesta.review.dto.request.ReviewCreateRequest;
@@ -81,7 +82,7 @@ class ReviewServiceMockTest extends MockTestSupport {
 
 	@Mock
 	private BadgeService badgeService;
-	
+
 	@InjectMocks
 	private ReviewService reviewService;
 
@@ -124,6 +125,43 @@ class ReviewServiceMockTest extends MockTestSupport {
 		assertEquals(1, reviews.getTotalElements());
 		ReviewResponse review = reviews.getContent().get(0);
 		assertEquals(5.0, review.getRating());
+	}
+
+	@DisplayName("리뷰 단건 조회 - 성공 (로그인  X)")
+	@Test
+	void getReview() {
+		// given
+		Long reviewId = 1L;
+
+		ReviewDataWithLike reviewData =
+			ReviewDataWithLike.builder()
+				.reviewId(reviewId)
+				.festivalId(1L)
+				.user(null)
+				.content("content")
+				.createdAt(LocalDateTime.of(2021, 1, 1, 0, 0))
+				.updatedAt(LocalDateTime.of(2021, 1, 1, 0, 0))
+				.rating(50)
+				.build();
+
+		given(reviewRepository.findReview(null, reviewId)).willReturn(Optional.ofNullable(reviewData));
+
+		List<ReviewImage> reviewImages = List.of(
+			ReviewImage.builder().id(1L).reviewId(reviewId).imageUrl("imageUrl").build());
+		given(reviewImageRepository.findByReviewId(any())).willReturn(reviewImages);
+
+		Map<Long, List<ReviewKeywordResponse>> reviewKeywordsMap = new HashMap<>();
+		reviewKeywordsMap.put(1L, Arrays.asList(new ReviewKeywordResponse(1L, "keyword")));
+		given(reviewRepository.findReviewKeywordsMap(any())).willReturn(reviewKeywordsMap);
+
+		// when
+		ReviewResponse review = reviewService.getReview(null, reviewId);
+
+		// then
+		System.out.println("review: " + review);
+		assertNotNull(review);
+		assertNull(review.getUser());
+		assertEquals(1, review.getImages().size());
 	}
 
 	@Nested
