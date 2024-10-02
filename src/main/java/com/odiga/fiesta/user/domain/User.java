@@ -73,7 +73,20 @@ public class User extends BaseEntity {
 		}
 	}
 
+	public static void validateStatusMessage(final String statusMessage) {
+		if (statusMessage.isEmpty() || statusMessage.length() > 30) {
+			throw new CustomException(INVALID_STATUS_MESSAGE_LENGTH);
+		}
+	}
+
 	public void updateUserType(final Long userTypeId) {
 		this.userTypeId = userTypeId;
+	}
+
+	public void updateUserInfo(final String nickname, final String statusMessage) {
+		validateNickname(nickname);
+		validateStatusMessage(statusMessage);
+		this.nickname = nickname;
+		this.statusMessage = statusMessage;
 	}
 }

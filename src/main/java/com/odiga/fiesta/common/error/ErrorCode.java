@@ -45,6 +45,7 @@ public enum ErrorCode {
 	ROLE_NOT_FOUND(404, "U010", "존재하지 않는 권한입니다."),
 	USER_TYPE_NOT_FOUND(500, "U011", "유저 유형을  찾을 수  없습니다."),
 	PROFILE_NOT_REGISTERED(400, "U012", "프로필을 등록해주세요."),
+	INVALID_STATUS_MESSAGE_LENGTH(400, "U013", "상태메시지는 1자 이상 30자 이하여야 합니다."),
 
 	// Festival
 	INVALID_FESTIVAL_MONTH(400, "F001", "입력된 월이 유효하지 않습니다. 월은 1월부터 12월 사이여야 합니다."),
