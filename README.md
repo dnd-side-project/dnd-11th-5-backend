@@ -37,6 +37,8 @@
     <a href="https://fiesta-psi.vercel.app/">프론트엔드 배포 URL</a>
     ·
     <a href="https://odiga.shop/swagger-ui/index.html">API 명세 (Swagger)</a>
+    ·
+    <a href="https://github.com/dnd-side-project/dnd-11th-5-backend/wiki">Wiki</a>
   </p>
 </div>
 
@@ -51,13 +53,6 @@
         <li><a href="#project-structure">Project Structure</a></li>
       </ul>
     </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#installation">Installation</a></li>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-      </ul>
-    </li>
   </ol>
 </details>
 
@@ -65,7 +60,7 @@
 
 ## About The Project
 
- <img src="https://i.imgur.com/20lTOkP.png" width="500">
+ <img src="https://i.imgur.com/20lTOkP.png" alt="Logo" width="500">
 
 Fiesta는 공공데이터 기반의 지역 축제 정보를 다양한 검색 조건을 이용하여 사용자에게 제공합니다.
 
@@ -80,6 +75,8 @@ Fiesta는 공공데이터 기반의 지역 축제 정보를 다양한 검색 조
 - 각 축제에 대한 리뷰 기능
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+> **프로젝트에 대한 더욱 자세한 정보는 [Wiki](https://github.com/dnd-side-project/dnd-11th-5-backend/wiki)를 참고해주세요!**
 
 ### Project Structure
 
