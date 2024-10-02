@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.badge.service.BadgeService;
-import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
@@ -349,6 +348,7 @@ public class ReviewService {
 		}
 	}
 
+	@Transactional
 	public ReviewReportResponse createReviewReport(User user, Long reviewId, ReviewReportRequest request) {
 
 		validateUserId(user.getId());
