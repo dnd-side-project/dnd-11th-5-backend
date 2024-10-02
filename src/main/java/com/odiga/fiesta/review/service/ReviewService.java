@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.odiga.fiesta.badge.service.BadgeService;
+import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.common.util.FileUtils;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
@@ -69,6 +70,17 @@ public class ReviewService {
 	private final BadgeService badgeService;
 
 	private final FileUtils fileUtils;
+
+	public ReviewResponse getReview(User user, Long reviewId) {
+		ReviewDataWithLike review = reviewRepository.findReview(isNull(user) ? null : user.getId(), reviewId)
+			.orElseThrow(() -> new CustomException(REVIEW_NOT_FOUND));
+
+		List<ReviewImage> reviewImages = reviewImageRepository.findByReviewId(reviewId);
+		Map<Long, List<ReviewKeywordResponse>> reviewKeywordsMap = reviewRepository.findReviewKeywordsMap(
+			List.of(reviewId));
+
+		return ReviewResponse.ofReviewDataWithImages(review, reviewImages, reviewKeywordsMap.get(reviewId));
+	}
 
 	public List<ReviewKeywordResponse> getKeywords() {
 		List<Keyword> keywords = keywordRepository.findAll();

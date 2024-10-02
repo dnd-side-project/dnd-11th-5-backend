@@ -3,6 +3,7 @@ package com.odiga.fiesta.review.dto.response;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.odiga.fiesta.review.domain.ReviewImage;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 
 import lombok.Getter;
@@ -37,6 +38,28 @@ public class ReviewResponse extends ReviewIdResponse {
 			.likeCount(reviewData.getLikeCount())
 			.rating((reviewData.getRating() / 10.0))
 			.images(images)
+			.keywords(keywords)
+			.build();
+	}
+
+	public static ReviewResponse ofReviewDataWithImages(ReviewDataWithLike reviewData, List<ReviewImage> images,
+		List<ReviewKeywordResponse> keywords) {
+		List<ReviewImageResponse> imageResponse = images.stream().map(image -> ReviewImageResponse.builder()
+			.imageId(image.getId())
+			.imageUrl(image.getImageUrl()).
+			build()).toList();
+
+		return ReviewResponse.builder()
+			.reviewId(reviewData.getReviewId())
+			.festivalId(reviewData.getFestivalId())
+			.user(reviewData.getUser())
+			.content(reviewData.getContent())
+			.createdAt(reviewData.getCreatedAt())
+			.updatedAt(reviewData.getUpdatedAt())
+			.isLiked(reviewData.getIsLiked())
+			.likeCount(reviewData.getLikeCount())
+			.rating((reviewData.getRating() / 10.0))
+			.images(imageResponse)
 			.keywords(keywords)
 			.build();
 	}

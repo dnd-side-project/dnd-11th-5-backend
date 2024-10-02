@@ -16,13 +16,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 
-import com.odiga.fiesta.festival.domain.QFestivalCategory;
 import com.odiga.fiesta.review.domain.QReviewLike;
 import com.odiga.fiesta.review.dto.projection.ReviewDataWithLike;
 import com.odiga.fiesta.review.dto.projection.ReviewSimpleData;
@@ -48,35 +48,18 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
 	private final QReviewLike reviewLikeForIsLiked = new QReviewLike("reviewLikeForIsLiked");
 
 	@Override
+	public Optional<ReviewDataWithLike> findReview(Long userId, Long reviewId) {
+		ReviewDataWithLike data = getDataWithLikeJPAQuery(userId)
+			.where(review.id.eq(reviewId))
+			.fetchOne();
+
+		return Optional.ofNullable(data);
+	}
+
+
+	@Override
 	public Page<ReviewDataWithLike> findReviews(Long userId, Long festivalId, Pageable pageable) {
-		List<ReviewDataWithLike> content = queryFactory.select(
-				Projections.fields(
-					ReviewDataWithLike.class,
-					review.id.as("reviewId"),
-					review.festivalId,
-					Projections.fields(
-						ReviewUserInfo.class,
-						review.userId,
-						user.profileImage,
-						user.nickname
-					).as("user"),
-					review.content,
-					review.createdAt,
-					review.rating,
-					new CaseBuilder()
-						.when(reviewLikeUserIdEq(userId))
-						.then(true)
-						.otherwise(false).as("isLiked"),
-					reviewLike.id.countDistinct().as("likeCount")
-				)
-			)
-			.from(review)
-			.leftJoin(reviewLike)
-			.on(reviewLike.reviewId.eq(review.id))
-			.leftJoin(reviewLikeForIsLiked)
-			.on(reviewLikeForIsLiked.reviewId.eq(review.id), reviewLikeUserIdEq(userId))
-			.leftJoin(user)
-			.on(review.userId.eq(user.id))
+		List<ReviewDataWithLike> content = getDataWithLikeJPAQuery(userId)
 			.where(reviewFestivalEq(festivalId))
 			.orderBy(getAllOrderSpecifiers(pageable).toArray(OrderSpecifier[]::new))
 			.offset(pageable.getOffset())
@@ -202,6 +185,36 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
 
 		reviewIds.forEach(reviewId -> resultMap.putIfAbsent(reviewId, new ArrayList<>()));
 		return resultMap;
+	}
+
+	private JPAQuery<ReviewDataWithLike> getDataWithLikeJPAQuery(Long userId) {
+		return queryFactory.select(
+				Projections.fields(
+					ReviewDataWithLike.class,
+					review.id.as("reviewId"),
+					review.festivalId,
+					Projections.fields(
+						ReviewUserInfo.class,
+						review.userId,
+						user.profileImage,
+						user.nickname
+					).as("user"),
+					review.content,
+					review.createdAt,
+					review.rating,
+					new CaseBuilder()
+						.when(reviewLikeUserIdEq(userId))
+						.then(true)
+						.otherwise(false).as("isLiked"),
+					reviewLike.id.countDistinct().as("likeCount")
+				)
+			).from(review)
+			.leftJoin(reviewLike)
+			.on(reviewLike.reviewId.eq(review.id))
+			.leftJoin(reviewLikeForIsLiked)
+			.on(reviewLikeForIsLiked.reviewId.eq(review.id), reviewLikeUserIdEq(userId))
+			.leftJoin(user)
+			.on(review.userId.eq(user.id));
 	}
 
 	private static BooleanExpression reviewFestivalEq(Long festivalId) {
