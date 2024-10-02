@@ -23,7 +23,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/dnd-side-project/dnd-11th-5-backend">
-    <img src="https://github-production-user-asset-6210df.s3.amazonaws.com/74234333/372043489-f2c58901-a721-4ac0-857b-ee0c5e99203e.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20240930%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240930T101151Z&X-Amz-Expires=300&X-Amz-Signature=3640c9fcb9b94fcdac1f2af1f7544aea22ca95841ad47f5ef636320f0736b367&X-Amz-SignedHeaders=host" alt="Logo" width="500">
+    <img src="https://i.imgur.com/7KKMWFz.png" alt="Logo" width="500">
   </a>
 
 <h3 align="center">Fiesta</h3>
@@ -65,7 +65,7 @@
 
 ## About The Project
 
- <img src="https://github-production-user-asset-6210df.s3.amazonaws.com/74234333/372124998-61be1407-e989-43ed-8658-b43babd252a3.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20240930%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240930T142911Z&X-Amz-Expires=300&X-Amz-Signature=64229a9fd694a89d25a939ec75e824f46327eb43f7f9f86167cbfcd3c0b2a9a9&X-Amz-SignedHeaders=host" width="500">
+ <img src="https://i.imgur.com/20lTOkP.png" width="500">
 
 Fiesta는 공공데이터 기반의 지역 축제 정보를 다양한 검색 조건을 이용하여 사용자에게 제공합니다.
 
