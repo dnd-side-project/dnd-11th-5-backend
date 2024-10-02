@@ -6,10 +6,14 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Builder
 public class ReviewReportRequest {
 
 	@NotBlank
 	@Size(max = 500)
 	private String description;
+
+	@Builder
+	private ReviewReportRequest(String description) {
+		this.description = description;
+	}
 }
