@@ -33,7 +33,7 @@ public class UserTypeService {
 		userTypeScores.put("파티피플러", getPartyPeopleScore(categories, moods));
 		userTypeScores.put("인스파이어러", getInspireScore(categories, moods));
 		userTypeScores.put("몽글몽글 힐링러", getHealingScore(categories, moods));
-		userTypeScores.put("탐험러", getExploreScore(categories, moods));
+		userTypeScores.put("호기심만땅 탐험러", getExploreScore(categories, moods));
 
 		log.info("userTypeScores: {}", userTypeScores);
 
