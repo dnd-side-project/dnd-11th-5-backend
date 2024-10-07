@@ -145,8 +145,8 @@ public class UserController {
 		return ResponseEntity.ok(BasicResponse.ok("내 정보 수정 성공", response));
 	}
 
-	@PatchMapping("/onboarding-info")
-	@Operation(summary = "유저의 온보딩 응답 정보 조회 성공", description = "유저의 온보딩 응답 정보 조회 성공를 조회합니다.")
+	@GetMapping("/onboarding-info")
+	@Operation(summary = "유저의 온보딩 응답 정보 조회", description = "유저의 온보딩 응답 정보를 조회합니다.")
 	public ResponseEntity<BasicResponse<UserOnboardingResponse>> getOnboardingInfo(@AuthUser User user) {
 
 		UserOnboardingResponse response = userService.getOnboardingInfo(user);
