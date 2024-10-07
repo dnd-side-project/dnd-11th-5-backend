@@ -26,6 +26,7 @@ import com.odiga.fiesta.common.PageResponse;
 import com.odiga.fiesta.common.error.ErrorCode;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
+import com.odiga.fiesta.festival.service.FestivalService;
 import com.odiga.fiesta.user.domain.User;
 import com.odiga.fiesta.user.dto.request.ProfileCreateRequest;
 import com.odiga.fiesta.user.dto.request.SocialLoginRequest;
@@ -56,7 +57,8 @@ public class UserController {
 	private final UserService userService;
 	private final AuthService authService;
 	private final BadgeService badgeService;
-
+	private final FestivalService festivalService;
+	
 	@PostMapping("/oauth/login")
 	@Operation(summary = "소셜 로그인", description = "소셜 로그인을 진행합니다.")
 	public ResponseEntity<BasicResponse<LoginResponse>> kakaoLogin(@RequestBody SocialLoginRequest request) {
@@ -112,8 +114,8 @@ public class UserController {
 	}
 
 	@Operation(
-		summary = "유저가 스크랩한 페스티벌 조회",
-		description = "유저가 스크랩한 페스티벌을 다건 조회합니다."
+		summary = "유저가 북마크한 페스티벌 조회",
+		description = "유저가 북마크한 페스티벌을 다건 조회합니다."
 	)
 	@GetMapping("/bookmarks")
 	public ResponseEntity<BasicResponse<PageResponse<FestivalInfoWithBookmark>>> getBookmarkedFestivals(
@@ -121,8 +123,8 @@ public class UserController {
 		@ParameterObject @Parameter(description = "Paging parameters", example = "{\"page\":0,\"size\":6,\"sort\":[\"createdAt,desc\"]}")
 		@PageableDefault(sort = {"createdAt"}, direction = Sort.Direction.DESC, size = 6) Pageable pageable) {
 
-		Page<FestivalInfoWithBookmark> festivals = userService.getBookmarkedFestivals(user, pageable);
-		return ResponseEntity.ok(BasicResponse.ok("스크랩한 페스티벌 조회 성공", PageResponse.of(festivals)));
+		Page<FestivalInfoWithBookmark> festivals = festivalService.getBookmarkedFestivals(user, pageable);
+		return ResponseEntity.ok(BasicResponse.ok("북마크한 페스티벌 조회 성공", PageResponse.of(festivals)));
 	}
 
 	@GetMapping("/badges")

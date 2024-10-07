@@ -130,35 +130,6 @@ class UserServiceTest extends MockTestSupport {
 		verify(userCompanionRepository).saveAll(anyList());
 	}
 
-	@DisplayName("유저가 북마크한 페스티벌들을 조회")
-	@Test
-	void getBookmarkedFestivals() {
-		// given
-		User currentUser = createNoProfileUser();
-		given(userRepository.existsById(currentUser.getId())).willReturn(true);
-
-		Pageable pageable = PageRequest.of(0, 5);
-		List<FestivalInfoWithBookmark> festivals = Arrays.asList(
-			new FestivalInfoWithBookmark(1L, "Festival 1", "Sido 1", "Sigungu 1", "image1.jpg",
-				LocalDate.of(2024, 10, 1), LocalDate.of(2024, 10, 10), true),
-			new FestivalInfoWithBookmark(2L, "Festival 2", "Sido 2", "Sigungu 2", "image2.jpg",
-				LocalDate.of(2024, 10, 2), LocalDate.of(2024, 10, 11), true)
-		);
-
-		Page<FestivalInfoWithBookmark> festivalPage = new PageImpl<>(festivals, pageable, festivals.size());
-		given(festivalRepository.findBookmarkedFestivals(currentUser.getId(), pageable)).willReturn(festivalPage);
-
-		// when
-		Page<FestivalInfoWithBookmark> result = userService.getBookmarkedFestivals(currentUser, pageable);
-
-		// then
-		assertThat(result).isNotNull();  // 반환된 값이 null이 아닌지 확인
-		assertThat(result.getTotalElements()).isEqualTo(2);  // 총 북마크된 페스티벌 수 확인
-		assertThat(result.getContent())
-			.usingRecursiveComparison()
-			.isEqualTo(festivals);
-	}
-
 	@DisplayName("유저 정보 수정 - 성공")
 	@Test
 	void updateUserInfo_Success() {

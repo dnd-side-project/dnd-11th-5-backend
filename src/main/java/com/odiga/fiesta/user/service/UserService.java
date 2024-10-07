@@ -23,8 +23,10 @@ import com.odiga.fiesta.category.repository.CategoryRepository;
 import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.companion.domain.Companion;
 import com.odiga.fiesta.companion.repository.CompanionRepository;
+import com.odiga.fiesta.festival.dto.projection.FestivalWithBookmarkAndSido;
 import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
+import com.odiga.fiesta.festival.service.FestivalService;
 import com.odiga.fiesta.mood.domain.Mood;
 import com.odiga.fiesta.mood.repository.MoodRepository;
 import com.odiga.fiesta.priority.domain.Priority;
@@ -54,7 +56,9 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class UserService {
+
 	private final FestivalRepository festivalRepository;
+	private final FestivalService festivalService;
 
 	private final UserCategoryRepository userCategoryRepository;
 	private final UserCompanionRepository userCompanionRepository;
@@ -101,15 +105,6 @@ public class UserService {
 			.userTypeName(userType.getName())
 			.userTypeImage(userType.getCardImage())
 			.build();
-	}
-
-	public Page<FestivalInfoWithBookmark> getBookmarkedFestivals(User user, Pageable pageable) {
-		validateUser(user);
-
-		Page<FestivalInfoWithBookmark> festivals = festivalRepository.findBookmarkedFestivals(user.getId(),
-			pageable);
-
-		return festivals;
 	}
 
 	@Transactional
