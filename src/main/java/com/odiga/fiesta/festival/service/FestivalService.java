@@ -212,6 +212,18 @@ public class FestivalService {
 			(page.intValue() / size) + 1);
 	}
 
+	public Page<FestivalInfoWithBookmark> getBookmarkedFestivals(User user, Pageable pageable) {
+		validateUserId(user.getId());
+
+		Page<FestivalWithBookmarkAndSido> bookmarkedFestivals = festivalRepository.findBookmarkedFestivals(user.getId(),
+			pageable);
+
+		List<FestivalInfoWithBookmark> festivals = getFestivalWithBookmarkAndSidoAndThumbnailImage(
+			bookmarkedFestivals);
+
+		return new PageImpl<>(festivals, pageable, bookmarkedFestivals.getTotalElements());
+	}
+
 	private List<FestivalInfoWithBookmark> getFestivalWithBookmarkAndSidoAndThumbnailImage(
 		Page<FestivalWithBookmarkAndSido> festivalsByFilters) {
 		// 1. 페스티벌 아이디를 가져온다.

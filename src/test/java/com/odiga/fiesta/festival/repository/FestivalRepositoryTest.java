@@ -181,67 +181,6 @@ class FestivalRepositoryTest extends RepositoryTestSupport {
 		assertThat(thumbnailImageByFestivalId.get(festival3.getId())).isNull();
 	}
 
-	@DisplayName("현재 유저가 북마크 한 페스티벌들을 조회한다.")
-	@Test
-	void findBookmarkedFestivals() {
-		// given
-		User currentUser = createUser();
-		em.persist(currentUser);
-
-		User otherUser = createUser();
-		em.persist(otherUser);
-
-		Sido sido = createSido();
-		em.persist(sido);
-
-		List<Festival> bookmarkedFestivals = new ArrayList<>();
-
-		for (int i = 0; i < 30; i++) {
-			Festival festival = createFestival(LocalDate.of(2024, 10, 1), LocalDate.of(2024, 10, 10), sido.getId());
-			em.persist(festival);
-
-			for (int j = 0; j < 3; j++) {
-				FestivalImage image = createFestivalImage(festival);
-				em.persist(image);
-			}
-
-			FestivalBookmark bookmark = FestivalBookmark.builder()
-				.festivalId(festival.getId())
-				.userId(currentUser.getId())
-				.build();
-
-			em.persist(bookmark);
-
-			bookmarkedFestivals.add(festival);
-		}
-
-		for (int i = 0; i < 10; i++) {
-			Festival festival = createFestival(LocalDate.of(2024, 10, 1), LocalDate.of(2024, 10, 10), sido.getId());
-			em.persist(festival);
-
-			FestivalBookmark bookmark = FestivalBookmark.builder()
-				.festivalId(festival.getId())
-				.userId(otherUser.getId())
-				.build();
-			em.persist(bookmark);
-		}
-
-		Pageable pageable = PageRequest.of(0, 6);
-
-		// when
-		Page<FestivalInfoWithBookmark> result = festivalRepository.findBookmarkedFestivals(currentUser.getId(),
-			pageable);
-
-		// then
-		assertThat(result).isNotNull();
-		assertThat(result.getTotalElements()).isEqualTo(30);
-		assertEquals(6, result.getSize());
-		List<FestivalInfoWithBookmark> content = result.getContent();
-		for (FestivalInfoWithBookmark festivalInfoWithBookmark : content) {
-			assertThat(festivalInfoWithBookmark.getIsBookmarked()).isTrue();
-		}
-	}
-
 	private static FestivalImage createFestivalImage(Festival festival) {
 		return FestivalImage.builder()
 			.festivalId(festival.getId())

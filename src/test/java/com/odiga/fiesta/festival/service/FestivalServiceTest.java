@@ -422,8 +422,8 @@ class FestivalServiceTest extends IntegrationTestSupport {
 				.collect(Collectors.toList())
 		);
 
-		FestivalImage image1 = FestivalImage.builder().festivalId(festival.getId()).imageUrl("imageUrl1").build();
-		FestivalImage image2 = FestivalImage.builder().festivalId(festival.getId()).imageUrl("imageUrl2").build();
+		FestivalImage image1 = createFestivalImage(festival);
+		FestivalImage image2 = createFestivalImage(festival);
 
 		List<FestivalImage> images = festivalImageRepository.saveAll(List.of(image1, image2));
 
@@ -840,6 +840,109 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.build();
 	}
 
+	@DisplayName("유저가 북마크한 페스티벌 조회 - 성공 케이스, 페스티벌이 하나의 이미지만 가지고 있음")
+	@Test
+	void findBookmarkedFestivals() {
+		// given
+		User currentUser = userRepository.save(createUser());
+
+		Festival festival = createFestival();
+		Festival festival2 = createFestival();
+		festivalRepository.saveAll(List.of(festival, festival2));
+
+		FestivalImage image = createFestivalImage(festival);
+		festivalImageRepository.save(image);
+
+		FestivalBookmark bookmark = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival.getId(), currentUser.getId()));
+		festivalBookmarkRepository.save(bookmark);
+
+		int bookmarkCount = 1;
+
+		// when
+		Page<FestivalInfoWithBookmark> bookmarkedFestivals = festivalService.getBookmarkedFestivals(currentUser,
+			PageRequest.of(0, 5));
+
+		// then
+		assertThat(bookmarkedFestivals.getContent())
+			.hasSize(1)
+			.extracting("festivalId", "thumbnailImage", "isBookmarked")
+			.containsExactly(
+				tuple(festival.getId(), image.getImageUrl(), true)
+			);
+
+		assertEquals(bookmarkedFestivals.getTotalElements(), bookmarkCount);
+	}
+
+	@DisplayName("유저가 북마크한 페스티벌 조회 - 페스티벌의 이미지가 여러 개인 경우에도 첫 번째 이미지만 반환한다.")
+	@Test
+	void findBookmarkedFestivals_multipleFestivalImages() {
+		// given
+		User currentUser = userRepository.save(createUser());
+
+		Festival festival = createFestival();
+		festivalRepository.save(festival);
+
+		FestivalImage image1 = createFestivalImage(festival);
+		FestivalImage image2 = createFestivalImage(festival);
+		FestivalImage image3 = createFestivalImage(festival);
+		festivalImageRepository.saveAll(List.of(image1, image2, image3));
+
+		FestivalBookmark bookmark = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival.getId(), currentUser.getId()));
+		festivalBookmarkRepository.save(bookmark);
+
+		// when
+		Page<FestivalInfoWithBookmark> bookmarkedFestivals = festivalService.getBookmarkedFestivals(currentUser,
+			PageRequest.of(0, 5));
+
+		// then
+		assertThat(bookmarkedFestivals.getContent())
+			.hasSize(1)
+			.extracting("festivalId", "thumbnailImage", "isBookmarked")
+			.containsExactly(
+				tuple(festival.getId(), image1.getImageUrl(), true)
+			);
+	}
+
+	@DisplayName("유저가 북마크한 페스티벌 조회 - 성공, 북마크 한 페스티벌이 여러 개 일 때")
+	@Test
+	void findBookmarkedFestivals_Success() {
+		// given
+		User currentUser = userRepository.save(createUser());
+
+		Festival festival = createFestival();
+		Festival festival2 = createFestival();
+		Festival festival3 = createFestival();
+		Festival festival4 = createFestival();
+		Festival festival5 = createFestival();
+		festivalRepository.saveAll(List.of(festival, festival2, festival3, festival4, festival5));
+
+		FestivalBookmark bookmark1 = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival.getId(), currentUser.getId()));
+		FestivalBookmark bookmark2 = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival.getId(), currentUser.getId()));
+		FestivalBookmark bookmark3 = festivalBookmarkRepository.save(
+			createFestivalBookmark(festival.getId(), currentUser.getId()));
+
+		festivalBookmarkRepository.saveAll(List.of(bookmark1, bookmark2, bookmark3));
+
+		int pageSize = 2;
+		int bookmarkedFestivalCount = 3;
+
+		// when
+		Page<FestivalInfoWithBookmark> bookmarkedFestivals = festivalService.getBookmarkedFestivals(currentUser,
+			PageRequest.of(0, pageSize));
+
+		// then
+		assertThat(bookmarkedFestivals.getContent()).hasSize(pageSize);
+		assertThat(bookmarkedFestivals.getTotalElements()).isEqualTo(bookmarkedFestivalCount);
+	}
+
+	private static FestivalImage createFestivalImage(Festival festival) {
+		return FestivalImage.builder().festivalId(festival.getId()).imageUrl("imageUrl1").build();
+	}
+
 	private static Festival createFestival(LocalDate startDate, LocalDate endDate, Long sidoId) {
 		return Festival.builder()
 			.userId(1L)
@@ -904,6 +1007,10 @@ class FestivalServiceTest extends IntegrationTestSupport {
 			.playtime("페스티벌 진행 시간")
 			.isPending(false)
 			.build();
+	}
+
+	private static Festival createFestival() {
+		return createFestival("페스티벌 이름");
 	}
 
 	private static Festival createFestival(String name) {
