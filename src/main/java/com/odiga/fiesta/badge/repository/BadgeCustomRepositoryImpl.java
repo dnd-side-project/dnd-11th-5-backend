@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.odiga.fiesta.user.dto.response.UserBadgeResponse;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -39,7 +40,12 @@ public class BadgeCustomRepositoryImpl implements BadgeCustomRepository {
 			)
 			.from(badge)
 			.leftJoin(userBadge)
-			.on(badge.id.eq(userBadge.badgeId)) // 단순 조인
+			.on(badgeIdEq())
+			.distinct()
 			.fetch();
+	}
+
+	private static BooleanExpression badgeIdEq() {
+		return badge.id.eq(userBadge.badgeId);
 	}
 }
