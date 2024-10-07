@@ -37,6 +37,7 @@ import com.odiga.fiesta.user.dto.request.ProfileCreateRequest;
 import com.odiga.fiesta.user.dto.request.UserInfoUpdateRequest;
 import com.odiga.fiesta.user.dto.response.ProfileCreateResponse;
 import com.odiga.fiesta.user.dto.response.UserIdResponse;
+import com.odiga.fiesta.user.dto.response.UserOnboardingResponse;
 import com.odiga.fiesta.user.repository.UserCategoryRepository;
 import com.odiga.fiesta.user.repository.UserCompanionRepository;
 import com.odiga.fiesta.user.repository.UserMoodRepository;
@@ -191,6 +192,46 @@ class UserServiceTest extends MockTestSupport {
 
 		// then
 		assertThat(exception.getErrorCode()).isEqualTo(INVALID_STATUS_MESSAGE_LENGTH);
+	}
+
+	@DisplayName("유저의 온보딩 정보 조회 - 성공")
+	@Test
+	void getOnboardingInfo() {
+		// given
+		User user = createNoProfileUser();
+
+		ProfileCreateRequest request = ProfileCreateRequest.builder()
+			.priorityIds(List.of(1L, 2L))
+			.moodIds(List.of(1L, 2L))
+			.categoryIds(List.of(1L, 2L))
+			.companionIds(List.of(1L, 2L))
+			.build();
+
+		UserType userType = UserType.builder()
+			.id(1L)
+			.name("힐링러")
+			.profileImage("힐링러 프로필 이미지")
+			.cardImage("힐링러 카드 이미지")
+			.build();
+
+		given(userRepository.existsById(user.getId())).willReturn(true);
+		given(userCategoryRepository.findCategoryIdsByUserId(user.getId())).willReturn(request.getCategoryIds());
+		given(userMoodRepository.findMoodIdsByUserId(user.getId())).willReturn(request.getMoodIds());
+		given(userCompanionRepository.findCompanionIdsByUserId(user.getId())).willReturn(request.getCompanionIds());
+		given(userPriorityRepository.findPriorityIdsByUserId(user.getId())).willReturn(request.getPriorityIds());
+
+		// when
+		UserOnboardingResponse onboardingInfo = userService.getOnboardingInfo(user);
+
+		// then
+		assertThat(onboardingInfo)
+			.extracting("categoryIds", "moodIds", "companionIds", "priorityIds")
+			.containsExactly(
+				request.getCategoryIds(),
+				request.getMoodIds(),
+				request.getCompanionIds(),
+				request.getPriorityIds()
+			);
 	}
 
 	User createNoProfileUser() {
