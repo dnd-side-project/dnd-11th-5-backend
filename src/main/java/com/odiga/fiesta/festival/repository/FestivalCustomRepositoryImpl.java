@@ -306,41 +306,15 @@ public class FestivalCustomRepositoryImpl implements FestivalCustomRepository {
 	}
 
 	@Override
-	public Page<FestivalInfoWithBookmark> findBookmarkedFestivals(Long userId, Pageable pageable) {
-		List<FestivalInfoWithBookmark> festivals = queryFactory.select(
-				Projections.fields(FestivalInfoWithBookmark.class,
-					festival.id.as("festivalId"),
-					festival.name,
-					sido.name.as("sido"),
-					festival.sigungu,
-					min(festivalImage.imageUrl).as("thumbnailImage"),
-					festival.startDate,
-					festival.endDate,
+	public Page<FestivalWithBookmarkAndSido> findBookmarkedFestivals(Long userId, Pageable pageable) {
 
-					new CaseBuilder()
-						.when(festivalBookmarkUserIdEq(userId))
-						.then(true)
-						.otherwise(false).as("isBookmarked")
-				)
-			).from(festival)
+		List<FestivalWithBookmarkAndSido> festivals = selectFestivalsWithBookmarkAndSido(pageable, userId)
 			.where(festivalBookmarkUserIdEq(userId))
-			.leftJoin(festivalBookmarkForIsBookmarked)
-			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id),
-				festivalBookmarkUserIdEq(userId))
-			.leftJoin(sido)
-			.on(sidoIdFestivalSidoIdEq())
-			.leftJoin(festivalImage)
-			.on(festival.id.eq(festivalImage.festivalId))
 			.orderBy(festivalBookmarkForIsBookmarked.createdAt.desc())
-			.offset(pageable.getOffset())
-			.limit(pageable.getPageSize())
 			.fetch();
 
-		JPAQuery<Long> countQuery = queryFactory.select(festival.count())
-			.from(festival)
-			.leftJoin(festivalBookmarkForIsBookmarked)
-			.on(festivalBookmarkForIsBookmarked.festivalId.eq(festival.id),
-				festivalBookmarkUserIdEq(userId))
+		JPAQuery<Long> countQuery = queryFactory.select(festivalBookmarkForIsBookmarked.count())
+			.from(festivalBookmarkForIsBookmarked)
 			.where(festivalBookmarkUserIdEq(userId));
 
 		return PageableExecutionUtils.getPage(festivals, pageable, countQuery::fetchOne);

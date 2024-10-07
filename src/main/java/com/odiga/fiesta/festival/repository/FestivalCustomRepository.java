@@ -41,5 +41,5 @@ public interface FestivalCustomRepository {
 
 	Map<Long, String> findThumbnailImageByFestivalId(List<Long> festivalIds);
 
-	Page<FestivalInfoWithBookmark> findBookmarkedFestivals(Long userId, Pageable pageable);
+	Page<FestivalWithBookmarkAndSido> findBookmarkedFestivals(Long userId, Pageable pageable);
 }
