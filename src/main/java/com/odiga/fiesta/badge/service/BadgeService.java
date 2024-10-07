@@ -4,6 +4,7 @@ import static com.odiga.fiesta.badge.domain.BadgeConstants.*;
 import static com.odiga.fiesta.category.domain.CategoryConstants.*;
 import static com.odiga.fiesta.common.error.ErrorCode.*;
 import static java.util.Objects.*;
+import static java.util.concurrent.CompletableFuture.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,25 +48,26 @@ public class BadgeService {
 	// 현재 유저의 뱃지 조회
 	public List<UserBadgeResponse> getUserBadges(User user) {
 		validateUser(user);
-		return badgeRepository.findUserBadges(user.getId());
+		List<UserBadgeResponse> userBadges = badgeRepository.findUserBadges(user.getId());
+		return userBadges;
 	}
 
 	@Async
 	@Transactional
 	public CompletableFuture<List<Long>> giveFestivalBadge(Long userId) {
-		return CompletableFuture.completedFuture(giveBadge(userId, BadgeType.FESTIVAL));
+		return completedFuture(giveBadge(userId, BadgeType.FESTIVAL));
 	}
 
 	@Async
 	@Transactional
 	public CompletableFuture<List<Long>> giveReviewBadge(Long userId) {
-		return CompletableFuture.completedFuture(giveBadge(userId, BadgeType.REVIEW));
+		return completedFuture(giveBadge(userId, BadgeType.REVIEW));
 	}
 
 	@Async
 	@Transactional
 	public CompletableFuture<List<Long>> giveUserBadge(Long userId) {
-		return CompletableFuture.completedFuture(giveBadge(userId, BadgeType.USER));
+		return completedFuture(giveBadge(userId, BadgeType.USER));
 	}
 
 	private List<Long> giveBadge(Long userId, BadgeType badgeType) {
@@ -86,7 +88,8 @@ public class BadgeService {
 
 		// 조건을 확인하고 뱃지를 수여
 		for (Long badgeId : badgeIds) {
-			if (isUserNotOwnedBadge(badgeId, userBadgeMap) && isBadgeCondition(userId, badgeId)) {
+			if (isUserNotOwnedBadge(badgeId) && isBadgeCondition(userId, badgeId)) {
+				log.info("뱃지 획득 완료");
 				userBadgeRepository.save(UserBadge.builder().badgeId(badgeId).userId(userId).build());
 				givenBadgeIds.add(badgeId);
 			}
@@ -169,8 +172,8 @@ public class BadgeService {
 		return false;
 	}
 
-	private static boolean isUserNotOwnedBadge(Long badgeId, Map<Long, Boolean> userBadgeMap) {
-		return !userBadgeMap.get(badgeId);
+	private boolean isUserNotOwnedBadge(Long badgeId) {
+		return !userBadgeRepository.existsByBadgeId(badgeId);
 	}
 
 	private void validateUser(User user) {
