@@ -145,6 +145,22 @@ public class UserService {
 		return userType;
 	}
 
+	public UserOnboardingResponse getOnboardingInfo(User user) {
+		validateUser(user);
+
+		List<Long> categoryIds = userCategoryRepository.findCategoryIdsByUserId(user.getId());
+		List<Long> moodIds = userMoodRepository.findMoodIdsByUserId(user.getId());
+		List<Long> companionIds = userCompanionRepository.findCompanionIdsByUserId(user.getId());
+		List<Long> priorityIds = userPriorityRepository.findPriorityIdsByUserId(user.getId());
+
+		return UserOnboardingResponse.builder()
+			.categoryIds(categoryIds)
+			.moodIds(moodIds)
+			.companionIds(companionIds)
+			.priorityIds(priorityIds)
+			.build();
+	}
+
 	private void saveUserCompanions(final Long userId, List<Long> companionIds) {
 		userCompanionRepository.saveAll(
 			companionIds.stream()
@@ -187,22 +203,6 @@ public class UserService {
 					.build())
 				.toList()
 		);
-	}
-
-	public UserOnboardingResponse getOnboardingInfo(User user) {
-		validateUser(user);
-
-		List<Long> categoryIds = userCategoryRepository.findCategoryIdsByUserId(user.getId());
-		List<Long> moodIds = userMoodRepository.findMoodIdsByUserId(user.getId());
-		List<Long> companionIds = userCompanionRepository.findCompanionIdsByUserId(user.getId());
-		List<Long> priorityIds = userPriorityRepository.findPriorityIdsByUserId(user.getId());
-
-		return UserOnboardingResponse.builder()
-			.categoryIds(categoryIds)
-			.moodIds(moodIds)
-			.companionIds(companionIds)
-			.priorityIds(priorityIds)
-			.build();
 	}
 
 	private void validateCompanions(List<Long> companionIds) {

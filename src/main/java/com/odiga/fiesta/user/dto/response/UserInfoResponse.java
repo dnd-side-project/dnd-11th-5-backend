@@ -12,6 +12,6 @@ public class UserInfoResponse {
 	private String nickname;
 	private String statusMessage;
 	private String profileImage;
-	private Boolean isProfileCreated;
+	private Boolean isProfileRegistered;
 	private Long userTypeId;
 }

@@ -83,15 +83,10 @@ public class AuthService {
 			.build();
 	}
 
+	@Transactional
 	public void deleteUser(User user) {
 		checkLogin(user);
 		userRepository.deleteById(user.getId());
-	}
-
-	private static void validateKakaoAcccount(KakaoAccount kakaoAccount) {
-		if (!kakaoAccount.isHasEmail()) {
-			throw new CustomException(CAN_NOT_FIND_KAKAO_USER);
-		}
 	}
 
 	// JWT 토큰 재발급
@@ -143,6 +138,12 @@ public class AuthService {
 		saveUserRole(role, savedUser);
 
 		return savedUser;
+	}
+
+	private static void validateKakaoAcccount(KakaoAccount kakaoAccount) {
+		if (!kakaoAccount.isHasEmail()) {
+			throw new CustomException(CAN_NOT_FIND_KAKAO_USER);
+		}
 	}
 
 	private UserRole saveUserRole(Role role, User savedUser) {
