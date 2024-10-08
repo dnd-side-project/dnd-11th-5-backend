@@ -74,8 +74,54 @@ public class UserService {
 	// 프로필 생성
 	@Transactional
 	public ProfileCreateResponse createProfile(User user, ProfileCreateRequest request) {
+		validateUser(user);
+		deleteOnboardingInfo(user);
+		UserType userType = createUserType(user, request);
+
+		// response
+		return ProfileCreateResponse.builder()
+			.userTypeId(userType.getId())
+			.userTypeName(userType.getName())
+			.userTypeImage(userType.getCardImage())
+			.build();
+	}
+
+	@Transactional
+	public ProfileCreateResponse updateProfile(User user, ProfileCreateRequest request) {
 
 		validateUser(user);
+		deleteOnboardingInfo(user);
+
+		UserType userType = createUserType(user, request);
+
+		// response
+		return ProfileCreateResponse.builder()
+			.userTypeId(userType.getId())
+			.userTypeName(userType.getName())
+			.userTypeImage(userType.getCardImage())
+			.build();
+	}
+
+	@Transactional
+	public UserIdResponse updateUserInfo(User user, UserInfoUpdateRequest request) {
+		validateUser(user);
+
+		user.updateUserInfo(request.getNickname(), request.getStatusMessage());
+		userRepository.save(user);
+
+		return UserIdResponse.builder()
+			.userId(user.getId())
+			.build();
+	}
+
+	private void deleteOnboardingInfo(User user) {
+		userCategoryRepository.deleteByUserId(user.getId());
+		userCompanionRepository.deleteByUserId(user.getId());
+		userMoodRepository.deleteByUserId(user.getId());
+		userPriorityRepository.deleteByUserId(user.getId());
+	}
+
+	private UserType createUserType(User user, ProfileCreateRequest request) {
 
 		List<Long> priorityIds = request.getPriorityIds();
 		List<Long> moodIds = request.getMoodIds();
@@ -96,25 +142,7 @@ public class UserService {
 
 		user.updateUserType(userType.getId());
 		userRepository.save(user);
-
-		// response
-		return ProfileCreateResponse.builder()
-			.userTypeId(userType.getId())
-			.userTypeName(userType.getName())
-			.userTypeImage(userType.getCardImage())
-			.build();
-	}
-
-	@Transactional
-	public UserIdResponse updateUserInfo(User user, UserInfoUpdateRequest request) {
-		validateUser(user);
-
-		user.updateUserInfo(request.getNickname(), request.getStatusMessage());
-		userRepository.save(user);
-
-		return UserIdResponse.builder()
-			.userId(user.getId())
-			.build();
+		return userType;
 	}
 
 	public UserOnboardingResponse getOnboardingInfo(User user) {

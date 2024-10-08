@@ -6,17 +6,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import com.odiga.fiesta.MockTestSupport;
 import com.odiga.fiesta.category.domain.Category;
@@ -25,7 +20,6 @@ import com.odiga.fiesta.common.error.exception.CustomException;
 import com.odiga.fiesta.companion.domain.Companion;
 import com.odiga.fiesta.companion.repository.CompanionRepository;
 import com.odiga.fiesta.festival.domain.Festival;
-import com.odiga.fiesta.festival.dto.response.FestivalInfoWithBookmark;
 import com.odiga.fiesta.festival.repository.FestivalRepository;
 import com.odiga.fiesta.mood.domain.Mood;
 import com.odiga.fiesta.mood.repository.MoodRepository;
@@ -44,7 +38,7 @@ import com.odiga.fiesta.user.repository.UserMoodRepository;
 import com.odiga.fiesta.user.repository.UserPriorityRepository;
 import com.odiga.fiesta.user.repository.UserRepository;
 
-class UserServiceTest extends MockTestSupport {
+class UserServiceMockTest extends MockTestSupport {
 
 	@InjectMocks
 	private UserService userService;
@@ -129,6 +123,37 @@ class UserServiceTest extends MockTestSupport {
 		verify(userMoodRepository).saveAll(anyList());
 		verify(userCategoryRepository).saveAll(anyList());
 		verify(userCompanionRepository).saveAll(anyList());
+	}
+
+	@DisplayName("프로필 수정 - 이전의 온보딩 정보가 삭제되어야 한다.")
+	@Test
+	void updateUserInfo_ShouldDeleteOnboardingInfo() {
+		// given
+		User user = createNoProfileUser();
+		Long userId = user.getId();
+		given(userRepository.existsById(userId)).willReturn(true);
+
+		ProfileCreateRequest currentOnboardingInfo = createProfileCreateRequest();
+		mockRepositoriesForCreateProfileRequest(currentOnboardingInfo);
+
+		UserType nextUserType = UserType.builder()
+			.id(2L)
+			.name("수정된 user type")
+			.profileImage("프로필 이미지")
+			.cardImage("카드 이미지")
+			.build();
+
+		given(userTypeService.getTopNUserTypes(currentOnboardingInfo.getCategoryIds(),
+			currentOnboardingInfo.getMoodIds(), 1))
+			.willReturn(List.of(nextUserType));
+
+		// when
+		ProfileCreateResponse response = userService.updateProfile(user, currentOnboardingInfo);
+
+		// then
+		verifyRepositoriesDeletion(userId);
+		verifyRepositoriesSave();
+		assertEquals(user.getUserTypeId(), nextUserType.getId());
 	}
 
 	@DisplayName("유저 정보 수정 - 성공")
@@ -232,6 +257,59 @@ class UserServiceTest extends MockTestSupport {
 				request.getCompanionIds(),
 				request.getPriorityIds()
 			);
+	}
+
+	private static ProfileCreateRequest createProfileCreateRequest() {
+		return ProfileCreateRequest.builder()
+			.categoryIds(List.of(11L, 12L))
+			.moodIds(List.of(11L, 12L, 13L))
+			.companionIds(List.of(11L, 12L))
+			.priorityIds(List.of(11L, 12L, 13L))
+			.build();
+	}
+
+	private void mockRepositoriesForCreateProfileRequest(ProfileCreateRequest request) {
+		given(priorityRepository.findAllById(request.getPriorityIds()))
+			.willReturn(List.of(
+				Priority.builder().id(11L).build(),
+				Priority.builder().id(12L).build(),
+				Priority.builder().id(13L).build()
+			));
+
+		given(moodRepository.findAllById(request.getMoodIds()))
+			.willReturn(List.of(
+				Mood.builder().id(11L).build(),
+				Mood.builder().id(12L).build(),
+				Mood.builder().id(13L).build()
+			));
+
+		given(categoryRepository.findAllById(request.getCategoryIds()))
+			.willReturn(List.of(
+				Category.builder().id(11L).build(),
+				Category.builder().id(12L).build()
+			));
+
+		given(companionRepository.findAllById(request.getCompanionIds()))
+			.willReturn(List.of(
+				Companion.builder().id(11L).build(),
+				Companion.builder().id(12L).build()
+			));
+	}
+
+	private void verifyRepositoriesDeletion(Long userId) {
+		// 카테고리 정보 삭제 확인
+		verify(userCategoryRepository).deleteByUserId(userId);
+		verify(userCompanionRepository).deleteByUserId(userId);
+		verify(userMoodRepository).deleteByUserId(userId);
+		verify(userPriorityRepository).deleteByUserId(userId);
+	}
+
+	private void verifyRepositoriesSave() {
+		// 새로운 정보 저장 여부 확인
+		verify(userCategoryRepository).saveAll(anyList());
+		verify(userCompanionRepository).saveAll(anyList());
+		verify(userMoodRepository).saveAll(anyList());
+		verify(userPriorityRepository).saveAll(anyList());
 	}
 
 	User createNoProfileUser() {
