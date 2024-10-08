@@ -75,6 +75,7 @@ public class UserService {
 	@Transactional
 	public ProfileCreateResponse createProfile(User user, ProfileCreateRequest request) {
 		validateUser(user);
+		deleteOnboardingInfo(user);
 		UserType userType = createUserType(user, request);
 
 		// response
@@ -89,7 +90,6 @@ public class UserService {
 	public ProfileCreateResponse updateProfile(User user, ProfileCreateRequest request) {
 
 		validateUser(user);
-		// 이전의 정보 삭제
 		deleteOnboardingInfo(user);
 
 		UserType userType = createUserType(user, request);
