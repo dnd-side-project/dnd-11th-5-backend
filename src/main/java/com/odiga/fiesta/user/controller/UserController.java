@@ -82,7 +82,7 @@ public class UserController {
 			.nickname(user.getNickname())
 			.statusMessage(user.getStatusMessage())
 			.profileImage(user.getProfileImage())
-			.isProfileCreated(user.getUserTypeId() != null)
+			.isProfileRegistered(user.getUserTypeId() != null)
 			.userTypeId(user.getUserTypeId())
 			.build();
 
