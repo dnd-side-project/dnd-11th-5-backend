@@ -96,12 +96,21 @@ public class UserController {
 	}
 
 	@PostMapping("/profile")
-	@Operation(summary = "프로필 생성", description = "프로필을 생성합니다.")
+	@Operation(summary = "프로필(유저 타입) 생성", description = "프로필을 생성합니다.")
 	public ResponseEntity<BasicResponse<ProfileCreateResponse>> createProfile(@AuthUser User user,
 		@RequestBody @Valid ProfileCreateRequest request) {
 
 		ProfileCreateResponse response = userService.createProfile(user, request);
 		return ResponseEntity.ok(BasicResponse.ok("프로필 생성 성공", response));
+	}
+
+	@PatchMapping("/profile")
+	@Operation(summary = "프로필(유저 타입) 수정", description = "프로필(유저 타입)을 수정합니다.")
+	public ResponseEntity<BasicResponse<ProfileCreateResponse>> updateProfile(@AuthUser User user,
+		@RequestBody @Valid ProfileCreateRequest request) {
+
+		ProfileCreateResponse response = userService.updateProfile(user, request);
+		return ResponseEntity.ok(BasicResponse.ok("프로필 수정 성공", response));
 	}
 
 	@PostMapping("/reissue")
