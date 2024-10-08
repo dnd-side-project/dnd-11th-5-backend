@@ -13,4 +13,6 @@ public interface UserCategoryRepository extends JpaRepository<UserCategory, Long
 	@Query("SELECT uc.categoryId FROM UserCategory uc WHERE uc.userId = :userId")
 	List<Long> findCategoryIdsByUserId(@Param("userId") Long userId);
 
+
+	void deleteByUserId(Long userId);
 }

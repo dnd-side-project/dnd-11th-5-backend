@@ -12,4 +12,6 @@ public interface UserCompanionRepository extends JpaRepository<UserCompanion, Lo
 
 	@Query("SELECT uc.companionId FROM UserCompanion uc WHERE uc.userId = :userId")
 	List<Long> findCompanionIdsByUserId(@Param("userId") Long userId);
+
+	void deleteByUserId(Long userId);
 }
