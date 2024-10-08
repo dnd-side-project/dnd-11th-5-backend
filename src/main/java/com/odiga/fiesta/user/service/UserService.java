@@ -42,6 +42,7 @@ import com.odiga.fiesta.user.dto.request.UserInfoUpdateRequest;
 import com.odiga.fiesta.user.dto.response.ProfileCreateResponse;
 import com.odiga.fiesta.user.dto.response.UserIdResponse;
 import com.odiga.fiesta.user.dto.response.UserInfoResponse;
+import com.odiga.fiesta.user.dto.response.UserOnboardingResponse;
 import com.odiga.fiesta.user.repository.UserCategoryRepository;
 import com.odiga.fiesta.user.repository.UserCompanionRepository;
 import com.odiga.fiesta.user.repository.UserMoodRepository;
@@ -186,6 +187,22 @@ public class UserService {
 					.build())
 				.toList()
 		);
+	}
+
+	public UserOnboardingResponse getOnboardingInfo(User user) {
+		validateUser(user);
+
+		List<Long> categoryIds = userCategoryRepository.findCategoryIdsByUserId(user.getId());
+		List<Long> moodIds = userMoodRepository.findMoodIdsByUserId(user.getId());
+		List<Long> companionIds = userCompanionRepository.findCompanionIdsByUserId(user.getId());
+		List<Long> priorityIds = userPriorityRepository.findPriorityIdsByUserId(user.getId());
+
+		return UserOnboardingResponse.builder()
+			.categoryIds(categoryIds)
+			.moodIds(moodIds)
+			.companionIds(companionIds)
+			.priorityIds(priorityIds)
+			.build();
 	}
 
 	private void validateCompanions(List<Long> companionIds) {

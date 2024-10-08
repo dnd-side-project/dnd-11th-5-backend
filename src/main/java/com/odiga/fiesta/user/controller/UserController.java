@@ -37,6 +37,7 @@ import com.odiga.fiesta.user.dto.response.TokenReissueResponse;
 import com.odiga.fiesta.user.dto.response.UserBadgeResponse;
 import com.odiga.fiesta.user.dto.response.UserIdResponse;
 import com.odiga.fiesta.user.dto.response.UserInfoResponse;
+import com.odiga.fiesta.user.dto.response.UserOnboardingResponse;
 import com.odiga.fiesta.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,7 +59,7 @@ public class UserController {
 	private final AuthService authService;
 	private final BadgeService badgeService;
 	private final FestivalService festivalService;
-	
+
 	@PostMapping("/oauth/login")
 	@Operation(summary = "소셜 로그인", description = "소셜 로그인을 진행합니다.")
 	public ResponseEntity<BasicResponse<LoginResponse>> kakaoLogin(@RequestBody SocialLoginRequest request) {
@@ -151,5 +152,13 @@ public class UserController {
 
 		UserIdResponse response = userService.updateUserInfo(user, request);
 		return ResponseEntity.ok(BasicResponse.ok("내 정보 수정 성공", response));
+	}
+
+	@GetMapping("/onboarding-info")
+	@Operation(summary = "유저의 온보딩 응답 정보 조회", description = "유저의 온보딩 응답 정보를 조회합니다.")
+	public ResponseEntity<BasicResponse<UserOnboardingResponse>> getOnboardingInfo(@AuthUser User user) {
+
+		UserOnboardingResponse response = userService.getOnboardingInfo(user);
+		return ResponseEntity.ok(BasicResponse.ok("유저의 온보딩 응답 정보 조회 성공", response));
 	}
 }
