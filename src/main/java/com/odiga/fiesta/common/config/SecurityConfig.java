@@ -65,7 +65,8 @@ public class SecurityConfig {
 				configuration.setAllowedOrigins(Arrays.asList(
 					"http://localhost:3000",
 					"https://odiga.shop",
-					"https://fiesta-psi.vercel.app"
+					"https://fiesta-psi.vercel.app",
+					"https://www.odiga.kr"
 				));
 				configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 				configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));

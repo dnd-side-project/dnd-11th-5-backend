@@ -12,7 +12,8 @@ public class CorsMvcConfig implements WebMvcConfigurer {
 	@Override
 	public void addCorsMappings(CorsRegistry corsRegistry) {
 		corsRegistry.addMapping("/api/v1/**")
-			.allowedOrigins("http://localhost:3000", "https://odiga.shop", "https://fiesta-psi.vercel.app")
+			.allowedOrigins("http://localhost:3000", "https://odiga.shop",
+				"https://fiesta-psi.vercel.app", "https://www.odiga.kr")
 			.allowedMethods(
 				GET.name(),
 				HEAD.name(),
