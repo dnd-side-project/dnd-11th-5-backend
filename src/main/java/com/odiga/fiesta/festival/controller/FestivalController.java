@@ -72,6 +72,17 @@ public class FestivalController {
 	private final FestivalBookmarkService festivalBookmarkService;
 
 	@Operation(
+		summary = "모든 페스티벌의 id 조회",
+		description = "DB에 존재하는 모든 페스티벌의 id를 조회합니다."
+	)
+	@GetMapping("/id")
+	public ResponseEntity<BasicResponse<List<Long>>> getAllFestivalIds() {
+		String message = "페스티벌 id 조회 성공";
+		final List<Long> response = festivalService.getAllFestivalIds();
+		return ResponseEntity.ok(BasicResponse.ok(message, response));
+	}
+
+	@Operation(
 		summary = "페스티벌 생성",
 		description = "페스티벌을 생성합니다."
 	)

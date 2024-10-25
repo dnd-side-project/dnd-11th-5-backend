@@ -939,6 +939,25 @@ class FestivalServiceTest extends IntegrationTestSupport {
 		assertThat(bookmarkedFestivals.getTotalElements()).isEqualTo(bookmarkedFestivalCount);
 	}
 
+	@DisplayName("페스티벌 id조회 - DB에 저장된 모든 페스티벌의 id를 조회한다.")
+	@Test
+	void getAllFestivalIds() {
+		// given
+		Festival festival1 = createFestival();
+		Festival festival2 = createFestival();
+		Festival festival3 = createFestival();
+		Festival festival4 = createFestival();
+		Festival festival5 = createFestival();
+
+		festivalRepository.saveAll(List.of(festival1, festival2, festival3, festival4, festival5));
+
+		// when
+		List<Long> festivalIds = festivalService.getAllFestivalIds();
+
+		// then
+		assertThat(festivalIds).hasSize(5);
+	}
+
 	private static FestivalImage createFestivalImage(Festival festival) {
 		return FestivalImage.builder().festivalId(festival.getId()).imageUrl("imageUrl1").build();
 	}

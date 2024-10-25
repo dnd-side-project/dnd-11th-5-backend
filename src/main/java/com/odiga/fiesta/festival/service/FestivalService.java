@@ -359,6 +359,10 @@ public class FestivalService {
 			.build();
 	}
 
+	public List<Long> getAllFestivalIds() {
+		return festivalRepository.findAllFestivalIds();
+	}
+
 	// 필터링을 위해, request list 내부의 중복 제거
 	private FestivalFilterCondition getFestivalFilterCondition(FestivalFilterRequest festivalFilterRequest) {
 		Optional.ofNullable(festivalFilterRequest.getMonths())
@@ -505,5 +509,6 @@ public class FestivalService {
 			files.forEach(fileUtils::validateImageExtension);
 		}
 	}
+
 
 }
